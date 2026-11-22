@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=4">
+<link rel="stylesheet" href="style.css?v=5">
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -35,6 +35,7 @@
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.5 3a7.5 7.5 0 015.9 12.1l4.7 4.7-1.4 1.4-4.7-4.7A7.5 7.5 0 1110.5 3zm0 2a5.5 5.5 0 100 11 5.5 5.5 0 000-11z"/></svg>
     <input id="q" type="search" placeholder="ابحث في السلاسل والدروس…" autocomplete="off">
   </div>
+  <button class="profile-btn" id="profileBtn" title="ملفي" aria-label="ملفي الشخصي"><span class="avatar" id="avatar">؟</span><span class="pname" id="pname">أضف اسمك</span></button>
   <button class="icon-btn" id="themeBtn" title="الوضع الليلي" aria-label="تبديل الوضع الليلي">
     <svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 109 9 7 7 0 01-9-9z"/></svg>
   </button>
@@ -80,8 +81,20 @@
   </form>
 </dialog>
 
+<dialog id="nameDlg">
+  <form method="dialog" id="nameForm">
+    <h3>ملفّك الشخصي</h3>
+    <p>اكتب اسمك ليظهر أعلى الموقع وتُحيّا به. يبقى الاسم في هذا المتصفح فقط مع تقدّمك، ولا يُرسل إلى أي مكان.</p>
+    <input id="nameInput" maxlength="40" placeholder="اسمك" autocomplete="nickname">
+    <div class="dlg-actions">
+      <button class="btn" value="save">حفظ</button>
+      <button class="btn ghost" value="cancel" formnovalidate>إلغاء</button>
+    </div>
+  </form>
+</dialog>
+
 <div id="toast" role="status" aria-live="polite"></div>
 
-<script src="app.js?v=4"></script>
+<script src="app.js?v=5"></script>
 </body>
 </html>

@@ -218,3 +218,12 @@ dialog .btn.ghost{color:var(--ink)}
 .card-done.on{background:var(--ok);border-color:var(--ok);color:#fff}
 .toast-act{margin-inline-start:12px;background:var(--gold);color:#1b1206;border:0;border-radius:999px;padding:2px 12px;font-weight:600;cursor:pointer}
 #toast{display:flex;align-items:center}
+
+.profile-btn{display:flex;align-items:center;gap:8px;height:40px;padding:0 6px 0 14px;border-radius:999px;border:1px solid var(--line);background:var(--card);cursor:pointer;flex:none;max-width:200px}
+.profile-btn:hover{border-color:var(--gold)}
+.profile-btn .avatar{width:30px;height:30px;flex:none;border-radius:50%;display:grid;place-items:center;background:var(--teal);color:var(--gold-2);font:700 16px/1 Amiri,serif}
+.profile-btn .pname{font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.profile-btn.empty .pname{color:var(--muted)}
+#nameInput{width:100%;font:inherit;padding:10px 14px;border-radius:12px;border:1px solid var(--line);background:var(--paper);color:var(--ink);margin-top:6px}
+#nameInput:focus{outline:2px solid var(--gold)}
+@media (max-width:600px){.profile-btn{padding:0 4px;max-width:none}.profile-btn .pname{display:none}}

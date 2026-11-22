@@ -83,6 +83,22 @@ function toast(msg, actLabel, act) {
 const catTitle = id => (CAT.categories.find(c => c.id === id) || {}).title || '';
 function isNew(v) { const f = S.seen[v]; return f && f > 1 && Date.now() - f < 21 * 864e5 && !S.p[v]; }
 
+/* ---------------- الملف الشخصي ---------------- */
+function renderProfile() {
+  const nm = (S.name || '').trim();
+  $('#avatar').textContent = nm ? [...nm][0] : '؟';
+  $('#pname').textContent = nm || 'أضف اسمك';
+  $('#profileBtn').classList.toggle('empty', !nm);
+}
+$('#profileBtn').onclick = () => { $('#nameInput').value = S.name || ''; $('#nameDlg').showModal(); $('#nameInput').focus(); };
+$('#nameForm').addEventListener('submit', e => {
+  if (e.submitter && e.submitter.value === 'cancel') return;
+  S.name = $('#nameInput').value.trim().slice(0, 40); save(true); renderProfile();
+  if (!location.hash || location.hash === '#/' || location.hash === '#browse') route();
+  toast(S.name ? `حيّاك الله يا ${S.name}` : 'حُذف الاسم');
+});
+renderProfile();
+
 /* ---------------- السمة ---------------- */
 function applyTheme() {
   if (S.theme) document.documentElement.dataset.theme = S.theme; else delete document.documentElement.dataset.theme;
@@ -114,7 +130,7 @@ function home() {
   let html = `
   <section class="hero">
     <div>
-      <div class="eyebrow">تراث الشيخ سعيد الكملي في مكان واحد</div>
+      <div class="eyebrow">${S.name ? `أهلًا بك يا ${esc(S.name)}، حيّاك الله` : 'تراث الشيخ سعيد الكملي في مكان واحد'}</div>
       <h1>مجالسُ العلم، درسًا درسًا</h1>
       <p>كل قوائم دروس الشيخ على يوتيوب من قناته وقنوات أخرى، مجموعةً بلا تكرار، يُحفظ فيها موضع توقّفك في كل درس، ويتقدّم مؤشر كل سلسلة مع كل دقيقة تسمعها.</p>
       <div class="hero-stats">
@@ -439,9 +455,9 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) { tra
 const dlg = $('#dataDlg');
 $('#menuBtn').onclick = () => { $('#updatedAt').textContent = 'آخر تحديث لفهرس الدروس: ' + updatedTxt(); dlg.showModal(); };
 $('#exportBtn').onclick = () => {
-  const blob = new Blob([JSON.stringify({ app: 'kamali', version: 1, exported: new Date().toISOString(), progress: S.p }, null, 1)], { type: 'application/json' });
+  const blob = new Blob([JSON.stringify({ app: 'kamali', version: 1, exported: new Date().toISOString(), name: S.name || '', progress: S.p }, null, 1)], { type: 'application/json' });
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-  a.download = `تقدمي-دروس-الكملي-${new Date().toISOString().slice(0, 10)}.json`; a.click();
+  a.download = `${S.name ? S.name + '-' : ''}تقدمي-دروس-الكملي-${new Date().toISOString().slice(0, 10)}.json`; a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 2000);
 };
 $('#importFile').onchange = async e => {
@@ -454,6 +470,7 @@ $('#importFile').onchange = async e => {
       const mine = S.p[v];
       if (!mine || (x.done && !mine.done) || ((x.t || 0) > (mine.t || 0) && !mine.done)) { S.p[v] = x; c++; }
     }
+    if (j.name && !S.name) { S.name = String(j.name).slice(0, 40); renderProfile(); }
     save(true); dlg.close(); refresh(); toast(`استُورد التقدّم (${n(c)} درسًا)`);
   } catch (err) { toast('تعذّرت قراءة الملف'); }
   e.target.value = '';
@@ -465,7 +482,7 @@ $('#resetBtn').onclick = () => {
 dlg.querySelector('.close').onclick = () => dlg.close();
 
 /* ---------------- التشغيل ---------------- */
-const APP_V = '4';
+const APP_V = '5';
 async function checkVersion() {
   try {
     const v = (await (await fetch('version.txt', { cache: 'no-store' })).text()).trim();
