@@ -1,0 +1,86 @@
+{
+ "channels": [
+  {
+   "handle": "elkamali",
+   "rank": 0,
+   "name": "قناة الشيخ سعيد الكملي",
+   "channel_id": ""
+  },
+  {
+   "handle": "elkamali2",
+   "rank": 1,
+   "name": "القناة الاحتياطية",
+   "channel_id": ""
+  }
+ ],
+ "extra_playlists": [
+  "PLUtxhBXriVhO7xKWmIY5NikclAU5gbvRn",
+  "PL_6G9FbfnNo6Qw_bVniWMPrdP9fQT3x9N",
+  "PLQQgexIsNoCdQpUjng2xRzkAZhlUWDF3w",
+  "PL0iihUPHbXXlL0gSMHoHKmcjc8DvVm5Oy",
+  "PL0iihUPHbXXm0J1gU3kkv0bOxUNPF1CkD",
+  "PLmQdpDQTXcJyCu578jp-ss9DCtI_IyIiU",
+  "PLPCoL01jsMJCTvsf8SYhcOSFD6cYVzMhE",
+  "PLPCoL01jsMJB_4D34PZrQKjGTIhwRMC6w",
+  "PLSC2rOHSlW2-8N-8IeZieltLkACINz-ZF",
+  "PLFd-jIGNK3ow",
+  "PLr1enMrEGNtIJW5qIfV5Lj21PFIzNyJBK",
+  "PLci-TEpAYR248rI_Bj1gbxtxDRPNd-WH_",
+  "PLtvQwTfEzVTM8Izw3H1M8-_PDnXUXcDRi",
+  "PLpBZ9q7X2tfKX0J89VUfBoezV6gqR4GoW",
+  "PLMfgACMH2PyACbPsAcBWFl8MfuxxPh-E1",
+  "PLseYN6lTCM3WH8n_NIicw7z15uVT4VcyA",
+  "PLseYN6lTCM3XHo70Wegy7lMobOt7CdnVH",
+  "PLWsNbz2ee3f8",
+  "PLseYN6lTCM3UJeKLQWBLQsAeCXfAbW9Bc",
+  "PLseYN6lTCM3VzAYQ_y1cfe5QR_SPtxP6a",
+  "PLGjPRWirewsSuqrSFDstr65JeuwIGdIVN",
+  "PLvefJ3n1JRAXwjHEpvPxnrtHt1vI2FUxC",
+  "PLMfgACMH2PyBjnufAtv10dSs2WqoierMA",
+  "PLMfgACMH2PyCRBJXTIZHFxerxdl9sKnqG",
+  "PLMfgACMH2PyB5ILsp1QjiD3qvmKvi-8rq",
+  "PLMfgACMH2PyBahdT0AnMW_8gV72ai86eU",
+  "PLyZoZ-_Ib5HHmvhVqy4S60J9JNoRqtRbX",
+  "PL6cP_x0vzBClJLVkaUcdahTo3XCXSsikx",
+  "PL41ltmcXHBOKB5AfhQuiRqAj9EhDfrz6z",
+  "PL1CAmbdMPc2jgGYyZijcAuE5TRyfFt7ED"
+ ],
+ "catch_all": [
+  "PLFkuO76ICjPlA8v1je7EhUO3UWP1uvBFe",
+  "PLFkuO76ICjPnryWlA5flPkekZLS_GkzuC"
+ ],
+ "exclude": [
+  "PLWsNbz2ee3f8",
+  "PL6cP_x0vzBClJLVkaUcdahTo3XCXSsikx"
+ ],
+ "keep": [],
+ "rename": {
+  "PLyZoZ-_Ib5HHmvhVqy4S60J9JNoRqtRbX": "كرسي الإمام مالك: شرح الموطأ",
+  "PLEbfLDlcXKwo": "تفسير سورة السجدة",
+  "PLLV0hvhR4arEaiLJ0mnYe7TuWsUaBGym5": "برنامج أشذاء وأنداء",
+  "PLFkuO76ICjPnnMHjKJyM3j_CU7e_nBFhL": "رمضان 2023",
+  "PLci-TEpAYR248rI_Bj1gbxtxDRPNd-WH_": "في رحاب رمضان 2015",
+  "PLFkuO76ICjPlyokqSyhP9_rkdZ__MxGrU": "حفظ القرآن",
+  "PLFkuO76ICjPlmJEWw6-AyKGp0Yj8v9py8": "فتاوى",
+  "PLFkuO76ICjPkMGIfjDN1yfeYcZo81XhN_": "الشعر",
+  "PLFkuO76ICjPk8J6mqGHqzs2rNWzbL03Rh": "شرح قصيدة عنوان الحكم للبستي",
+  "PLFkuO76ICjPkhtq5s22uS_v9t3HnPUOIQ": "شرح لامية ابن الوردي",
+  "PLFkuO76ICjPmSckkduR7TcQn-2BANlw2G": "أخبار العرب وسيرة سيد البشر",
+  "PLFkuO76ICjPmw_LkCYPJI6E79mvBlLZQT": "أسوة حسنة ﷺ"
+ },
+ "category": {},
+ "merge": [
+  [
+   "PLFkuO76ICjPmgiy50tDpg8ZhAXuX3THJM",
+   "PLLV0hvhR4arFatY__mEPidIIOgIE_pIpU"
+  ],
+  [
+   "PLLV0hvhR4arEaiLJ0mnYe7TuWsUaBGym5",
+   "PLFkuO76ICjPk-P6Ts1Y5Gkq192WOA0dhR"
+  ],
+  [
+   "PLFkuO76ICjPk8J6mqGHqzs2rNWzbL03Rh",
+   "PLLV0hvhR4arEWBLHcFp3G-soosTuanVBe"
+  ]
+ ]
+}
