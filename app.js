@@ -157,8 +157,8 @@ function googleSignIn() {
   if (!CLOUD.ready) { toast('المزامنة غير مفعّلة بعد'); return; }
   const prov = new firebase.auth.GoogleAuthProvider();
   prov.setCustomParameters({ prompt: 'select_account' });
-  const mobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-  (mobile ? firebase.auth().signInWithRedirect(prov) : firebase.auth().signInWithPopup(prov))
+  // النافذة المنبثقة أوثق من إعادة التوجيه في المتصفحات التي تحجب تخزين الطرف الثالث (Safari وغيره)
+  firebase.auth().signInWithPopup(prov)
     .catch(e => {
       if (e && e.code === 'auth/popup-blocked') return firebase.auth().signInWithRedirect(prov);
       if (e && e.code !== 'auth/popup-closed-by-user') toast('تعذّر تسجيل الدخول: ' + (e.code || ''));
@@ -257,7 +257,7 @@ function home() {
   </section>`;
 
   if (inProg.length) {
-    html += `<div class="section-head"><h2>سلاسلك الجارية</h2><span class="muted">${n(fmtHoursNum(wsec))} من الاستماع حتى الآن</span></div>
+    html += `<div class="section-head"><h2>سلاسلك الجارية</h2><span class="muted">${fmtHours(wsec)} من الاستماع حتى الآن</span></div>
       <div class="grid">${inProg.slice(0, 6).map(card).join('')}</div>`;
   }
   if (newOnes.length) {
@@ -587,7 +587,7 @@ $('#resetBtn').onclick = () => {
 dlg.querySelector('.close').onclick = () => dlg.close();
 
 /* ---------------- التشغيل ---------------- */
-const APP_V = '7';
+const APP_V = '8';
 async function checkVersion() {
   try {
     const v = (await (await fetch('version.txt', { cache: 'no-store' })).text()).trim();
