@@ -101,6 +101,9 @@ def main():
         pt = toks(p['title'])
         p['items'] = [it for it in p['items'] if re.search(r'كمل|kamal', norm(it['t']), re.I) or (toks(it['t']) & pt)]
     PL = {k: v for k, v in PL.items() if v['items']}
+    for p in PL.values():
+        if any(it.get('d') for it in p['items']):
+            p['items'] = [it for it in p['items'] if it.get('d')]
 
     # ---- 1. فهرس المقاطع
     V = {}
@@ -191,7 +194,7 @@ def main():
             lo, hi = min(len(sa), len(sb)), max(len(sa), len(sb))
             ov = inter / lo
             share = bool(ta & toks(PL[b]['title']))
-            if ov >= 0.6 and (share or ov >= 0.95) and lo >= 0.6 * hi:
+            if ov >= 0.6 and ((share and lo >= 0.6 * hi) or (ov >= 0.95 and lo >= 0.85 * hi)):
                 parent[uf(a)] = uf(b)
 
     for group in src.get('merge', []):
@@ -206,6 +209,9 @@ def main():
     series = []
     for root, members in clusters.items():
         members.sort(key=lambda p: (prank(p), -len(vids[p])))
+        for g in src.get('merge', []):
+            if g[0] in members:
+                members.remove(g[0]); members.insert(0, g[0]); break
         head = members[0]
         biggest = max(members, key=lambda p: len(vids[p]))
         order, seen = [], set()

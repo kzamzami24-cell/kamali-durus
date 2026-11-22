@@ -102,6 +102,7 @@ def dl_playlist(pid, limit=None):
         if not e or not e.get('id'): continue
         t = e.get('title') or ''
         if t in ('[Private video]', '[Deleted video]'): continue
+        if not e.get('duration') and (e.get('availability') or '') not in ('', 'public', 'unlisted'): continue
         items.append({'v': e['id'], 't': t, 'd': int(e.get('duration') or 0)})
     return j.get('title'), (j.get('channel') or j.get('uploader') or ''), items
 
