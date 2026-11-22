@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=5">
+<link rel="stylesheet" href="style.css?v=6">
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -84,7 +84,9 @@
 <dialog id="nameDlg">
   <form method="dialog" id="nameForm">
     <h3>ملفّك الشخصي</h3>
-    <p>اكتب اسمك ليظهر أعلى الموقع وتُحيّا به. يبقى الاسم في هذا المتصفح فقط مع تقدّمك، ولا يُرسل إلى أي مكان.</p>
+    <p>ادخل بحساب Google ليُحفظ تقدّمك واسمك ويتزامنا بين الجوال والكمبيوتر، أو اكتب اسمك فقط ليُحفظ في هذا الجهاز.</p>
+    <div id="cloudBox" class="cloud-box"></div>
+    <label for="nameInput" class="muted" style="font-size:14px">الاسم الظاهر</label>
     <input id="nameInput" maxlength="40" placeholder="اسمك" autocomplete="nickname">
     <div class="dlg-actions">
       <button class="btn" value="save">حفظ</button>
@@ -95,6 +97,7 @@
 
 <div id="toast" role="status" aria-live="polite"></div>
 
-<script src="app.js?v=5"></script>
+<script src="firebase-config.js?v=6"></script>
+<script src="app.js?v=6"></script>
 </body>
 </html>

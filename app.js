@@ -25,6 +25,7 @@ function save(now) {
   clearTimeout(saveT);
   const w = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
   now ? w() : (saveT = setTimeout(w, 300));
+  if (typeof cloudPush === 'function') cloudPush();
 }
 
 /* ---------------- أدوات ---------------- */
@@ -83,17 +84,119 @@ function toast(msg, actLabel, act) {
 const catTitle = id => (CAT.categories.find(c => c.id === id) || {}).title || '';
 function isNew(v) { const f = S.seen[v]; return f && f > 1 && Date.now() - f < 21 * 864e5 && !S.p[v]; }
 
+
+/* ---------------- المزامنة عبر حساب Google (Firebase) ---------------- */
+const CLOUD = { ready: false, user: null, db: null, ref: null, pushT: 0, applying: false, lastPushed: '' };
+const FB_V = '10.12.2';
+function loadScript(src) {
+  return new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
+}
+function mergeProgress(a, b) {
+  // لكل درس: الأحدث تعديلًا هو الذي يُعتمد
+  const out = Object.assign({}, a);
+  for (const [v, x] of Object.entries(b || {})) {
+    const y = out[v];
+    if (!y || (x.at || 0) > (y.at || 0)) out[v] = x;
+  }
+  return out;
+}
+async function cloudInit() {
+  const cfg = window.FIREBASE_CONFIG;
+  if (!cfg || !cfg.apiKey) { renderCloudBox(); return; }
+  try {
+    await loadScript(`https://www.gstatic.com/firebasejs/${FB_V}/firebase-app-compat.js`);
+    await Promise.all([
+      loadScript(`https://www.gstatic.com/firebasejs/${FB_V}/firebase-auth-compat.js`),
+      loadScript(`https://www.gstatic.com/firebasejs/${FB_V}/firebase-firestore-compat.js`),
+    ]);
+    firebase.initializeApp(cfg);
+    CLOUD.db = firebase.firestore();
+    CLOUD.ready = true;
+    firebase.auth().getRedirectResult().catch(e => toast('تعذّر تسجيل الدخول: ' + (e.code || '')));
+    firebase.auth().onAuthStateChanged(onAuth);
+  } catch (e) { console.warn('cloud init failed', e); }
+  renderCloudBox();
+}
+let unsub = null;
+async function onAuth(user) {
+  CLOUD.user = user; if (unsub) { unsub(); unsub = null; }
+  renderProfile();
+  if (!user) return;
+  CLOUD.ref = CLOUD.db.collection('users').doc(user.uid);
+  let first = true;
+  unsub = CLOUD.ref.onSnapshot(snap => {
+    const d = snap.exists ? snap.data() : {};
+    const merged = mergeProgress(S.p, d.p || {});
+    const changed = JSON.stringify(merged) !== JSON.stringify(S.p);
+    S.p = merged;
+    if (d.name && (!S.name || (d.nameAt || 0) > (S.nameAt || 0))) { S.name = d.name; S.nameAt = d.nameAt || 0; }
+    if (!S.name && user.displayName) { S.name = user.displayName; S.nameAt = Date.now(); }
+    if (d.last && (!S.last || (d.lastAt || 0) > (S.lastAt || 0))) { S.last = d.last; S.lastAt = d.lastAt; }
+    try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {}
+    renderProfile();
+    if (changed && CAT) refresh();
+    // ارفع ما عندي مما ليس في السحابة (أول دخول بعد تقدّم محلي)
+    const remoteStr = JSON.stringify(d.p || {});
+    if (first && JSON.stringify(merged) !== remoteStr) cloudPush(true);
+    if (first) toast(`تمت المزامنة مع حسابك${user.displayName ? ' يا ' + user.displayName.split(' ')[0] : ''}`);
+    first = false;
+  }, e => console.warn('snapshot', e));
+}
+function cloudPush(now) {
+  if (!CLOUD.ref) return;
+  clearTimeout(CLOUD.pushT);
+  CLOUD.pushT = setTimeout(() => {
+    const payload = { p: S.p, name: S.name || '', nameAt: S.nameAt || 0, last: S.last || null, lastAt: S.lastAt || 0, updated: Date.now() };
+    const str = JSON.stringify(payload.p) + payload.name + JSON.stringify(payload.last);
+    if (str === CLOUD.lastPushed) return;
+    CLOUD.lastPushed = str;
+    CLOUD.ref.set(payload).catch(e => { CLOUD.lastPushed = ''; console.warn('push', e); });
+  }, now ? 50 : 4000);
+}
+function googleSignIn() {
+  if (!CLOUD.ready) { toast('المزامنة غير مفعّلة بعد'); return; }
+  const prov = new firebase.auth.GoogleAuthProvider();
+  prov.setCustomParameters({ prompt: 'select_account' });
+  const mobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  (mobile ? firebase.auth().signInWithRedirect(prov) : firebase.auth().signInWithPopup(prov))
+    .catch(e => {
+      if (e && e.code === 'auth/popup-blocked') return firebase.auth().signInWithRedirect(prov);
+      if (e && e.code !== 'auth/popup-closed-by-user') toast('تعذّر تسجيل الدخول: ' + (e.code || ''));
+    });
+}
+function googleSignOut() {
+  if (!CLOUD.ready) return;
+  cloudPush(true);
+  setTimeout(() => firebase.auth().signOut().then(() => { CLOUD.ref = null; toast('خرجت من حسابك. يبقى تقدّمك محفوظًا في هذا الجهاز وفي حسابك.'); renderProfile(); }), 300);
+}
+function renderCloudBox() {
+  const box = document.getElementById('cloudBox'); if (!box) return;
+  if (!window.FIREBASE_CONFIG || !window.FIREBASE_CONFIG.apiKey) { box.innerHTML = ''; return; }
+  if (CLOUD.user) {
+    box.innerHTML = `<div class="cloud-on">✓ متصل بحساب Google: <b>${esc(CLOUD.user.email || CLOUD.user.displayName || '')}</b><br><small>تقدّمك واسمك يتزامنان تلقائيًا بين كل أجهزتك.</small></div>
+      <button type="button" class="btn ghost" id="gOut">تسجيل الخروج</button>`;
+    box.querySelector('#gOut').onclick = googleSignOut;
+  } else {
+    box.innerHTML = `<button type="button" class="btn gbtn" id="gIn"><svg viewBox="0 0 48 48" width="20" height="20"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg> الدخول بحساب Google</button>
+      <small class="muted">لمزامنة تقدّمك واسمك بين الجوال والكمبيوتر.</small>`;
+    box.querySelector('#gIn').onclick = googleSignIn;
+  }
+}
+
 /* ---------------- الملف الشخصي ---------------- */
 function renderProfile() {
   const nm = (S.name || '').trim();
-  $('#avatar').textContent = nm ? [...nm][0] : '؟';
+  const av = $('#avatar');
+  if (CLOUD.user && CLOUD.user.photoURL) av.innerHTML = `<img src="${esc(CLOUD.user.photoURL)}" alt="" referrerpolicy="no-referrer">`;
+  else av.textContent = nm ? [...nm][0] : '؟';
+  renderCloudBox();
   $('#pname').textContent = nm || 'أضف اسمك';
   $('#profileBtn').classList.toggle('empty', !nm);
 }
 $('#profileBtn').onclick = () => { $('#nameInput').value = S.name || ''; $('#nameDlg').showModal(); $('#nameInput').focus(); };
 $('#nameForm').addEventListener('submit', e => {
   if (e.submitter && e.submitter.value === 'cancel') return;
-  S.name = $('#nameInput').value.trim().slice(0, 40); save(true); renderProfile();
+  S.name = $('#nameInput').value.trim().slice(0, 40); S.nameAt = Date.now(); save(true); renderProfile();
   if (!location.hash || location.hash === '#/' || location.hash === '#browse') route();
   toast(S.name ? `حيّاك الله يا ${S.name}` : 'حُذف الاسم');
 });
@@ -381,7 +484,7 @@ async function play(v, sid) {
   $('#pSeries').textContent = s ? s.title : '';
   const p = S.p[v];
   const start = p && !p.done && p.t > 5 ? Math.floor(p.t - 3) : 0;
-  S.last = { v, s: cur.s }; save();
+  S.last = { v, s: cur.s }; S.lastAt = Date.now(); save();
   markPlaying(); updateDoneBtn();
   await loadYT();
   if (!YTP) {
@@ -477,12 +580,14 @@ $('#importFile').onchange = async e => {
 };
 $('#resetBtn').onclick = () => {
   if (!confirm('سيُمسح كل تقدّمك في هذا المتصفّح. هل أنت متأكد؟')) return;
-  S.p = {}; S.last = null; save(true); dlg.close(); refresh();
+  const now = Date.now();
+  for (const v in S.p) S.p[v] = { t: 0, done: false, at: now };
+  S.last = null; S.lastAt = now; save(true); dlg.close(); refresh();
 };
 dlg.querySelector('.close').onclick = () => dlg.close();
 
 /* ---------------- التشغيل ---------------- */
-const APP_V = '5';
+const APP_V = '6';
 async function checkVersion() {
   try {
     const v = (await (await fetch('version.txt', { cache: 'no-store' })).text()).trim();
@@ -493,6 +598,7 @@ async function checkVersion() {
 }
 async function init() {
   checkVersion();
+  cloudInit();
   app.innerHTML = `<div class="empty">جارٍ تحميل الدروس…</div>`;
   try {
     const r = await fetch('catalog.json', { cache: 'no-cache' });
