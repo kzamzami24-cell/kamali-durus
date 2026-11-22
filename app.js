@@ -71,9 +71,14 @@ function ring(pct, size, stroke) {
     `<circle class="ring-fill" cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" stroke-width="${stroke}" stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${c * (1 - pct)}"/></svg>`;
 }
 const pctTxt = p => `${n(Math.floor(p * 100))}٪`;
-function toast(msg) {
-  const t = $('#toast'); t.textContent = msg; t.classList.add('show');
-  clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show'), 2600);
+function toast(msg, actLabel, act) {
+  const t = $('#toast'); t.textContent = msg;
+  if (actLabel) {
+    const b = document.createElement('button'); b.className = 'toast-act'; b.textContent = actLabel;
+    b.onclick = () => { t.classList.remove('show'); act(); }; t.appendChild(b);
+  }
+  t.classList.add('show');
+  clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show'), actLabel ? 6000 : 2600);
 }
 const catTitle = id => (CAT.categories.find(c => c.id === id) || {}).title || '';
 function isNew(v) { const f = S.seen[v]; return f && f > 1 && Date.now() - f < 21 * 864e5 && !S.p[v]; }
@@ -175,7 +180,7 @@ function updatedTxt() {
 }
 function renderGrid() {
   let list = CAT.series.filter(s => filterCat === 'all' || s.cat === filterCat);
-  list.forEach(s => s._st = s._st || seriesStats(s));
+  list.forEach(s => s._st = seriesStats(s));
   const by = {
     progress: (a, b) => b._st.pct - a._st.pct,
     near: (a, b) => ((b._st.pct < 1 && b._st.pct > 0) - (a._st.pct < 1 && a._st.pct > 0)) || (b._st.pct - a._st.pct),
@@ -187,7 +192,7 @@ function renderGrid() {
   $('#grid').innerHTML = list.map(card).join('') || `<div class="empty">لا توجد سلاسل هنا.</div>`;
 }
 function card(s) {
-  const st = s._st || seriesStats(s);
+  const st = seriesStats(s);
   const newC = s.videos.filter(isNew).length;
   return `<a class="card" href="#/s/${encodeURIComponent(s.id)}">
     <div class="card-cover"><img src="${thumb(s.videos[0])}" alt="" loading="lazy">
@@ -197,11 +202,11 @@ function card(s) {
     </div>
     <div class="card-body">
       <h3>${esc(s.title)}</h3>
+      <button class="card-done ${st.pct >= 1 ? 'on' : ''}" data-complete="${esc(s.id)}" title="${st.pct >= 1 ? 'إلغاء إتمام السلسلة' : 'تعليم السلسلة كاملة كمكتملة'}">${st.pct >= 1 ? '✓ مكتملة' : '✓ أتممتها'}</button>
       <div class="prog"><i style="width:${st.pct * 100}%"></i></div>
       <div class="card-meta">
         <span>أتممت ${n(st.done)} من ${n(st.count)}</span>
         ${newC ? `<span class="badge-new">${n(newC)} جديد</span>` : ''}
-        ${st.pct >= 1 ? `<span class="badge-done">مكتملة</span>` : ''}
         ${!s.official ? `<span>من قنوات أخرى</span>` : ''}
       </div>
     </div></a>`;
@@ -231,6 +236,7 @@ function seriesPage(id) {
         </div>
         <div class="s-actions">
           <button class="btn" data-play="${nextV}" data-s="${s.id}">▶ ${resumeTxt}</button>
+          <button class="btn ghost" data-complete="${esc(s.id)}">${st.pct >= 1 ? 'إلغاء إتمام السلسلة' : '✓ أتممت السلسلة كاملة'}</button>
           <a class="btn ghost" href="https://www.youtube.com/playlist?list=${encodeURIComponent(s.sources[0]?.id || '')}" target="_blank" rel="noopener">القائمة على يوتيوب</a>
         </div>
         ${seg ? `<div class="segbar" aria-label="تقدّم كل درس">${seg}</div>` : `<div class="prog" style="margin-top:12px"><i style="width:${st.pct * 100}%"></i></div>`}
@@ -302,6 +308,25 @@ window.addEventListener('hashchange', route);
 
 /* ---------------- النقرات ---------------- */
 app.addEventListener('click', e => {
+  const comp = e.target.closest('[data-complete]');
+  if (comp) {
+    e.preventDefault(); e.stopPropagation();
+    const s = BY_ID[comp.dataset.complete]; if (!s) return;
+    const allDone = seriesStats(s).pct >= 1;
+    if (allDone && !confirm(`إلغاء إتمام «${s.title}» وإرجاع كل دروسها غير مكتملة؟`)) return;
+    const before = {}; s.videos.forEach(v => before[v] = S.p[v] ? Object.assign({}, S.p[v]) : null);
+    const now = Date.now();
+    s.videos.forEach(v => {
+      const p = S.p[v] || (S.p[v] = { t: 0 });
+      p.done = !allDone; if (allDone) p.t = 0; p.at = now;
+    });
+    save(); CAT.series.forEach(x => delete x._st); refresh();
+    toast(allDone ? 'أُلغي إتمام السلسلة' : `أتممت «${s.title}» كاملة`, 'تراجع', () => {
+      for (const [v, p] of Object.entries(before)) { if (p) S.p[v] = p; else delete S.p[v]; }
+      save(); CAT.series.forEach(x => delete x._st); refresh();
+    });
+    return;
+  }
   const tick = e.target.closest('[data-tick]');
   if (tick) {
     e.preventDefault(); e.stopPropagation();

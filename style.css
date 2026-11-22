@@ -212,3 +212,9 @@ dialog .btn.ghost{color:var(--ink)}
   .player-actions .chip#pPrev{display:none}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+
+.card-done{align-self:flex-start;border:1px solid var(--line);background:transparent;color:var(--ink-2);border-radius:999px;padding:3px 12px;font-size:13px;cursor:pointer;position:relative;z-index:2}
+.card-done:hover{border-color:var(--ok);color:var(--ok)}
+.card-done.on{background:var(--ok);border-color:var(--ok);color:#fff}
+.toast-act{margin-inline-start:12px;background:var(--gold);color:#1b1206;border:0;border-radius:999px;padding:2px 12px;font-weight:600;cursor:pointer}
+#toast{display:flex;align-items:center}
