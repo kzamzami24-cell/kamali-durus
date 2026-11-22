@@ -587,7 +587,7 @@ $('#resetBtn').onclick = () => {
 dlg.querySelector('.close').onclick = () => dlg.close();
 
 /* ---------------- التشغيل ---------------- */
-const APP_V = '6';
+const APP_V = '7';
 async function checkVersion() {
   try {
     const v = (await (await fetch('version.txt', { cache: 'no-store' })).text()).trim();
