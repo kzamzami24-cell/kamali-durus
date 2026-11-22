@@ -465,7 +465,17 @@ $('#resetBtn').onclick = () => {
 dlg.querySelector('.close').onclick = () => dlg.close();
 
 /* ---------------- التشغيل ---------------- */
+const APP_V = '4';
+async function checkVersion() {
+  try {
+    const v = (await (await fetch('version.txt', { cache: 'no-store' })).text()).trim();
+    if (v && v !== APP_V && sessionStorage.getItem('kamali.reloaded') !== v) {
+      sessionStorage.setItem('kamali.reloaded', v); location.reload();
+    }
+  } catch (e) {}
+}
 async function init() {
+  checkVersion();
   app.innerHTML = `<div class="empty">جارٍ تحميل الدروس…</div>`;
   try {
     const r = await fetch('catalog.json', { cache: 'no-cache' });
