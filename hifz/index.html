@@ -161,6 +161,13 @@ details.step summary{cursor:pointer;font-family:"Reem Kufi";font-size:20px}
 .acct .gbtn{background:#fff;color:#1f1f1f;border:0;display:inline-flex;gap:8px;align-items:center;font-weight:600;padding:0 16px}
 .who2{display:inline-flex;align-items:center;gap:8px;font-weight:600;font-size:14px}
 .who2 b{width:30px;height:30px;border-radius:50%;background:#f3c96f;color:#3a2600;display:grid;place-items:center}
+.seg3{grid-template-columns:1fr 1fr 1fr!important}
+.mact{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px}.mact button{min-height:40px;font-size:14px}
+.srcnote{background:var(--goldS);border-radius:14px;padding:10px 14px;margin-bottom:12px;font-size:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:space-between}
+.srcnote button{min-height:38px;font-size:13px}
+.pthumbs{display:flex;gap:6px;overflow-x:auto;padding:6px 0 10px}.pth{flex:none;position:relative;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.2);background:#fff}
+.pth canvas{display:block;width:80px;height:auto}.pth span{position:absolute;bottom:2px;inset-inline-start:4px;font-size:11px;background:rgba(0,0,0,.6);color:#fff;border-radius:6px;padding:0 5px}
+.noimg{padding:30px 16px;text-align:center;color:#666;font-size:14px;background:#fafafa}
 .face.plus{background:var(--bg);color:var(--mute);font-size:40px;font-family:inherit}
 .planic{opacity:.6}.planic .face{filter:grayscale(.7)}
 .ic .ttl{font-family:"Amiri",serif;font-weight:700;font-size:17px;line-height:1.3;margin-top:6px}
@@ -320,10 +327,11 @@ const ord=['الأول','الثاني','الثالث','الرابع','الخام
 let T=dnum();
 
 /* فهرسة كلمات المتن المرفق */
-for(const k in LIB){const L=LIB[k];L.W=[];L.pos={};let c=0;
+function indexLib(L){L.W=[];L.pos={};let c=0;
   for(const g of Object.keys(L.words).map(Number).sort((a,b)=>a-b)){L.pos[g]=[];L.words[g].forEach((ln,li)=>{L.pos[g][li]=L.W.length;ln[2].forEach((w,wi)=>{c+=w[2];L.W.push({g,li,wi,c})})})}
-  L.total=c;L.endOf=g=>{let e=-1;for(const i in L.W)if(L.W[i].g<=g)e=+i;return e};
-}
+  L.total=c||1;L.endOf=g=>{let e=-1;for(let i=0;i<L.W.length;i++)if(L.W[i].g<=g)e=i;return e};return L}
+for(const k in LIB)indexLib(LIB[k]);
+function regUser(m){if(m.ulib&&m.ulib.words){m.lib='u_'+m.id;LIB[m.lib]=indexLib({dir:null,user:m.id,words:m.ulib.words,parts:[],urls:{}})}else if(m.lib&&!LIB[m.lib])delete m.lib}
 const pctOf=(L,i)=>i<0?0:L.W[Math.min(i,L.W.length-1)].c/L.total;
 const pc=x=>ar(Math.round(x*100))+'٪';
 
@@ -353,6 +361,7 @@ function migrate(o){
       if(m.lib&&m.status!='done'){m.ptr=-1;m.hist=[]}else if(m.lib){m.hist=[{d:T,p:m.ptr,init:1}]}
       for(const p of m.portions)Object.assign(p,{interval:0,due:T,last:null,reps:0,lapses:0,added:null,rv:0,tests:[]})}
     o.v=5}
+  for(const m of o.mutun)regUser(m);
   return o;
 }
 const SHORT=n=>/نخبة/.test(n)?'النخبة':/البيقونية/.test(n)?'البيقونية':/الجزرية/.test(n)?'الجزرية':/التحرير/.test(n)?'نظم التحرير':/سعدي/.test(n)?'قواعد السعدي':/^منظومة في العقيدة/.test(n)?'العقيدة':/^نظم أو كتاب في الفقه/.test(n)?'الفقه':'';
@@ -632,7 +641,7 @@ function cycCalc(){const f=document.getElementById('cycF');if(!f)return;const fd
   document.getElementById('cycCalc').textContent=c?(fd.get('mode')=='days'?`= ${f1(c.per)} صفحة يوميًا من ${f1(c.t)} · تُختم ${hijri(T+c.days-1)}`:`= ${ar(c.days)} يومًا لختم ${f1(c.t)} صفحة · تُختم ${hijri(T+c.days-1)}`):'أدخل رقمًا صحيحًا'}
 function cycCard(){
   const C=S.cycle;
-  if(!C){const n=cycMutun().length;return n?`<section class="cyccard empty2"><div><b>الخطة المقترحة للمراجعة</b><span>دورة تمرّ على ${ar(n)} ${n>=3&&n<=10?'متون':'متن'} واحدًا تلو الآخر بترتيب مدروس، ويُحسب نصيب كل يوم تلقائيًا.</span></div><button class="pri" data-cyc>اقترح لي خطة</button></section>`:''}
+  if(!C){const n=cycMutun().length;if(!n)return `<section class="cyccard empty2"><div><b>الخطة المقترحة للمراجعة</b><span>تظهر هنا حين يكون عندك متن محفوظ. أضف متنًا واختر «مراجعة (حفظته)»، أو حدّد ما حفظته من متن تحفظه الآن.</span></div><button data-addm>+ أضف متنًا</button></section>`;return n?`<section class="cyccard empty2"><div><b>الخطة المقترحة للمراجعة</b><span>دورة تمرّ على ${ar(n)} ${n>=3&&n<=10?'متون':'متن'} واحدًا تلو الآخر بترتيب مدروس، ويُحسب نصيب كل يوم تلقائيًا.</span></div><button class="pri" data-cyc>اقترح لي خطة</button></section>`:''}
   const st=cycStatus();if(!st)return '';
   const cm=st.cur?st.cur.m:null,todayNames=[...new Set(st.today.map(x=>x.m.name))];
   return `<section class="cyccard"><div class="cyctop"><div><b>الخطة المقترحة للمراجعة</b><span>الدورة رقم ${ar((C.n||0)+1)} · تُختم ${hijri(st.end)} · ${f1(C.per)} صفحة يوميًا</span></div><button data-cyc>تعديل</button></div>
@@ -646,7 +655,9 @@ function matnSheet(mid){
   const m=S.mutun.find(x=>x.id==mid);if(!m)return;if(OPEN!==mid)TRK=0;OPEN=mid;
   const a=achieve(m),f=fullRev(m),r=mStrength(m),memo=m.portions.filter(p=>isMemo(m,p)),pend=m.portions.filter(p=>!isMemo(m,p)),plan=m.status=='plan';
   const lastFull=m.fullLog&&m.fullLog.length?m.fullLog[m.fullLog.length-1]:null;
-  let h=`<div class="mhead"><span class="ring" style="--p:${(a*100).toFixed(1)};--c:${m.color}"><span class="face" style="background-color:${m.color}">${esc(shortOf(m))}</span></span><div><h3>${esc(m.name)}</h3><div class="note">${esc(m.cat||'')}</div></div><button data-close style="margin-inline-start:auto">إغلاق</button></div>`;
+  let h=`<div class="mhead"><span class="ring" style="--p:${(a*100).toFixed(1)};--c:${m.color}"><span class="face" style="background-color:${m.color}">${esc(shortOf(m))}</span></span><div><h3>${esc(m.name)}</h3><div class="note">${esc(m.cat||'')}</div></div><button data-close style="margin-inline-start:auto">إغلاق</button></div>
+  <div class="mact"><button data-medit>تعديل</button>${(!m.lib||m.ulib)?`<button data-src="${m.id}">${m.ulib?'تغيير ملف المتن':'أرفق ملف المتن (PDF)'}</button>`:''}<button class="again" data-delm="${m.id}">حذف المتن</button></div>
+  ${!m.lib&&m.status!='plan'?`<div class="srcnote">لهذا المتن لا يوجد نص في الموقع. <button data-src="${m.id}">أرفق ملفه أو ابحث عنه</button></div>`:''}`;
   if(!plan)h+=`<div class="kpis"><div><b>${m.lib&&m.status=='prog'?pc(a):m.status=='done'?'١٠٠٪':'—'}</b><span>الإنجاز</span></div><div><b>${r==null?'—':pc(r)}</b><span>قوة الحفظ</span></div><div><b>${lastFull==null?'—':T-lastFull==0?'اليوم':'قبل '+ar(T-lastFull)}</b><span>آخر مراجعة كاملة${lastFull!=null&&T-lastFull>0?' (يومًا)':''}</span></div></div>`;
   if(!plan)h+=`<div class="khatma"><span class="kn">${ar(f)}</span><span>${f==1?'ختمة':'ختمات'} مراجعة كاملة للمتن${lastFull!=null?` · آخرها ${T-lastFull==0?'اليوم':'قبل '+ar(T-lastFull)+' يومًا'}`:''}</span></div>`;
   if(!plan)h+=`<details class="listenbox" ${LOPEN?'open':''}><summary>الاستماع إلى المتن</summary><div id="lis"><p class="note">جارٍ التحميل…</p></div></details>`;
@@ -662,7 +673,7 @@ function matnSheet(mid){
   if(m.status=='prog'&&!m.lib)h+=`<form class="form" data-new="${m.id}" style="grid-template-columns:minmax(0,1fr) auto;margin-top:12px"><input name="l" placeholder="سجّل ما حفظته اليوم" required><button class="pri">سجّل</button></form>`;
   if(memo.length)h+=`<h4>المقاطع المحفوظة</h4>`+memo.map(p=>rowHTML(m,p,true)).join('');
   if(pend.length&&m.lib)h+=`<h4>لم يُحفظ بعد</h4><div class="chips">${pend.map(p=>`<button class="chip pend" data-read="${m.id}|${p.id}">${esc(p.label)}</button>`).join('')}</div>`;
-  h+=`<details style="margin-top:14px"><summary class="note" style="cursor:pointer">تعديل المتن${m.lib?'':' وإضافة مقاطع'}</summary><form class="form" data-editf="${m.id}" style="margin-top:8px"><label>الاسم<input name="n" value="${esc(m.name)}" required></label><label>الاسم على الأيقونة<input name="sh" value="${esc(m.short||'')}" placeholder="كلمة أو كلمتان"></label><label>الفن<input name="c" value="${esc(m.cat||'')}"></label><label>الحالة<select name="s">${[['done','محفوظ'],['prog','قيد الحفظ'],['plan','في الخطة']].map(([v,t])=>`<option value="${v}" ${m.status==v?'selected':''}>${t}</option>`).join('')}</select></label><button class="pri">احفظ</button></form>
+  h+=`<details id="medit" style="margin-top:14px"><summary class="note" style="cursor:pointer">تعديل المتن${m.lib?'':' وإضافة مقاطع'}</summary><form class="form" data-editf="${m.id}" style="margin-top:8px"><label>الاسم<input name="n" value="${esc(m.name)}" required></label><label>الاسم على الأيقونة<input name="sh" value="${esc(m.short||'')}" placeholder="كلمة أو كلمتان"></label><label>الفن<input name="c" value="${esc(m.cat||'')}"></label><label>الحالة<select name="s">${[['done','محفوظ'],['prog','قيد الحفظ'],['plan','في الخطة']].map(([v,t])=>`<option value="${v}" ${m.status==v?'selected':''}>${t}</option>`).join('')}</select></label><button class="pri">احفظ</button></form>
   ${m.lib?'':`<form class="form" data-addp="${m.id}" style="margin-top:12px"><label>إضافة مقاطع (كل مقطع في سطر)<textarea name="t" rows="3" required></textarea></label><button>أضف</button></form>`}
   <div class="tools"><button class="again" data-delm="${m.id}">احذف المتن</button></div></details>`;
   openSheet(h);box.classList.add('matn');
@@ -710,12 +721,108 @@ const mmss=t=>{t=Math.max(0,Math.floor(t));return ar(Math.floor(t/60))+':'+Strin
 function celebrate(t){const r=document.createElement('div');r.className='cele';r.innerHTML=`<div><svg viewBox="0 0 40 40" fill="#e7c56a"><path d="M20 2l4 9 9-4-4 9 9 4-9 4 4 9-9-4-4 9-4-9-9 4 4-9-9-4 9-4-4-9 9 4z"/></svg><b></b></div>`;r.querySelector('b').textContent=t;document.body.appendChild(r);setTimeout(()=>r.remove(),2600)}
 document.addEventListener('toggle',e=>{if(e.target.classList&&e.target.classList.contains('listenbox'))LOPEN=e.target.open},true);
 document.addEventListener('input',e=>{if(e.target.closest('#cycF'))return cycCalc();const f=e.target.closest('form[data-plan]');if(f)calcFill(f)});
-document.addEventListener('change',async e=>{if(e.target.closest('#cycF'))return cycCalc();const f=e.target.closest('form[data-plan]');if(f)return calcFill(f);
+document.addEventListener('change',async e=>{const sr=e.target.closest('#addM input[name=src]');if(sr){document.getElementById('addK').style.display=sr.value=='none'?'grid':'none';return}
+  const pin=e.target.closest('input[data-pdf]');if(pin&&pin.files&&pin.files[0]){return startPdf(pin.dataset.pdf,pin.files[0],pin.files[0].name)}
+  if(e.target.closest('#cycF'))return cycCalc();const f=e.target.closest('form[data-plan]');if(f)return calcFill(f);
   const inp=e.target.closest('input[data-aud]');if(inp&&inp.files&&inp.files[0]){const file=inp.files[0],m=S.mutun.find(x=>x.id==inp.dataset.aud);
     try{await IDB.put(m.id,{blob:file,name:file.name});toast('حُفظ التسجيل على هذا الجهاز',true)}catch(err){toast('تعذّر حفظ الملف في هذا المتصفح',true)}loadAudio(m)}});
 
-function catalogHTML(){const have=new Set(S.mutun.map(m=>m.name));const cs=CATALOG.map((c,i)=>[c,i]).filter(([c])=>!have.has(c.name));if(!cs.length)return '';return `<div class="catl">${cs.map(([c,i])=>`<div class="catr"><span><b>${esc(c.name)}</b><small>${esc(c.cat)}${c.lib?' · نصه وصوته في الموقع':''}</small></span><div class="b"><button data-cat="${i}|done">حفظته</button><button data-cat="${i}|prog">أحفظه الآن</button><button data-cat="${i}|plan">في خطتي</button></div></div>`).join('')}</div>`}
-function addSheet(){openSheet(`<h3>إضافة متن</h3>${catalogHTML()?'<p class="note">من المكتبة الجاهزة:</p>'+catalogHTML()+'<p class="note" style="margin-top:14px">أو متن آخر تكتبه بنفسك:</p>':''}<form class="form" id="addM"><label>اسم المتن<input name="n" required></label><label>الفن<input name="c"></label><label>الحالة<select name="s"><option value="done">محفوظ</option><option value="prog">قيد الحفظ</option><option value="plan">في الخطة</option></select></label><label>عدد المقاطع<input name="k" type="number" min="0" max="60" value="4"></label><button class="pri">أضف</button></form><div class="tools"><button data-close>إلغاء</button></div>`)}
+function catalogHTML(){const have=new Set(S.mutun.map(m=>m.name));const cs=CATALOG.map((c,i)=>[c,i]).filter(([c])=>!have.has(c.name));if(!cs.length)return '';return `<div class="catl">${cs.map(([c,i])=>`<div class="catr"><span><b>${esc(c.name)}</b><small>${esc(c.cat)}</small></span><div class="b"><button data-cat="${i}|prog">حفظ جديد</button><button data-cat="${i}|done">مراجعة (حفظته)</button></div></div>`).join('')}</div>`}
+function catalogHTML_old(){const have=new Set(S.mutun.map(m=>m.name));const cs=CATALOG.map((c,i)=>[c,i]).filter(([c])=>!have.has(c.name));if(!cs.length)return '';return `<div class="catl">${cs.map(([c,i])=>`<div class="catr"><span><b>${esc(c.name)}</b><small>${esc(c.cat)}${c.lib?' · نصه وصوته في الموقع':''}</small></span><div class="b"><button data-cat="${i}|done">حفظته</button><button data-cat="${i}|prog">أحفظه الآن</button><button data-cat="${i}|plan">في خطتي</button></div></div>`).join('')}</div>`}
+
+/* ملف المتن (PDF): تحليل الصفحات إلى أسطر وكلمات */
+let PDFJS=null;
+async function loadPdfjs(){if(PDFJS)return PDFJS;await loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';PDFJS=pdfjsLib;return PDFJS}
+function analyze(cv){
+  const w=cv.width,h=cv.height,ctx=cv.getContext('2d'),d=ctx.getImageData(0,0,w,h).data;
+  const ink=new Uint8Array(w*h);for(let i=0,p=0;i<w*h;i++,p+=4){const mn=Math.min(d[p],d[p+1],d[p+2]);ink[i]=(mn<170&&d[p+3]>40)?1:0}
+  const rc=new Int32Array(h),cc=new Int32Array(w);for(let y=0;y<h;y++){let s=0;for(let x=0;x<w;x++){if(ink[y*w+x]){s++;cc[x]++}}rc[y]=s}
+  let y0=0,y1=h-1,x0=0,x1=w-1;while(y0<h&&rc[y0]<3)y0++;while(y1>y0&&rc[y1]<3)y1--;while(x0<w&&cc[x0]<3)x0++;while(x1>x0&&cc[x1]<3)x1--;
+  if(y0>=y1||x0>=x1)return null;
+  const pad=Math.round(w*.015);y0=Math.max(0,y0-pad);y1=Math.min(h-1,y1+pad);x0=Math.max(0,x0-pad);x1=Math.min(w-1,x1+pad);
+  const cw=x1-x0+1,ch=y1-y0+1,prof=[];for(let y=y0;y<=y1;y++){let s=0;for(let x=x0;x<=x1;x++)s+=ink[y*w+x];prof.push(s)}
+  const bands=[];let st=-1;for(let y=0;y<=ch;y++){const v=y<ch&&prof[y]>2;if(v&&st<0)st=y;if(!v&&st>=0){bands.push([st,y]);st=-1}}
+  const hs=bands.map(b=>b[1]-b[0]).filter(x=>x>6).sort((a,b)=>a-b);if(!hs.length)return null;
+  const med=hs[Math.floor(hs.length/2)];const main=bands.filter(b=>b[1]-b[0]>=med*.5).map(b=>b.slice());
+  for(const b of bands){if(b[1]-b[0]>=med*.5)continue;const c=(b[0]+b[1])/2;let j=0,bd=1e9;main.forEach((m,i)=>{const dd=Math.min(Math.abs(c-m[0]),Math.abs(c-m[1]));if(dd<bd){bd=dd;j=i}});if(main[j]){main[j][0]=Math.min(main[j][0],b[0]);main[j][1]=Math.max(main[j][1],b[1])}}
+  const gapT=Math.max(4,med*.22),lines=[];
+  main.forEach((b,k)=>{const top=k==0?b[0]-6:Math.floor((main[k-1][1]+b[0])/2),bot=k==main.length-1?b[1]+6:Math.floor((b[1]+main[k+1][0])/2);
+    const col=new Int32Array(cw);for(let y=b[0];y<b[1];y++){const ry=(y0+y)*w+x0;for(let x=0;x<cw;x++)col[x]+=ink[ry+x]}
+    let segs=[];st=-1;for(let x=0;x<=cw;x++){const v=x<cw&&col[x]>0;if(v&&st<0)st=x;if(!v&&st>=0){segs.push([st,x]);st=-1}}
+    let ws=[];for(const sg of segs){if(ws.length&&sg[0]-ws[ws.length-1][1]<gapT)ws[ws.length-1][1]=sg[1];else ws.push(sg.slice())}
+    ws=ws.filter(q=>q[1]-q[0]>2).reverse().map(q=>{let s2=0;for(let x=q[0];x<q[1];x++)s2+=col[x];return [q[0],q[1],s2]});
+    const out=[];for(const q of ws){if(out.length&&(q[1]-q[0])<cw*.02){const o=out[out.length-1];o[0]=Math.min(o[0],q[0]);o[1]=Math.max(o[1],q[1]);o[2]+=q[2]}else out.push(q)}
+    if(out.length)lines.push([+(Math.max(0,top)/ch).toFixed(4),+(Math.min(ch,bot)/ch).toFixed(4),out.map(q=>[+(q[0]/cw).toFixed(3),+(q[1]/cw).toFixed(3),q[2]])])});
+  const oc=document.createElement('canvas'),OW=900;oc.width=OW;oc.height=Math.round(ch*OW/cw);oc.getContext('2d').drawImage(cv,x0,y0,cw,ch,0,0,oc.width,oc.height);
+  return {lines,canvas:oc};
+}
+async function pdfInfo(blob){const lib=await loadPdfjs();const doc=await lib.getDocument({data:await blob.arrayBuffer()}).promise;return doc}
+async function processPdf(m,doc,from,to,onProg){
+  const words={},keep=m.status;
+  for(let g=from;g<=to;g++){
+    const page=await doc.getPage(g),vp0=page.getViewport({scale:1}),sc=1300/vp0.width,vp=page.getViewport({scale:sc});
+    const cv=document.createElement('canvas');cv.width=Math.round(vp.width);cv.height=Math.round(vp.height);const ctx=cv.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,cv.width,cv.height);
+    await page.render({canvasContext:ctx,viewport:vp}).promise;
+    const r=analyze(cv);
+    if(r&&r.lines.length){words[g]=r.lines;const bl=await new Promise(res=>r.canvas.toBlob(res,'image/jpeg',.82));await IDB.put('img:'+m.id+':'+g,bl)}
+    onProg&&onProg((g-from+1)/(to-from+1));
+  }
+  const pages=Object.keys(words).map(Number);if(!pages.length)throw new Error('empty');
+  m.ulib={words,src:m.ulib&&m.ulib.src||''};regUser(m);
+  const L=LIB[m.lib];m.portions=pages.map((g,i)=>Object.assign(P('صفحة '+ar(i+1)),{pg:[g,g],rv:0}));
+  m.ptr=keep=='done'?L.W.length-1:-1;m.hist=keep=='done'?[{d:T,p:m.ptr,init:1}]:[];
+}
+let PDFSTATE=null;
+async function startPdf(mid,blob,srcLabel){
+  const m=S.mutun.find(x=>x.id==mid);if(!m)return;
+  openSheet(`<h3>${esc(m.name)}</h3><p class="note">جارٍ فتح الملف…</p>`);
+  let doc;try{doc=await pdfInfo(blob)}catch(e){console.warn(e);return openSheet(`<h3>تعذّر فتح الملف</h3><p class="note">تأكّد أنه ملف PDF سليم.</p><div class="tools"><button data-close>إغلاق</button></div>`)}
+  PDFSTATE={mid,doc,src:srcLabel||''};const n=doc.numPages;
+  let thumbs='';
+  openSheet(`<h3>ملف «${esc(m.name)}»</h3><p class="note" style="font-size:14px">في الملف ${ar(n)} صفحة. حدّد صفحات المتن نفسه (بلا الغلاف والمقدمات والفهارس)، فيقسّمه الموقع إلى أسطر وكلمات لتحدّد أين وصلت وتختبر حفظك.</p>
+  <div class="pthumbs" id="pth"></div>
+  <form class="form" id="pdfF" style="grid-template-columns:1fr 1fr auto;align-items:end"><label>من صفحة<input name="a" type="number" min="1" max="${n}" value="1"></label><label>إلى صفحة<input name="b" type="number" min="1" max="${n}" value="${n}"></label><button class="pri">ابدأ</button></form>
+  <div class="pbar" id="pdfBar" style="display:none"><i style="width:0%"></i></div><p class="note" id="pdfMsg"></p>`);
+  // مصغرات للصفحات الأولى لمساعدة الاختيار
+  for(let g=1;g<=Math.min(n,12);g++){try{const pg=await doc.getPage(g),vp=pg.getViewport({scale:110/pg.getViewport({scale:1}).width}),cv=document.createElement('canvas');cv.width=vp.width;cv.height=vp.height;await pg.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise;const th=document.getElementById('pth');if(!th)return;const d=document.createElement('div');d.className='pth';d.appendChild(cv);const sp=document.createElement('span');sp.textContent=ar(g);d.appendChild(sp);th.appendChild(d)}catch(e){}}
+}
+async function runPdf(a,b){
+  const st=PDFSTATE;if(!st)return;const m=S.mutun.find(x=>x.id==st.mid);const n=st.doc.numPages;a=Math.max(1,Math.min(n,a|0));b=Math.max(a,Math.min(n,b|0));
+  const bar=document.getElementById('pdfBar'),msg=document.getElementById('pdfMsg');bar.style.display='block';document.querySelector('#pdfF button').disabled=true;
+  try{await processPdf(m,st.doc,a,b,p=>{bar.firstChild.style.width=(p*100)+'%';msg.textContent='جارٍ تحليل الصفحات… '+pc(p)});
+    if(st.src)m.ulib.src=st.src;PDFSTATE=null;save();render();closeSheet();matnSheet(m.id);toast('جُهّز نص «'+m.name+'»: '+nP(m.portions.length),true)}
+  catch(e){console.warn(e);msg.textContent='تعذّر تحليل الملف. جرّب نطاق صفحات آخر أو ملفًا آخر.';document.querySelector('#pdfF button').disabled=false}
+}
+async function netSearch(mid,q){
+  const box=document.getElementById('netRes');if(!box)return;box.innerHTML='<p class="note">جارٍ البحث في أرشيف الإنترنت…</p>';
+  try{const r=await fetch('https://archive.org/advancedsearch.php?q='+encodeURIComponent('('+q+') AND mediatype:texts')+'&fl[]=identifier&fl[]=title&fl[]=creator&rows=12&output=json').then(r=>r.json());
+    const docs=(r.response&&r.response.docs)||[];
+    box.innerHTML=docs.length?docs.map(d=>`<div class="catr"><span><b>${esc(String(d.title||d.identifier).slice(0,120))}</b><small>${esc(String(d.creator||'').slice(0,80))}</small></span><div class="b"><a class="ytb" style="background:var(--bg);color:var(--ink)" href="https://archive.org/details/${encodeURIComponent(d.identifier)}" target="_blank" rel="noopener">معاينة</a><button class="pri" data-netuse="${mid}|${esc(d.identifier)}">استعمله</button></div></div>`).join(''):'<p class="note">لم أجد نتائج. جرّب كلمات أخرى أو ارفع الملف من جهازك.</p>';
+  }catch(e){box.innerHTML='<p class="note">تعذّر البحث الآن. ارفع الملف من جهازك.</p>'}
+}
+async function netUse(mid,id){
+  const box=document.getElementById('netRes');if(box)box.innerHTML='<p class="note">جارٍ تنزيل الملف…</p>';
+  try{const md=await fetch('https://archive.org/metadata/'+encodeURIComponent(id)).then(r=>r.json());
+    const pdfs=(md.files||[]).filter(f=>/\.pdf$/i.test(f.name)).sort((a,b)=>(+a.size||0)-(+b.size||0));if(!pdfs.length)throw new Error('nopdf');
+    const f=pdfs.find(x=>x.source=='original')||pdfs[0];if(+f.size>60e6)throw new Error('big');
+    const blob=await fetch('https://archive.org/download/'+encodeURIComponent(id)+'/'+f.name.split('/').map(encodeURIComponent).join('/')).then(r=>{if(!r.ok)throw new Error(r.status);return r.blob()});
+    startPdf(mid,blob,'archive.org/details/'+id);
+  }catch(e){console.warn(e);if(box)box.innerHTML='<p class="note">تعذّر تنزيل ملف هذه النتيجة'+(String(e.message)=='big'?' (الملف كبير جدًا)':'')+'. جرّب نتيجة أخرى أو ارفع الملف من جهازك.</p>'}
+}
+function sourceSheet(mid){
+  const m=S.mutun.find(x=>x.id==mid);
+  openSheet(`<h3>ملف المتن: ${esc(m.name)}</h3><p class="note" style="font-size:14px">ليظهر نص المتن في الموقع وتحدّد موضع حفظك وتختبر نفسك سطرًا سطرًا، أرفق ملفه PDF أو دعني أبحث عنه.</p>
+  <div class="tools"><label class="fbtn pri" style="min-height:46px">ارفع ملف PDF من جهازك<input type="file" accept="application/pdf" data-pdf="${mid}" hidden></label></div>
+  <form class="form" data-net="${mid}" style="grid-template-columns:minmax(0,1fr) auto;margin-top:14px"><input name="q" value="${esc(m.name)}" placeholder="اسم المتن"><button>ابحث في الإنترنت</button></form>
+  <div class="catl" id="netRes"></div>
+  <div class="tools"><button data-open="${mid}">لاحقًا</button></div>`);
+}
+function addSheet(){openSheet(`<h3>إضافة متن</h3>${catalogHTML()?'<p class="note">من المكتبة الجاهزة (نصها وصوتها في الموقع):</p>'+catalogHTML()+'<p class="note" style="margin-top:14px">أو متن آخر:</p>':''}
+  <form class="form" id="addM"><label>اسم المتن<input name="n" required placeholder="مثال: حائية ابن أبي داود"></label><label>الفن<input name="c" placeholder="العقيدة"></label>
+  <div class="seg"><label><input type="radio" name="s" value="prog" checked><span>حفظ جديد</span></label><label><input type="radio" name="s" value="done"><span>مراجعة (حفظته)</span></label></div>
+  <div class="seg seg3"><label><input type="radio" name="src" value="pdf" checked><span>أرفق ملف PDF</span></label><label><input type="radio" name="src" value="net"><span>ابحث عنه في الإنترنت</span></label><label><input type="radio" name="src" value="none"><span>بدون ملف</span></label></div>
+  <label id="addK" style="display:none">عدد المقاطع<input name="k" type="number" min="1" max="60" value="4"></label>
+  <button class="pri">متابعة</button></form><div class="tools"><button data-close>إلغاء</button></div>`)}
 
 /* قارئ المتن */
 let RD=null;
@@ -739,7 +846,7 @@ function drawReader(scroll){
   let h='',k=0;
   for(let g=from;g<=to;g++){
     const lines=L.words[g];if(!lines)continue;
-    h+=`<div class="pg ${mode=='mark'?'mark':''}" data-g="${g}"><img src="${L.dir}p${g}.jpg" alt="صفحة ${ar(g)}" loading="${Math.abs(g-from)<3?'eager':'lazy'}"><span class="no">ص ${ar(g)}</span>`;
+    h+=`<div class="pg ${mode=='mark'?'mark':''}" data-g="${g}"><img ${L.dir?`src="${L.dir}p${g}.jpg"`:(L.urls[g]?`src="${L.urls[g]}"`:'')} data-ug="${g}" alt="صفحة ${ar(g)}" loading="${Math.abs(g-from)<3?'eager':'lazy'}"><span class="no">ص ${ar(g)}</span>`;
     lines.forEach((ln,li)=>{
       const [t,b,ws]=ln,base=L.pos[g][li];
       if(mode!=='test'){
@@ -759,6 +866,7 @@ function drawReader(scroll){
   }
   if(mode==='test'&&RD.q==null){RD.total=k;RD.q=Array.from({length:k},(_,i)=>i);return drawReader(scroll)}
   rb.innerHTML=h;rb.classList.toggle('hint',RD.hint);
+  if(L.user)rb.querySelectorAll('img:not([src])').forEach(async im=>{const g=im.dataset.ug;const bl=await IDB.get('img:'+L.user+':'+g);if(bl){L.urls[g]=URL.createObjectURL(bl);im.src=L.urls[g]}else{im.replaceWith(Object.assign(document.createElement('div'),{className:'noimg',textContent:'صورة هذه الصفحة غير موجودة على هذا الجهاز. أرفق ملف المتن (PDF) من صفحة المتن ليظهر النص هنا.'}))}});
   box.querySelectorAll('[data-md]').forEach(b=>b.classList.toggle('on',b.dataset.md===mode));
   const tb=document.getElementById('tbar');tb.style.display=mode=='test'?'flex':'none';
   const hb=box.querySelector('[data-tx=hint]');if(hb)hb.classList.toggle('on',RD.hint);
@@ -825,6 +933,9 @@ document.addEventListener('click',e=>{
   if(d.cin){CEX=(CEX||[]).filter(x=>x!=d.cin);CEDIT=(CEDIT||[]).concat(d.cin);return cycSheetKeep()}
   if(d.cdel!==undefined){if(b.dataset.sure){delete S.cycle;save();closeSheet();render();return toast('أُلغيت الخطة',true)}b.dataset.sure=1;b.textContent='اضغط للتأكيد';return}
   if(d.cat){const [i,st]=d.cat.split('|');const c=CATALOG[+i];S.mutun.push(fromCatalog(c,st));save();if(sheet.classList.contains('open'))closeSheet();render();return toast('أُضيف «'+c.name+'»',true)}
+  if(d.netuse){const i=d.netuse.indexOf('|');return netUse(d.netuse.slice(0,i),d.netuse.slice(i+1))}
+  if(d.src){return sourceSheet(d.src)}
+  if(d.medit!==undefined){const dt=box.querySelector('#medit');if(dt){dt.open=true;dt.scrollIntoView({behavior:'smooth'})}return}
   if(d.editp){EDITP=d.editp;return matnSheet(d.editp.split('|')[0])}
   if(d.canp!==undefined){const o=EDITP;EDITP=null;return matnSheet(o.split('|')[0])}
   if(d.delp){if(b.dataset.sure){const [mi,k]=d.delp.split('|'),m=S.mutun.find(x=>x.id==mi);delete m[k=='mem'?'pm':'pr'];save();render();return toast('أُلغيت الخطة',true)}b.dataset.sure=1;b.textContent='اضغط للتأكيد';return}
@@ -841,7 +952,7 @@ document.addEventListener('click',e=>{
   if(d.addm!==undefined)return addSheet();
   if(d.start){const m=S.mutun.find(x=>x.id==d.start);m.status='prog';save();render();return toast('بدأت حفظ «'+m.name+'»',true)}
   if(d.allok){const m=S.mutun.find(x=>x.id==d.allok),ps=m.portions.filter(p=>isMemo(m,p));for(const p of ps){p.interval=Math.max(3,p.interval>0?Math.round(p.interval*1.5):3);p.last=T;p.due=T+p.interval;p.reps++;p.rv=(p.rv||0)+1;cycMark(p.id)}m.fullLog=(m.fullLog||[]).concat(T);S.log[T]=(S.log[T]||0)+ps.length;save();render();celebrate('الختمة رقم '+ar(fullRev(m))+' — '+m.name);return toast('سُجّلت مراجعة كاملة لـ«'+m.name+'» — المرة '+ar(fullRev(m)),true)}
-  if(d.delm){if(b.dataset.sure){S.mutun=S.mutun.filter(x=>x.id!=d.delm);OPEN=null;save();closeSheet();render()}else{b.dataset.sure=1;b.textContent='اضغط مرة أخرى للتأكيد'}return}
+  if(d.delm){if(b.dataset.sure){const dm=S.mutun.find(x=>x.id==d.delm);if(dm&&dm.ulib){for(const g of Object.keys(dm.ulib.words))IDB.del('img:'+dm.id+':'+g).catch(()=>{});delete LIB[dm.lib]}IDB.del(d.delm).catch(()=>{});S.mutun=S.mutun.filter(x=>x.id!=d.delm);OPEN=null;save();closeSheet();render()}else{b.dataset.sure=1;b.textContent='اضغط مرة أخرى للتأكيد'}return}
   if(b.id=='undoB')return doUndo();
   if(b.id=='cp'){try{navigator.clipboard.writeText(JSON.stringify(S)).then(()=>toast('نُسخت',true),()=>toast('حدّد النص وانسخه يدويًا',true))}catch(err){toast('حدّد النص وانسخه يدويًا',true)}return}
   if(b.id=='rs'){try{const o=JSON.parse(document.getElementById('bk').value);if(!o.mutun)throw 0;S=migrate(o);save();render();toast('استُعيدت النسخة',true)}catch(err){toast('النص غير صالح',true)}return}
@@ -859,7 +970,12 @@ document.addEventListener('submit',e=>{
     const o={mode,val,start:T,days:c.days,per:c.per};if(k=='mem'){o.sp=achieve(m);m.pm=o}else m.pr=o;EDITP=null;save();render();return toast('اعتُمدت الخطة: '+ar(c.days)+' يومًا',true)}
   if(d.editf){const m=S.mutun.find(x=>x.id==d.editf);m.name=fd.get('n').trim()||m.name;m.short=fd.get('sh').trim();m.cat=fd.get('c').trim();m.status=fd.get('s');save();render();return toast('حُفظ التعديل',true)}
   if(d.addp){const m=S.mutun.find(x=>x.id==d.addp);const ls=String(fd.get('t')).split('\n').map(s=>s.trim()).filter(Boolean);for(const l of ls)m.portions.push(P(l));save();render();return toast('أُضيف '+nP(ls.length),true)}
-  if(f.id=='addM'){const k=Math.max(0,Math.min(60,+fd.get('k')||0));S.mutun.push({id:uid(),name:fd.get('n').trim(),cat:fd.get('c').trim(),status:fd.get('s'),color:COLORS[S.mutun.length%COLORS.length],portions:Array.from({length:k},(_,i)=>P('المقطع '+(ord[i]||ar(i+1))))});save();closeSheet();render();return}
+  if(f.id=='addM'){const src=fd.get('src'),st=fd.get('s'),k=Math.max(1,Math.min(60,+fd.get('k')||4));const m={id:uid(),name:fd.get('n').trim(),cat:fd.get('c').trim(),status:st,color:COLORS[S.mutun.length%COLORS.length],portions:[]};
+    if(src=='none')m.portions=Array.from({length:k},(_,i)=>Object.assign(P('المقطع '+(ord[i]||ar(i+1))),{rv:0}));
+    S.mutun.push(m);save();render();if(src=='none'){closeSheet();return toast('أُضيف «'+m.name+'»',true)}
+    sourceSheet(m.id);if(src=='net')netSearch(m.id,m.name);else{const inp=document.querySelector('input[data-pdf]');if(inp)inp.click()}return}
+  if(d.net){return netSearch(d.net,String(fd.get('q')||'').trim())}
+  if(f.id=='pdfF'){return runPdf(+fd.get('a'),+fd.get('b'))}
   if(f.id=='setF'){S.settings.cap=Math.max(1,+fd.get('cap')||6);S.settings.recent=Math.max(1,+fd.get('recent')||7);save();render();return toast('حُفظت الإعدادات',true)}
 });
 boot();
