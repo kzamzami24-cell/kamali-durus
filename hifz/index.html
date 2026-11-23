@@ -394,25 +394,32 @@ function loadScript(src){return new Promise((res,rej)=>{const x=document.createE
 const FB_V='10.12.2';let FBREADY=false;
 async function boot(){
   const l=loadLocal();S=l?migrate(l):seed();render();save();renderAcct();
-  const cfg=window.FIREBASE_CONFIG;if(!cfg||!cfg.apiKey)return;
+  const cfg=window.FIREBASE_CONFIG;if(!cfg||!cfg.apiKey)return maybeImport();
   try{
     await loadScript(`https://www.gstatic.com/firebasejs/${FB_V}/firebase-app-compat.js`);
     await Promise.all([loadScript(`https://www.gstatic.com/firebasejs/${FB_V}/firebase-auth-compat.js`),loadScript(`https://www.gstatic.com/firebasejs/${FB_V}/firebase-firestore-compat.js`)]);
     firebase.initializeApp(cfg);FBREADY=true;
     firebase.auth().getRedirectResult().catch(e=>toast('تعذّر تسجيل الدخول: '+(e.code||''),true));
     firebase.auth().onAuthStateChanged(onAuth);
-  }catch(e){console.warn('firebase',e)}
+  }catch(e){console.warn('firebase',e);maybeImport()}
   renderAcct();
+}
+async function maybeImport(){
+  const q=new URLSearchParams(location.search).get('import');if(!q||!/^[\w-]+$/.test(q))return;
+  try{const d=migrate(await fetch('import-'+q+'.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw 0;return r.json()}));
+    if(!S.mutun.length){S=d}else{const have=new Set(S.mutun.map(m=>m.name));for(const m of d.mutun)if(!have.has(m.name))S.mutun.push(m);if(!S.cycle&&d.cycle)S.cycle=d.cycle}
+    save();render();toast('نُقلت متونك وخطتك إلى هذا الموقع',true)}catch(e){console.warn('import',e)}
+  history.replaceState(null,'',location.pathname);
 }
 async function onAuth(u){
   FBU=u;
-  if(!u){docRef=null;LKEY='hifz-state';const l=loadLocal();S=l?migrate(l):seed();render();save();renderAcct();return}
+  if(!u){docRef=null;LKEY='hifz-state';const l=loadLocal();S=l?migrate(l):seed();render();save();renderAcct();return maybeImport()}
   LKEY='hifz-state-'+u.uid;docRef=firebase.firestore().collection('hifz').doc(u.uid);renderAcct();
   try{
     const snap=await docRef.get();const d=snap.exists?snap.data():null;
     if(d&&d.json){S=migrate(JSON.parse(d.json));render();save()}
     else{const mine=loadLocal(),anon=loadLocal('hifz-state');S=mine?migrate(mine):(anon&&anon.mutun&&anon.mutun.length?migrate(anon):seed());render();save()}
-    toast('أهلًا '+((u.displayName||'').split(' ')[0]||'بك')+'، تقدّمك محفوظ في حسابك',true);
+    toast('أهلًا '+((u.displayName||'').split(' ')[0]||'بك')+'، تقدّمك محفوظ في حسابك',true);await maybeImport();
   }catch(e){console.warn('load',e);setSync('تعذّر الوصول إلى حسابك الآن؛ تعمل على نسخة هذا الجهاز');S=migrate(loadLocal()||seed());render()}
 }
 function signIn(){
