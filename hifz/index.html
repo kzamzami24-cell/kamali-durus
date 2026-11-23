@@ -108,7 +108,10 @@ details.step summary{cursor:pointer;font-family:"Reem Kufi";font-size:20px}
 .qtop{display:flex;justify-content:space-between;font-size:13px;color:var(--mut,#667);font-weight:600}.qk{background:var(--goldS);color:#7a5200;border-radius:99px;padding:2px 10px}
 .qbar{height:6px;background:var(--line);border-radius:9px;margin:8px 0 12px;overflow:hidden}.qbar i{display:block;height:100%;background:var(--em);border-radius:9px;transition:width .3s}
 .qq{font-weight:700;font-size:17px;margin:6px 0 10px}
-.crop{position:relative;width:100%;overflow:hidden;background:#fff;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,.12)}.crop img{position:absolute;top:0;left:0;max-width:none;height:auto;display:block}
+.crop{position:relative;width:100%;overflow:hidden;background:#fff;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,.12)}.crop img{position:absolute;max-width:none;height:auto;display:block}
+.qblank{position:absolute;top:4%;bottom:4%;background:#fff6dd;border:2px dashed #c9a14a;border-radius:8px}.qblank.filled{background:transparent;border:3px solid #2fa57c}
+.qw{grid-template-columns:1fr 1fr}.qw .qo{flex-direction:row}.wwrap{flex:1;min-width:0;display:flex;justify-content:center}.crop.word{box-shadow:none}
+.qline{display:grid;gap:6px}.qw .qo{justify-content:flex-start}.qshow{display:flex;justify-content:center;margin-top:14px}.qshow .crop.word{box-shadow:0 1px 3px rgba(0,0,0,.15)}.qshow .wwrap{flex:none;width:70%}
 .qlab{font-size:13px;font-weight:700;color:var(--em);margin:10px 0 4px}
 .qopts{display:grid;gap:10px;margin-top:14px}
 .qo{display:flex;align-items:center;gap:10px;width:100%;padding:8px;border:2px solid var(--line);border-radius:14px;background:var(--card);min-height:52px;cursor:pointer;text-align:start}
@@ -180,7 +183,7 @@ details.step summary{cursor:pointer;font-family:"Reem Kufi";font-size:20px}
 .srcnote{background:var(--goldS);border-radius:14px;padding:10px 14px;margin-bottom:12px;font-size:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:space-between}
 .srcnote button{min-height:38px;font-size:13px}
 .pthumbs{display:flex;gap:6px;overflow-x:auto;padding:6px 0 10px}.pth{flex:none;position:relative;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.2);background:#fff}
-.pth canvas{display:block;width:80px;height:auto}.pth span{position:absolute;bottom:2px;inset-inline-start:4px;font-size:11px;background:rgba(0,0,0,.6);color:#fff;border-radius:6px;padding:0 5px}
+.pth canvas{display:block;width:110px;height:auto}.pth{min-width:110px;min-height:150px}.pth span{position:absolute;bottom:2px;inset-inline-start:4px;font-size:11px;background:rgba(0,0,0,.6);color:#fff;border-radius:6px;padding:0 5px}
 .noimg{padding:30px 16px;text-align:center;color:#666;font-size:14px;background:#fafafa}
 .face.plus{background:var(--bg);color:var(--mute);font-size:40px;font-family:inherit}
 .planic{opacity:.6}.planic .face{filter:grayscale(.7)}
@@ -743,6 +746,7 @@ function celebrate(t){const r=document.createElement('div');r.className='cele';r
 document.addEventListener('toggle',e=>{if(e.target.classList&&e.target.classList.contains('listenbox'))LOPEN=e.target.open},true);
 document.addEventListener('input',e=>{if(e.target.closest('#cycF'))return cycCalc();const f=e.target.closest('form[data-plan]');if(f)calcFill(f)});
 document.addEventListener('change',async e=>{const sr=e.target.closest('#addM input[name=src]');if(sr){document.getElementById('addK').style.display=sr.value=='none'?'grid':'none';return}
+  if(e.target.closest('#pdfF input[name=a]')){const v=+e.target.value||1;const bb=document.querySelector('#pdfF input[name=b]');if(bb&&+bb.value<v)bb.value=Math.min(PDFSTATE?PDFSTATE.D.n:v,v+5);return thumbs(v)}
   const pin=e.target.closest('input[data-pdf]');if(pin&&pin.files&&pin.files[0]){return startPdf(pin.dataset.pdf,pin.files[0],pin.files[0].name)}
   if(e.target.closest('#cycF'))return cycCalc();const f=e.target.closest('form[data-plan]');if(f)return calcFill(f);
   const inp=e.target.closest('input[data-aud]');if(inp&&inp.files&&inp.files[0]){const file=inp.files[0],m=S.mutun.find(x=>x.id==inp.dataset.aud);
@@ -777,18 +781,20 @@ function analyze(cv){
   const oc=document.createElement('canvas'),OW=900;oc.width=OW;oc.height=Math.round(ch*OW/cw);oc.getContext('2d').drawImage(cv,x0,y0,cw,ch,0,0,oc.width,oc.height);
   return {lines,canvas:oc};
 }
-async function pdfInfo(blob){const lib=await loadPdfjs();const doc=await lib.getDocument({data:await blob.arrayBuffer()}).promise;return doc}
-async function processPdf(m,doc,from,to,onProg){
+async function pdfDoc(blob){const lib=await loadPdfjs();const doc=await lib.getDocument({data:await blob.arrayBuffer()}).promise;
+  return {n:doc.numPages,async canvas(g,W){const page=await doc.getPage(g),vp0=page.getViewport({scale:1}),vp=page.getViewport({scale:W/vp0.width});const cv=document.createElement('canvas');cv.width=Math.round(vp.width);cv.height=Math.round(vp.height);const ctx=cv.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,cv.width,cv.height);await page.render({canvasContext:ctx,viewport:vp}).promise;return cv}}}
+function iaDoc(server,dir,zip,files){const cache={};
+  const get=g=>cache[g]||(cache[g]=fetch('https://'+server+'/view_archive.php?archive='+encodeURIComponent(dir+'/'+zip)+'&file='+encodeURIComponent(files[g-1])+'&ext=jpg').then(r=>{if(!r.ok)throw new Error(r.status);return r.blob()}).then(b=>createImageBitmap(b)));
+  return {n:files.length,async canvas(g,W){const im=await get(g),cv=document.createElement('canvas');cv.width=W;cv.height=Math.round(im.height*W/im.width);const ctx=cv.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,cv.width,cv.height);ctx.drawImage(im,0,0,cv.width,cv.height);return cv}}}
+async function processDoc(m,D,from,to,onProg){
   const words={},keep=m.status;
   for(let g=from;g<=to;g++){
-    const page=await doc.getPage(g),vp0=page.getViewport({scale:1}),sc=1300/vp0.width,vp=page.getViewport({scale:sc});
-    const cv=document.createElement('canvas');cv.width=Math.round(vp.width);cv.height=Math.round(vp.height);const ctx=cv.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,cv.width,cv.height);
-    await page.render({canvasContext:ctx,viewport:vp}).promise;
-    const r=analyze(cv);
+    const cv=await D.canvas(g,1300);const r=analyze(cv);
     if(r&&r.lines.length){words[g]=r.lines;const bl=await new Promise(res=>r.canvas.toBlob(res,'image/jpeg',.82));await IDB.put('img:'+m.id+':'+g,bl)}
     onProg&&onProg((g-from+1)/(to-from+1));
   }
   const pages=Object.keys(words).map(Number);if(!pages.length)throw new Error('empty');
+  if(m.ulib)for(const g of Object.keys(m.ulib.words))if(!words[g])IDB.del('img:'+m.id+':'+g).catch(()=>{});
   m.ulib={words,src:m.ulib&&m.ulib.src||''};regUser(m);
   const L=LIB[m.lib];m.portions=pages.map((g,i)=>Object.assign(P('صفحة '+ar(i+1)),{pg:[g,g],rv:0}));
   m.ptr=keep=='done'?L.W.length-1:-1;m.hist=keep=='done'?[{d:T,p:m.ptr,init:1}]:[];
@@ -797,38 +803,53 @@ let PDFSTATE=null;
 async function startPdf(mid,blob,srcLabel){
   const m=S.mutun.find(x=>x.id==mid);if(!m)return;
   openSheet(`<h3>${esc(m.name)}</h3><p class="note">جارٍ فتح الملف…</p>`);
-  let doc;try{doc=await pdfInfo(blob)}catch(e){console.warn(e);return openSheet(`<h3>تعذّر فتح الملف</h3><p class="note">تأكّد أنه ملف PDF سليم.</p><div class="tools"><button data-close>إغلاق</button></div>`)}
-  PDFSTATE={mid,doc,src:srcLabel||''};const n=doc.numPages;
-  let thumbs='';
-  openSheet(`<h3>ملف «${esc(m.name)}»</h3><p class="note" style="font-size:14px">في الملف ${ar(n)} صفحة. حدّد صفحات المتن نفسه (بلا الغلاف والمقدمات والفهارس)، فيقسّمه الموقع إلى أسطر وكلمات لتحدّد أين وصلت وتختبر حفظك.</p>
+  let D;try{D=await pdfDoc(blob)}catch(e){console.warn(e);return openSheet(`<h3>تعذّر فتح الملف</h3><p class="note">تأكّد أنه ملف PDF سليم.</p><div class="tools"><button data-src="${mid}">رجوع</button></div>`)}
+  startDoc(mid,D,srcLabel);
+}
+function startDoc(mid,D,srcLabel){
+  const m=S.mutun.find(x=>x.id==mid);PDFSTATE={mid,D,src:srcLabel||''};const n=D.n;
+  openSheet(`<h3>ملف «${esc(m.name)}»</h3><p class="note" style="font-size:14px">في الملف ${ar(n)} صفحة. حدّد صفحات المتن نفسه (بلا الغلاف والمقدمات والشرح والفهارس)، فيقسّمه الموقع إلى أسطر وكلمات لتحدّد أين وصلت وتختبر حفظك. تظهر أدناه الصفحات ابتداءً من رقم «من صفحة» لتتأكد.</p>
+  <form class="form" id="pdfF" style="grid-template-columns:1fr 1fr auto;align-items:end"><label>من صفحة<input name="a" type="number" min="1" max="${n}" value="1"></label><label>إلى صفحة<input name="b" type="number" min="1" max="${n}" value="${Math.min(n,6)}"></label><button class="pri">ابدأ</button></form>
   <div class="pthumbs" id="pth"></div>
-  <form class="form" id="pdfF" style="grid-template-columns:1fr 1fr auto;align-items:end"><label>من صفحة<input name="a" type="number" min="1" max="${n}" value="1"></label><label>إلى صفحة<input name="b" type="number" min="1" max="${n}" value="${n}"></label><button class="pri">ابدأ</button></form>
   <div class="pbar" id="pdfBar" style="display:none"><i style="width:0%"></i></div><p class="note" id="pdfMsg"></p>`);
-  // مصغرات للصفحات الأولى لمساعدة الاختيار
-  for(let g=1;g<=Math.min(n,12);g++){try{const pg=await doc.getPage(g),vp=pg.getViewport({scale:110/pg.getViewport({scale:1}).width}),cv=document.createElement('canvas');cv.width=vp.width;cv.height=vp.height;await pg.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise;const th=document.getElementById('pth');if(!th)return;const d=document.createElement('div');d.className='pth';d.appendChild(cv);const sp=document.createElement('span');sp.textContent=ar(g);d.appendChild(sp);th.appendChild(d)}catch(e){}}
+  thumbs(1);
+}
+let THV=0;
+async function thumbs(a){
+  const st=PDFSTATE;if(!st)return;const v=++THV,th=document.getElementById('pth');if(!th)return;th.innerHTML='';
+  for(let g=Math.max(1,a);g<=Math.min(st.D.n,a+7);g++){
+    const d=document.createElement('div');d.className='pth';d.dataset.pg=g;const sp=document.createElement('span');sp.textContent=ar(g);d.appendChild(sp);th.appendChild(d);
+  }
+  for(const d of th.children){if(v!==THV)return;try{const cv=await st.D.canvas(+d.dataset.pg,240);if(v!==THV)return;d.prepend(cv)}catch(e){}}
 }
 async function runPdf(a,b){
-  const st=PDFSTATE;if(!st)return;const m=S.mutun.find(x=>x.id==st.mid);const n=st.doc.numPages;a=Math.max(1,Math.min(n,a|0));b=Math.max(a,Math.min(n,b|0));
+  const st=PDFSTATE;if(!st)return;const m=S.mutun.find(x=>x.id==st.mid);const n=st.D.n;a=Math.max(1,Math.min(n,a|0));b=Math.max(a,Math.min(n,b|0));
+  if(b-a>59)return toast('حدّد ستين صفحة على الأكثر',true);
   const bar=document.getElementById('pdfBar'),msg=document.getElementById('pdfMsg');bar.style.display='block';document.querySelector('#pdfF button').disabled=true;
-  try{await processPdf(m,st.doc,a,b,p=>{bar.firstChild.style.width=(p*100)+'%';msg.textContent='جارٍ تحليل الصفحات… '+pc(p)});
+  try{await processDoc(m,st.D,a,b,p=>{bar.firstChild.style.width=(p*100)+'%';msg.textContent='جارٍ تحليل الصفحات… '+pc(p)});
     if(st.src)m.ulib.src=st.src;PDFSTATE=null;save();render();closeSheet();matnSheet(m.id);toast('جُهّز نص «'+m.name+'»: '+nP(m.portions.length),true)}
-  catch(e){console.warn(e);msg.textContent='تعذّر تحليل الملف. جرّب نطاق صفحات آخر أو ملفًا آخر.';document.querySelector('#pdfF button').disabled=false}
+  catch(e){console.warn(e);msg.textContent='تعذّر تحليل الصفحات. جرّب نطاقًا آخر أو ملفًا آخر.';document.querySelector('#pdfF button').disabled=false}
 }
 async function netSearch(mid,q){
   const box=document.getElementById('netRes');if(!box)return;box.innerHTML='<p class="note">جارٍ البحث في أرشيف الإنترنت…</p>';
-  try{const r=await fetch('https://archive.org/advancedsearch.php?q='+encodeURIComponent('('+q+') AND mediatype:texts')+'&fl[]=identifier&fl[]=title&fl[]=creator&rows=12&output=json').then(r=>r.json());
+  try{const r=await fetch('https://archive.org/advancedsearch.php?q='+encodeURIComponent('('+q+') AND mediatype:texts')+'&fl[]=identifier&fl[]=title&fl[]=creator&fl[]=imagecount&rows=15&output=json').then(r=>r.json());
     const docs=(r.response&&r.response.docs)||[];
-    box.innerHTML=docs.length?docs.map(d=>`<div class="catr"><span><b>${esc(String(d.title||d.identifier).slice(0,120))}</b><small>${esc(String(d.creator||'').slice(0,80))}</small></span><div class="b"><a class="ytb" style="background:var(--bg);color:var(--ink)" href="https://archive.org/details/${encodeURIComponent(d.identifier)}" target="_blank" rel="noopener">معاينة</a><button class="pri" data-netuse="${mid}|${esc(d.identifier)}">استعمله</button></div></div>`).join(''):'<p class="note">لم أجد نتائج. جرّب كلمات أخرى أو ارفع الملف من جهازك.</p>';
+    box.innerHTML=docs.length?'<p class="note" style="font-size:13px">اختر الكتاب الذي فيه نص المتن (متن مفرد أو شرح يورد المتن)، ثم تحدّد صفحاته.</p>'+docs.map(d=>`<div class="catr"><span><b>${esc(String(d.title||d.identifier).slice(0,120))}</b><small>${esc(String(d.creator||'').slice(0,80))}${d.imagecount?' · '+ar(d.imagecount)+' صفحة':''}</small></span><div class="b"><a class="ytb" style="background:var(--bg);color:var(--ink)" href="https://archive.org/details/${encodeURIComponent(d.identifier)}" target="_blank" rel="noopener">معاينة</a><button class="pri" data-netuse="${mid}|${esc(d.identifier)}">استعمله</button></div></div>`).join(''):'<p class="note">لم أجد نتائج. جرّب كلمات أخرى أو ارفع الملف من جهازك.</p>';
   }catch(e){box.innerHTML='<p class="note">تعذّر البحث الآن. ارفع الملف من جهازك.</p>'}
 }
 async function netUse(mid,id){
-  const box=document.getElementById('netRes');if(box)box.innerHTML='<p class="note">جارٍ تنزيل الملف…</p>';
+  const box=document.getElementById('netRes');if(box)box.innerHTML='<p class="note">جارٍ جلب صفحات الكتاب…</p>';
   try{const md=await fetch('https://archive.org/metadata/'+encodeURIComponent(id)).then(r=>r.json());
-    const pdfs=(md.files||[]).filter(f=>/\.pdf$/i.test(f.name)).sort((a,b)=>(+a.size||0)-(+b.size||0));if(!pdfs.length)throw new Error('nopdf');
-    const f=pdfs.find(x=>x.source=='original')||pdfs[0];if(+f.size>60e6)throw new Error('big');
-    const blob=await fetch('https://archive.org/download/'+encodeURIComponent(id)+'/'+f.name.split('/').map(encodeURIComponent).join('/')).then(r=>{if(!r.ok)throw new Error(r.status);return r.blob()});
+    const zip=(md.files||[]).find(f=>/_jp2\.zip$/i.test(f.name));
+    if(zip&&md.server&&md.dir){
+      const t=await fetch('https://'+md.server+'/view_archive.php?archive='+encodeURIComponent(md.dir+'/'+zip.name)).then(r=>r.text());
+      const pre=zip.name.replace(/\.zip$/i,'');const files=[...new Set((t.match(/[^"'<>\s?&=]+?\.jp2/g)||[]).map(x=>{x=decodeURIComponent(x);const i=x.indexOf(pre.split('/').pop()+'/');return i>=0?x.slice(i):x}))].sort();
+      if(files.length)return startDoc(mid,iaDoc(md.server,md.dir,zip.name,files),'archive.org/details/'+id);
+    }
+    const pdf=(md.files||[]).filter(f=>/\.pdf$/i.test(f.name)).sort((a,b)=>(+a.size||0)-(+b.size||0))[0];if(!pdf)throw new Error('nopdf');
+    const blob=await fetch('https://archive.org/download/'+encodeURIComponent(id)+'/'+pdf.name.split('/').map(encodeURIComponent).join('/')).then(r=>{if(!r.ok)throw new Error(r.status);return r.blob()});
     startPdf(mid,blob,'archive.org/details/'+id);
-  }catch(e){console.warn(e);if(box)box.innerHTML='<p class="note">تعذّر تنزيل ملف هذه النتيجة'+(String(e.message)=='big'?' (الملف كبير جدًا)':'')+'. جرّب نتيجة أخرى أو ارفع الملف من جهازك.</p>'}
+  }catch(e){console.warn(e);if(box)box.innerHTML=`<p class="note">تعذّر جلب هذا الكتاب مباشرة. افتحه من <a href="https://archive.org/details/${encodeURIComponent(id)}" target="_blank" rel="noopener">صفحته في الأرشيف</a> ونزّل ملف PDF ثم ارفعه هنا، أو جرّب نتيجة أخرى.</p>`}
 }
 function sourceSheet(mid){
   const m=S.mutun.find(x=>x.id==mid);
@@ -852,40 +873,52 @@ const ASP={};
 async function pageURL(L,g){if(L.dir)return L.dir+'p'+g+'.jpg';if(L.urls[g])return L.urls[g];const bl=await IDB.get('img:'+L.user+':'+g);if(!bl)return null;return L.urls[g]=URL.createObjectURL(bl)}
 function aspOf(url){return ASP[url]||(ASP[url]=new Promise(res=>{const im=new Image();im.onload=()=>res(im.naturalHeight/im.naturalWidth);im.onerror=()=>res(null);im.src=url}))}
 function shuf(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
-function libLines(L,from,to){const o=[];for(let g=from;g<=to;g++)(L.words[g]||[]).forEach((ln,li)=>{let ws=ln[2];if(ws.length>2&&ws[0][1]-ws[0][0]<.05)ws=ws.slice(1);o.push({g,li,t:ln[0],b:ln[1],x0:Math.max(0,Math.min(...ws.map(w=>w[0]))-.01),x1:Math.min(1,Math.max(...ws.map(w=>w[1]))+.01)})});return o}
+function libLines(L,from,to){const o=[];for(let g=from;g<=to;g++)(L.words[g]||[]).forEach((ln,li)=>{let ws=ln[2],sk=0;if(ws.length>2&&ws[0][1]-ws[0][0]<.05){ws=ws.slice(1);sk=1}if(!ws.length)return;o.push({g,li,t:ln[0],b:ln[1],ws,sk,x0:Math.max(0,Math.min(...ws.map(w=>w[0]))-.01),x1:Math.min(1,Math.max(...ws.map(w=>w[1]))+.01)})});return o}
 async function buildQuiz(){
   const {L,from,to}=RD;const lines=libLines(L,from,to);
   const all=libLines(L,+Object.keys(L.words)[0],+Object.keys(L.words).slice(-1)[0]);
-  const urls={};for(const x of all)if(!(x.g in urls))urls[x.g]=null;
+  const urls={};
   for(const g of new Set(lines.map(x=>x.g).concat(all.map(x=>x.g)))){const u=await pageURL(L,g);if(u){urls[g]=u;const a=await aspOf(u);if(a)ASP[g+'|'+L.dir+L.user]=a}}
-  const ok=x=>urls[x.g]&&ASP[x.g+'|'+L.dir+L.user];
-  const pairs=[];for(let i=0;i+1<lines.length;i++)if(ok(lines[i])&&ok(lines[i+1]))pairs.push([lines[i],lines[i+1]]);
-  const pool=all.filter(ok);RD.urls=urls;
-  if(pairs.length<1||pool.length<4){RD.quiz=[];return}
-  const n=Math.min(10,pairs.length);const pick=shuf(pairs.slice()).slice(0,n);
-  // الترتيب بحسب المتن ليكون الاختبار متدرجًا
-  pick.sort((a,b)=>lines.indexOf(a[0])-lines.indexOf(b[0]));
-  const same=(a,b)=>a.g==b.g&&a.li==b.li;
-  RD.quiz=pick.map(([a,b],i)=>{
-    const others=shuf(pool.filter(x=>!same(x,a)&&!same(x,b)));
-    if(i%3==2){const t=Math.random()<.5;return {type:'tf',a,c:t?b:others[0],ans:t,nx:b}}
-    const opts=shuf([b,...others.slice(0,3)]);return {type:'mc',a,opts,ans:opts.indexOf(b)}});
+  const ok=x=>urls[x.g]&&ASP[x.g+'|'+L.dir+L.user];RD.urls=urls;
+  // كل كلمة صالحة للسؤال: عرض مناسب (ليست حرفًا مفردًا)
+  const pool=[];for(const x of all.filter(ok))x.ws.forEach((w,wi)=>{if(w[1]-w[0]>=.035)pool.push({x,wi,w:w[1]-w[0]})});
+  const cand=[];for(const x of lines.filter(ok))x.ws.forEach((w,wi)=>{if(w[1]-w[0]>=.035)cand.push({x,wi,w:w[1]-w[0]})});
+  if(!cand.length||pool.length<6){RD.quiz=[];return}
+  // سؤال لكل سطر قدر الإمكان، حتى عشرة
+  const byLine=new Map();for(const c of shuf(cand.slice()))if(!byLine.has(c.x))byLine.set(c.x,c);
+  let pick=shuf([...byLine.values()]).slice(0,10);if(pick.length<Math.min(10,cand.length))pick=pick.concat(shuf(cand.filter(c=>!pick.includes(c))).slice(0,10-pick.length));
+  pick.sort((a,b)=>lines.indexOf(a.x)-lines.indexOf(b.x)||a.wi-b.wi);
+  RD.quiz=pick.map((c,i)=>{
+    const ink=o=>o.x.ws[o.wi][2],twin=(a,b)=>Math.abs(a.w-b.w)<.006&&Math.abs(ink(a)-ink(b))<=.1*Math.max(ink(a),ink(b));
+    const others=shuf(pool.filter(o=>!twin(o,c))).sort((a,b)=>Math.abs(a.w-c.w)-Math.abs(b.w-c.w)).slice(0,14);
+    const ds=[];for(const o of shuf(others)){if(ds.length==3)break;if(!ds.some(d=>twin(d,o)))ds.push(o)}
+    if(i%4==3){const t=Math.random()<.5;return {type:'tf',c,show:t?c:ds[0],ans:t}}
+    const opts=shuf([c,...ds]);return {type:'mc',c,opts,ans:opts.indexOf(c)}});
 }
-function cropHTML(x){const L=RD.L,asp=ASP[x.g+'|'+L.dir+L.user],u=RD.urls[x.g];
-  const w=x.x1-x.x0;return `<div class="crop" style="aspect-ratio:${w.toFixed(4)}/${((x.b-x.t)*asp).toFixed(4)}"><img src="${u}" alt="" style="width:${(100/w).toFixed(3)}%;left:-${(x.x0/w*100).toFixed(3)}%;transform:translateY(-${(x.t*100).toFixed(3)}%)"></div>`}
+function partsOf(x){const ws=x.ws;let bi=-1,bg=.04;for(let i=0;i+1<ws.length;i++){const g=ws[i][0]-ws[i+1][1];if(g>bg){bg=g;bi=i}}
+  const mk=(a,b)=>({a,b,x0:Math.max(0,Math.min(...ws.slice(a,b).map(w=>w[0]))-.01),x1:Math.min(1,Math.max(...ws.slice(a,b).map(w=>w[1]))+.01)});
+  return bi<0?[mk(0,ws.length)]:[mk(0,bi+1),mk(bi+1,ws.length)]}
+function cropOne(x,x0,x1,t,b,inner,cls,st){const L=RD.L,asp=ASP[x.g+'|'+L.dir+L.user],u=RD.urls[x.g],W=x1-x0,H=b-t;
+  return `<div class="crop ${cls||''}" style="${st||''}aspect-ratio:${W.toFixed(4)}/${(H*asp).toFixed(4)}"><img src="${u}" alt="" style="width:${(100/W).toFixed(3)}%;left:-${(x0/W*100).toFixed(3)}%;top:-${(t/H*100).toFixed(3)}%"></div>`.replace('</div>',(inner||'')+'</div>')}
+function cropHTML(x,hide,fill){return '<div class="qline">'+partsOf(x).map(pt=>{let m='';
+  if(hide!=null&&hide>=pt.a&&hide<pt.b){const w=x.ws[hide],W=pt.x1-pt.x0;m=`<div class="qblank ${fill?'filled':''}" style="left:${((w[0]-.004-pt.x0)/W*100).toFixed(2)}%;width:${((w[1]-w[0]+.008)/W*100).toFixed(2)}%"></div>`}
+  return cropOne(x,pt.x0,pt.x1,x.t,x.b,m)}).join('')+'</div>'}
+function wordHTML(o,H){const x=o.x,w=x.ws[o.wi],h=x.b-x.t,L=RD.L,asp=ASP[x.g+'|'+L.dir+L.user],x0=Math.max(0,w[0]-.006),x1=Math.min(1,w[1]+.006),t=x.t+h*.08,b=x.b-h*.06,r=(x1-x0)/((b-t)*asp);
+  return `<div class="wwrap">`+cropOne(x,x0,x1,t,b,'','word',`width:min(100%,${Math.round((H||60)*r)}px);`)+`</div>`}
 async function drawQuiz(){
   const rb=document.getElementById('rb');if(!rb)return;
   if(!RD.quiz){rb.innerHTML='<p class="note" style="padding:30px;text-align:center">جارٍ إعداد الأسئلة…</p>';await buildQuiz();if(!document.getElementById('rb'))return;RD.qi=0;RD.ansd=null;RD.first={}}
   const Q=RD.quiz,rf=document.getElementById('rf');rf.style.display='none';
-  document.getElementById('tip').textContent='أسئلة من نص هذا المقطع: اختر السطر الذي يلي، أو احكم بصح أو خطأ.';
-  if(!Q.length){rb.innerHTML='<p class="note" style="padding:30px;text-align:center">هذا المقطع قصير لا تكفي أسطره لإعداد أسئلة. اختبر نفسك على مقطع أطول أو على ما حفظته مؤخرًا.</p>';return}
-  if(RD.qi>=Q.length){const tot=Q.length,ok=Object.values(RD.first).filter(Boolean).length,sc=ok/tot,memo=RD.p&&isMemo(RD.m,RD.p),wrong=Q.map((_,i)=>i).filter(i=>!RD.first[i]);
+  document.getElementById('tip').textContent='أكمل الكلمة الناقصة من حفظك، ثم اختر الجواب.';
+  if(!Q.length){rb.innerHTML='<p class="note" style="padding:30px;text-align:center">هذا المقطع قصير لا تكفي كلماته لإعداد أسئلة. اختبر نفسك على مقطع أطول أو على ما حفظته مؤخرًا.</p>';return}
+  if(RD.qi>=Q.length){const tot=Q.length,ok=Object.values(RD.first).filter(Boolean).length,sc=ok/tot,memo=RD.p&&isMemo(RD.m,RD.p);
     rb.innerHTML=`<div class="qres"><div class="qsc">${pc(sc)}</div><b>${ar(ok)} من ${ar(tot)} إجابة صحيحة</b><span>${sc>=.9?'حفظ ثابت، بارك الله لك':sc>=.7?'جيد، يحتاج تعاهدًا':'يحتاج إعادة'}</span>
       <div class="tools" style="justify-content:center">${memo?`<button class="pri" data-tv="save">سجّل النتيجة</button>`:RD.what=='recent'&&RD.m.recentDone!==T?`<button class="pri" data-recent="${RD.m.id}">سجّل المراجعة</button>`:''}<button data-tx="restart">اختبار جديد</button></div></div>`;return}
   const q=Q[RD.qi],done=RD.ansd!=null;let h=`<div class="quiz"><div class="qtop"><span>السؤال ${ar(RD.qi+1)} من ${ar(Q.length)}</span><span class="qk">${q.type=='mc'?'اختيار من متعدد':'صح أو خطأ'}</span></div><div class="qbar"><i style="width:${RD.qi/Q.length*100}%"></i></div>`;
-  if(q.type=='mc'){h+=`<p class="qq">ما السطر الذي يلي هذا السطر؟</p>${cropHTML(q.a)}<div class="qopts">`+q.opts.map((o,i)=>`<button class="qo ${done?(i==q.ans?'right':i==RD.ansd?'wrong':''):''}" data-qa="${i}" ${done?'disabled':''}><span class="ql">${'أبجد'[i]}</span>${cropHTML(o)}</button>`).join('')+'</div>'}
-  else{h+=`<p class="qq">هل يأتي السطر الثاني بعد الأول مباشرة؟</p><div class="qlab">السطر الأول</div>${cropHTML(q.a)}<div class="qlab">السطر الثاني</div>${cropHTML(q.c)}<div class="qtf"><button class="qo ${done?(q.ans?'right':RD.ansd===1?'wrong':''):''}" data-qa="1" ${done?'disabled':''}>صح</button><button class="qo ${done?(!q.ans?'right':RD.ansd===0?'wrong':''):''}" data-qa="0" ${done?'disabled':''}>خطأ</button></div>`}
-  if(done){const r=q.type=='mc'?RD.ansd==q.ans:(RD.ansd==1)==q.ans;h+=`<div class="qfb ${r?'ok':'no'}"><b>${r?'أحسنت':'ليست هذه'}</b>${q.type=='tf'&&!q.ans?'<div style="width:100%"><div class="qlab">السطر الذي يليه في المتن:</div>'+cropHTML(q.nx)+'</div>':''}<button class="pri" data-qn>${RD.qi+1<Q.length?'السؤال التالي':'النتيجة'}</button></div>`}
+  h+=`<p class="qq">${q.type=='mc'?'ما الكلمة الناقصة في هذا السطر؟':'هل الكلمة الناقصة هي هذه الكلمة؟'}</p>${cropHTML(q.c.x,q.c.wi,done)}`;
+  if(q.type=='mc')h+=`<div class="qopts qw">`+q.opts.map((o,i)=>`<button class="qo ${done?(i==q.ans?'right':i==RD.ansd?'wrong':''):''}" data-qa="${i}" ${done?'disabled':''}><span class="ql">${'أبجد'[i]}</span>${wordHTML(o)}</button>`).join('')+'</div>';
+  else h+=`<div class="qshow">${wordHTML(q.show,80)}</div><div class="qtf"><button class="qo ${done?(q.ans?'right':RD.ansd===1?'wrong':''):''}" data-qa="1" ${done?'disabled':''}>صح</button><button class="qo ${done?(!q.ans?'right':RD.ansd===0?'wrong':''):''}" data-qa="0" ${done?'disabled':''}>خطأ</button></div>`;
+  if(done){const r=q.type=='mc'?RD.ansd==q.ans:(RD.ansd==1)==q.ans;h+=`<div class="qfb ${r?'ok':'no'}"><b>${r?'أحسنت':'ليست هذه'}</b>${r?'':'<div style="width:100%"><div class="qlab">الكلمة الصحيحة ظاهرة الآن في السطر:</div></div>'}<button class="pri" data-qn>${RD.qi+1<Q.length?'السؤال التالي':'النتيجة'}</button></div>`}
   rb.innerHTML=h+'</div>';
   const fb=rb.querySelector('.qfb');if(fb)fb.scrollIntoView({block:'nearest',behavior:'smooth'});else rb.scrollTop=0;
 }
