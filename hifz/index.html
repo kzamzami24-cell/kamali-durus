@@ -104,6 +104,20 @@ details.step summary{cursor:pointer;font-family:"Reem Kufi";font-size:20px}
 .tint.new{background:rgba(231,184,74,.30)}
 .sel{position:absolute;border:3px solid #0f6b52;background:rgba(15,107,82,.12);border-radius:6px;pointer-events:none;box-shadow:0 0 0 4px rgba(15,107,82,.18)}
 .cur{position:absolute;width:4px;background:#c2412a;border-radius:2px;pointer-events:none}
+.quiz{padding:14px;max-width:760px;margin:0 auto}
+.qtop{display:flex;justify-content:space-between;font-size:13px;color:var(--mut,#667);font-weight:600}.qk{background:var(--goldS);color:#7a5200;border-radius:99px;padding:2px 10px}
+.qbar{height:6px;background:var(--line);border-radius:9px;margin:8px 0 12px;overflow:hidden}.qbar i{display:block;height:100%;background:var(--em);border-radius:9px;transition:width .3s}
+.qq{font-weight:700;font-size:17px;margin:6px 0 10px}
+.crop{position:relative;width:100%;overflow:hidden;background:#fff;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,.12)}.crop img{position:absolute;top:0;left:0;max-width:none;height:auto;display:block}
+.qlab{font-size:13px;font-weight:700;color:var(--em);margin:10px 0 4px}
+.qopts{display:grid;gap:10px;margin-top:14px}
+.qo{display:flex;align-items:center;gap:10px;width:100%;padding:8px;border:2px solid var(--line);border-radius:14px;background:var(--card);min-height:52px;cursor:pointer;text-align:start}
+.qo .crop{flex:1;box-shadow:none}.qo:hover:not(:disabled){border-color:var(--em)}
+.ql{flex:none;width:30px;height:30px;border-radius:50%;background:var(--bg);display:grid;place-items:center;font-weight:700}
+.qo.right{border-color:#2fa57c;background:rgba(47,165,124,.12)}.qo.wrong{border-color:#d6553a;background:rgba(214,85,58,.1)}.qo:disabled{cursor:default}
+.qtf{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}.qtf .qo{justify-content:center;font-size:18px;font-weight:700}
+.qfb{margin-top:14px;padding:12px 14px;border-radius:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}.qfb.ok{background:rgba(47,165,124,.12)}.qfb.no{background:rgba(214,85,58,.1)}.qfb button{margin-inline-start:auto}
+.qres{text-align:center;padding:40px 16px;display:grid;gap:8px;justify-items:center}.qsc{font-size:46px;font-weight:800;color:var(--em)}
 .mk{position:absolute;left:0;width:100%;background:repeating-linear-gradient(90deg,#e8efeb 0 14px,#dfe8e3 14px 28px);border-radius:6px;cursor:pointer}
 .hint .mk{width:80%}
 .mk.nx{box-shadow:inset 0 0 0 3px #0f6b52;background:repeating-linear-gradient(90deg,#dff0e8 0 14px,#d3eadf 14px 28px)}
@@ -832,6 +846,50 @@ function addSheet(){openSheet(`<h3>إضافة متن</h3>${catalogHTML()?'<p cla
   <button class="pri">متابعة</button></form><div class="tools"><button data-close>إلغاء</button></div>`)}
 
 /* قارئ المتن */
+
+/* الاختبار: اختيار من متعدد، وصح أو خطأ */
+const ASP={};
+async function pageURL(L,g){if(L.dir)return L.dir+'p'+g+'.jpg';if(L.urls[g])return L.urls[g];const bl=await IDB.get('img:'+L.user+':'+g);if(!bl)return null;return L.urls[g]=URL.createObjectURL(bl)}
+function aspOf(url){return ASP[url]||(ASP[url]=new Promise(res=>{const im=new Image();im.onload=()=>res(im.naturalHeight/im.naturalWidth);im.onerror=()=>res(null);im.src=url}))}
+function shuf(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function libLines(L,from,to){const o=[];for(let g=from;g<=to;g++)(L.words[g]||[]).forEach((ln,li)=>{let ws=ln[2];if(ws.length>2&&ws[0][1]-ws[0][0]<.05)ws=ws.slice(1);o.push({g,li,t:ln[0],b:ln[1],x0:Math.max(0,Math.min(...ws.map(w=>w[0]))-.01),x1:Math.min(1,Math.max(...ws.map(w=>w[1]))+.01)})});return o}
+async function buildQuiz(){
+  const {L,from,to}=RD;const lines=libLines(L,from,to);
+  const all=libLines(L,+Object.keys(L.words)[0],+Object.keys(L.words).slice(-1)[0]);
+  const urls={};for(const x of all)if(!(x.g in urls))urls[x.g]=null;
+  for(const g of new Set(lines.map(x=>x.g).concat(all.map(x=>x.g)))){const u=await pageURL(L,g);if(u){urls[g]=u;const a=await aspOf(u);if(a)ASP[g+'|'+L.dir+L.user]=a}}
+  const ok=x=>urls[x.g]&&ASP[x.g+'|'+L.dir+L.user];
+  const pairs=[];for(let i=0;i+1<lines.length;i++)if(ok(lines[i])&&ok(lines[i+1]))pairs.push([lines[i],lines[i+1]]);
+  const pool=all.filter(ok);RD.urls=urls;
+  if(pairs.length<1||pool.length<4){RD.quiz=[];return}
+  const n=Math.min(10,pairs.length);const pick=shuf(pairs.slice()).slice(0,n);
+  // الترتيب بحسب المتن ليكون الاختبار متدرجًا
+  pick.sort((a,b)=>lines.indexOf(a[0])-lines.indexOf(b[0]));
+  const same=(a,b)=>a.g==b.g&&a.li==b.li;
+  RD.quiz=pick.map(([a,b],i)=>{
+    const others=shuf(pool.filter(x=>!same(x,a)&&!same(x,b)));
+    if(i%3==2){const t=Math.random()<.5;return {type:'tf',a,c:t?b:others[0],ans:t,nx:b}}
+    const opts=shuf([b,...others.slice(0,3)]);return {type:'mc',a,opts,ans:opts.indexOf(b)}});
+}
+function cropHTML(x){const L=RD.L,asp=ASP[x.g+'|'+L.dir+L.user],u=RD.urls[x.g];
+  const w=x.x1-x.x0;return `<div class="crop" style="aspect-ratio:${w.toFixed(4)}/${((x.b-x.t)*asp).toFixed(4)}"><img src="${u}" alt="" style="width:${(100/w).toFixed(3)}%;left:-${(x.x0/w*100).toFixed(3)}%;transform:translateY(-${(x.t*100).toFixed(3)}%)"></div>`}
+async function drawQuiz(){
+  const rb=document.getElementById('rb');if(!rb)return;
+  if(!RD.quiz){rb.innerHTML='<p class="note" style="padding:30px;text-align:center">جارٍ إعداد الأسئلة…</p>';await buildQuiz();if(!document.getElementById('rb'))return;RD.qi=0;RD.ansd=null;RD.first={}}
+  const Q=RD.quiz,rf=document.getElementById('rf');rf.style.display='none';
+  document.getElementById('tip').textContent='أسئلة من نص هذا المقطع: اختر السطر الذي يلي، أو احكم بصح أو خطأ.';
+  if(!Q.length){rb.innerHTML='<p class="note" style="padding:30px;text-align:center">هذا المقطع قصير لا تكفي أسطره لإعداد أسئلة. اختبر نفسك على مقطع أطول أو على ما حفظته مؤخرًا.</p>';return}
+  if(RD.qi>=Q.length){const tot=Q.length,ok=Object.values(RD.first).filter(Boolean).length,sc=ok/tot,memo=RD.p&&isMemo(RD.m,RD.p),wrong=Q.map((_,i)=>i).filter(i=>!RD.first[i]);
+    rb.innerHTML=`<div class="qres"><div class="qsc">${pc(sc)}</div><b>${ar(ok)} من ${ar(tot)} إجابة صحيحة</b><span>${sc>=.9?'حفظ ثابت، بارك الله لك':sc>=.7?'جيد، يحتاج تعاهدًا':'يحتاج إعادة'}</span>
+      <div class="tools" style="justify-content:center">${memo?`<button class="pri" data-tv="save">سجّل النتيجة</button>`:RD.what=='recent'&&RD.m.recentDone!==T?`<button class="pri" data-recent="${RD.m.id}">سجّل المراجعة</button>`:''}<button data-tx="restart">اختبار جديد</button></div></div>`;return}
+  const q=Q[RD.qi],done=RD.ansd!=null;let h=`<div class="quiz"><div class="qtop"><span>السؤال ${ar(RD.qi+1)} من ${ar(Q.length)}</span><span class="qk">${q.type=='mc'?'اختيار من متعدد':'صح أو خطأ'}</span></div><div class="qbar"><i style="width:${RD.qi/Q.length*100}%"></i></div>`;
+  if(q.type=='mc'){h+=`<p class="qq">ما السطر الذي يلي هذا السطر؟</p>${cropHTML(q.a)}<div class="qopts">`+q.opts.map((o,i)=>`<button class="qo ${done?(i==q.ans?'right':i==RD.ansd?'wrong':''):''}" data-qa="${i}" ${done?'disabled':''}><span class="ql">${'أبجد'[i]}</span>${cropHTML(o)}</button>`).join('')+'</div>'}
+  else{h+=`<p class="qq">هل يأتي السطر الثاني بعد الأول مباشرة؟</p><div class="qlab">السطر الأول</div>${cropHTML(q.a)}<div class="qlab">السطر الثاني</div>${cropHTML(q.c)}<div class="qtf"><button class="qo ${done?(q.ans?'right':RD.ansd===1?'wrong':''):''}" data-qa="1" ${done?'disabled':''}>صح</button><button class="qo ${done?(!q.ans?'right':RD.ansd===0?'wrong':''):''}" data-qa="0" ${done?'disabled':''}>خطأ</button></div>`}
+  if(done){const r=q.type=='mc'?RD.ansd==q.ans:(RD.ansd==1)==q.ans;h+=`<div class="qfb ${r?'ok':'no'}"><b>${r?'أحسنت':'ليست هذه'}</b>${q.type=='tf'&&!q.ans?'<div style="width:100%"><div class="qlab">السطر الذي يليه في المتن:</div>'+cropHTML(q.nx)+'</div>':''}<button class="pri" data-qn>${RD.qi+1<Q.length?'السؤال التالي':'النتيجة'}</button></div>`}
+  rb.innerHTML=h+'</div>';
+  const fb=rb.querySelector('.qfb');if(fb)fb.scrollIntoView({block:'nearest',behavior:'smooth'});else rb.scrollTop=0;
+}
+function quizAns(v){const q=RD.quiz[RD.qi];if(RD.ansd!=null)return;RD.ansd=+v;RD.first[RD.qi]=q.type=='mc'?RD.ansd==q.ans:(RD.ansd==1)==q.ans;drawQuiz()}
 let RD=null;
 function openReader(mid,what,start){
   const m=S.mutun.find(x=>x.id==mid),L=LIB[m.lib];if(!L)return;
@@ -844,12 +902,13 @@ function openReader(mid,what,start){
   RD={m,L,from,to,mode,p,hl,sel:null,hint:false,what};resetTest();
   const canMark=m.status=='prog';
   openSheet(`<div class="rhead"><div class="top"><h3>${esc(title)}</h3><button data-close>إغلاق</button></div>
-  <div class="mode">${canMark?'<button data-md="mark">تحديد موضع الحفظ</button>':''}<button data-md="read">قراءة</button><button data-md="test">اختبر حفظي</button><span id="tbar" style="display:none;gap:6px;flex-wrap:wrap"><button data-tx="hint">تلميح البدايات</button><button data-tx="restart">ابدأ الاختبار من جديد</button></span></div>
+  <div class="mode">${canMark?'<button data-md="mark">تحديد موضع الحفظ</button>':''}<button data-md="read">قراءة</button><button data-md="test">اختبر حفظي</button><span id="tbar" style="display:none;gap:6px;flex-wrap:wrap"><button data-tx="hint">تلميح البدايات</button><button data-tx="restart">أسئلة جديدة</button></span></div>
   <div class="tip" id="tip"></div></div><div class="rbody" id="rb"></div><div class="rfoot" id="rf"></div>`,true);
   drawReader(true);
 }
 function drawReader(scroll){
   const {m,L,from,to,mode,sel,hl}=RD,rb=document.getElementById('rb');if(!rb)return;
+  if(mode==='test'){box.querySelectorAll('[data-md]').forEach(b=>b.classList.toggle('on',b.dataset.md===mode));const tb=document.getElementById('tbar');tb.style.display='flex';const hb=box.querySelector('[data-tx=hint]');if(hb)hb.style.display='none';return drawQuiz()}
   let h='',k=0;
   for(let g=from;g<=to;g++){
     const lines=L.words[g];if(!lines)continue;
@@ -876,7 +935,7 @@ function drawReader(scroll){
   if(L.user)rb.querySelectorAll('img:not([src])').forEach(async im=>{const g=im.dataset.ug;const bl=await IDB.get('img:'+L.user+':'+g);if(bl){L.urls[g]=URL.createObjectURL(bl);im.src=L.urls[g]}else{im.replaceWith(Object.assign(document.createElement('div'),{className:'noimg',textContent:'صورة هذه الصفحة غير موجودة على هذا الجهاز. أرفق ملف المتن (PDF) من صفحة المتن ليظهر النص هنا.'}))}});
   box.querySelectorAll('[data-md]').forEach(b=>b.classList.toggle('on',b.dataset.md===mode));
   const tb=document.getElementById('tbar');tb.style.display=mode=='test'?'flex':'none';
-  const hb=box.querySelector('[data-tx=hint]');if(hb)hb.classList.toggle('on',RD.hint);
+  const hb=box.querySelector('[data-tx=hint]');if(hb){hb.classList.toggle('on',RD.hint);hb.style.display=''}
   document.getElementById('tip').textContent=mode=='mark'?'اضغط على آخر كلمة حفظتها؛ المظلَّل بالأخضر محفوظ.':mode=='test'?'اختبار سطرًا سطرًا: سمِّع السطر المحدد من حفظك، ثم اكشفه وقيّم نفسك بصدق.':'المظلَّل بالأخضر ما حفظته، وبالذهبي ما حفظته هذا الأسبوع.';
   /* الشريط السفلي */
   const rf=document.getElementById('rf');let f='';
@@ -899,12 +958,12 @@ function drawReader(scroll){
   else{const s=rb.querySelector('#selb')||rb.querySelector('#curl');if(s)s.scrollIntoView({block:'nearest',behavior:'smooth'})}
   if(scroll&&mode=='test'){const c=rb.querySelector('#curl');if(c)setTimeout(()=>c.scrollIntoView({block:'nearest'}),250)}
 }
-function resetTest(){Object.assign(RD,{q:null,qi:0,rev:false,res:{},first:{},retry:false})}
+function resetTest(){Object.assign(RD,{q:null,qi:0,rev:false,res:{},first:{},retry:false,quiz:null,ansd:null})}
 function testAct(a){
   if(a=='reveal')RD.rev=true;
   else if(a=='yes'||a=='no'){const k=RD.q[RD.qi],v=a=='yes';RD.res[k]=v;if(!(k in RD.first))RD.first[k]=v;RD.qi++;RD.rev=false}
   else if(a=='retry'){RD.q=Object.keys(RD.res).filter(i=>!RD.res[i]).map(Number);RD.q.forEach(i=>delete RD.res[i]);RD.qi=0;RD.rev=false;RD.retry=true}
-  else if(a=='save'){const tot=RD.total,ok=Object.values(RD.first).filter(Boolean).length,sc=tot?ok/tot:0,p=RD.p,m=RD.m;
+  else if(a=='save'){const tot=RD.quiz?RD.quiz.length:RD.total,ok=Object.values(RD.first).filter(Boolean).length,sc=tot?ok/tot:0,p=RD.p,m=RD.m;
     p.tests=(p.tests||[]).concat({d:T,s:Math.round(sc*100)/100}).slice(-12);rate(m.id,p.id,sc>=.9);closeSheet();
     return toast('نتيجة الاختبار '+pc(sc)+(sc>=.9?' — ثابت، يعود بعد '+ar(p.interval)+' يومًا':' — يعود إليك غدًا'))}
   drawReader(false);
@@ -948,6 +1007,8 @@ document.addEventListener('click',e=>{
   if(d.delp){if(b.dataset.sure){const [mi,k]=d.delp.split('|'),m=S.mutun.find(x=>x.id==mi);delete m[k=='mem'?'pm':'pr'];save();render();return toast('أُلغيت الخطة',true)}b.dataset.sure=1;b.textContent='اضغط للتأكيد';return}
   if(d.tab){TAB=d.tab;try{localStorage.setItem('hifz-tab',TAB);history.replaceState(null,'','#'+TAB)}catch(err){}render();return window.scrollTo({top:document.querySelector('main').offsetTop-20,behavior:'smooth'})}
   if(d.read){const [m,w,md]=d.read.split('|');return openReader(m,w,md)}
+  if(d.qa!==undefined&&RD)return quizAns(d.qa);
+  if(d.qn!==undefined&&RD){RD.qi++;RD.ansd=null;return drawQuiz()}
   if(d.tv&&RD)return testAct(d.tv);
   if(d.md&&RD){RD.mode=d.md;RD.sel=null;resetTest();return drawReader(true)}
   if(d.tx&&RD){if(d.tx=='restart')resetTest();else RD.hint=!RD.hint;return drawReader(d.tx=='restart')}
