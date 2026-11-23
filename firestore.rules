@@ -1,7 +1,12 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // مجالس الكملي
     match /users/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+    // خزانة المحفوظات: لكل مستخدم مستند واحد لا يقرؤه ولا يكتبه غيره
+    match /hifz/{uid} {
       allow read, write: if request.auth != null && request.auth.uid == uid;
     }
   }

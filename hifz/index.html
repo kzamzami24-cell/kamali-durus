@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>مراجعة محفوظاتي</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Alexandria:wght@400;600;700;800&family=Reem+Kufi:wght@600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap">
+<style>
+/* VOICE: بسيط واضح، خطوتان كل يوم بلا تعقيد
+   IDEA: دفتر المتابعة: مقياس حفظ كبير للمتن الجاري، وقائمة مراجعة اليوم
+   PICTURE: صفحة المتن نفسها، تضغط على الكلمة التي وصلت إليها فتُظلَّل وتظهر النسبة
+   COLOUR and TYPE: أبيض، أخضر زمردي للتقدّم، ذهبي للجديد، أحمر للتنبيه؛ Reem Kufi للعناوين، Plex Arabic للواجهة، Amiri للأسماء
+   LAYOUT: عمود واحد مرقّم بالخطوات، بطاقات كبيرة وأزرار واضحة */
+:root{color-scheme:light dark;--bg:light-dark(#f4f7f5,#0b1411);--card:light-dark(#ffffff,#13201b);--ink:light-dark(#13211c,#e7efea);--mute:light-dark(#5d6d67,#9fb2aa);--line:light-dark(#e2e9e5,#22322c);--em:light-dark(#0f6b52,#43b991);--emS:light-dark(#e3f3ec,#173a2f);--gold:light-dark(#b07d12,#e7b84a);--goldS:light-dark(#fbf1d9,#3a3019);--red:light-dark(#c2412a,#f07a5c);--redS:light-dark(#fbe7e2,#3d211b)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.65 "IBM Plex Sans Arabic",system-ui,sans-serif;overflow-x:clip}
+h1,h2,h3{font-family:"Reem Kufi",sans-serif;line-height:1.2;margin:0;text-wrap:balance}
+button,input,select,textarea{font:inherit;font-size:16px;color:inherit}
+button{cursor:pointer;border:1px solid var(--line);background:var(--card);border-radius:12px;min-height:46px;padding:0 18px;font-weight:600}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--em);outline-offset:2px}
+input,select,textarea{background:var(--bg);border:1px solid var(--line);border-radius:10px;min-height:46px;padding:8px 12px;width:100%}
+.pri{background:var(--em);border-color:var(--em);color:#fff}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]) .pri{color:#06120e}}
+:root[data-theme=dark] .pri{color:#06120e}
+.wrap{max-width:820px;margin:0 auto;padding:0 16px}
+header{position:relative;overflow:hidden;background:radial-gradient(120% 90% at 50% 0%,#14805f 0%,#0c4d3b 55%,#08372a 100%);color:#fff;padding:30px 0 78px;text-align:center}
+header::before{content:"";position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Cg fill='none' stroke='%23e7c56a' stroke-width='1.1' opacity='.55'%3E%3Crect x='22' y='22' width='36' height='36'/%3E%3Crect x='22' y='22' width='36' height='36' transform='rotate(45 40 40)'/%3E%3Ccircle cx='40' cy='40' r='9'/%3E%3Cpath d='M0 0L22 22M80 0L58 22M0 80L22 58M80 80L58 58M40 0V14M40 80V66M0 40H14M80 40H66'/%3E%3C/g%3E%3C/svg%3E") center/80px 80px;opacity:.5;-webkit-mask:radial-gradient(90% 80% at 50% 40%,transparent 25%,#000 75%);mask:radial-gradient(90% 80% at 50% 40%,transparent 25%,#000 75%)}
+header::after{content:"";position:absolute;left:0;right:0;bottom:0;height:16px;background:repeating-linear-gradient(90deg,#e7c56a 0 2px,transparent 2px 22px),linear-gradient(#e7c56a,#e7c56a) top/100% 1px no-repeat;opacity:.45}
+header .wrap{position:relative}
+.orn{display:block;margin:0 auto;color:#e7c56a;max-width:100%}
+.verse{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:14px;margin:10px auto 6px;max-width:780px;font-family:"Amiri",serif;font-weight:700;font-size:clamp(21px,3.6vw,30px);line-height:1.6;text-shadow:0 2px 10px rgba(0,0,0,.25)}
+.verse span{text-align:center}
+.verse i{display:block;width:26px;height:26px;color:#e7c56a}
+.who{font-size:15px;color:#f1dc9b;font-family:"Amiri",serif}
+@media(max-width:600px){.verse{grid-template-columns:1fr;gap:2px}.verse i{margin:0 auto;width:18px;height:18px}}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]) header{background:#0f3d30}}
+:root[data-theme=dark] header{background:#0f3d30}
+.sync{font-size:12px;opacity:.7;margin-top:12px}
+main{margin-top:-40px;padding-bottom:60px}
+.step{background:var(--card);border-radius:20px;padding:20px;margin-bottom:18px;box-shadow:0 2px 0 var(--line)}
+.sh{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.num{flex:none;width:36px;height:36px;border-radius:50%;background:var(--emS);color:var(--em);display:grid;place-items:center;font-weight:700;font-family:"Reem Kufi"}
+.sh h2{font-size:23px}
+.sh small{display:block;color:var(--mute);font-size:14px;font-family:"IBM Plex Sans Arabic"}
+.prog{border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:12px}
+.prog .nm{font-family:"Amiri",serif;font-weight:700;font-size:24px}
+.big{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin:4px 0 8px}
+.big b{font-family:"Reem Kufi";font-size:clamp(44px,10vw,60px);line-height:1;color:var(--em)}
+.big span{color:var(--mute)}
+.bar{height:14px;border-radius:9px;background:var(--line);overflow:hidden;display:flex}
+.bar i{display:block;height:100%}
+.bar .o{background:var(--em)}.bar .n{background:var(--gold)}
+.meta{font-size:14px;color:var(--mute);margin:8px 0 12px}
+.wide-btn{width:100%;min-height:54px;font-size:18px}
+.row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px 14px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}
+.row:first-of-type{border-top:0}
+.row .t{font-weight:600}
+.row .s{font-size:14px;color:var(--mute)}
+.row .b{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.row.done{opacity:.55}
+.ok{background:var(--emS);color:var(--em);border-color:transparent}
+.again{background:var(--redS);color:var(--red);border-color:transparent}
+.late{color:var(--red);font-weight:600}
+.empty{padding:18px;border:1px dashed var(--line);border-radius:14px;color:var(--mute);text-align:center}
+.count{margin-inline-start:auto;font-weight:700;color:var(--em);font-size:15px;white-space:nowrap}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.mt{text-align:start;display:block;padding:14px;min-height:0;font-weight:400;border-radius:14px}
+.mt .nm{font-family:"Amiri",serif;font-weight:700;font-size:20px;line-height:1.3;display:block}
+.mt .s{font-size:13px;color:var(--mute);display:block;margin-top:6px}
+.mt .bar{height:8px;margin-top:10px}
+.pl{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;padding:10px 0;border-top:1px solid var(--line)}
+.pl span{font-family:"Amiri";font-size:19px;font-weight:700}
+.pl em{font-style:normal;font-size:13px;color:var(--mute);display:block;font-family:"IBM Plex Sans Arabic";font-weight:400}
+details.step summary{cursor:pointer;font-family:"Reem Kufi";font-size:20px}
+.form{display:grid;gap:10px}
+.form label{display:grid;gap:4px;font-size:14px;color:var(--mute)}
+.tools{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.chip{min-height:38px;padding:0 12px;font-size:14px;font-weight:500;border:0;color:#fff}
+.chip.unk{background:var(--line);color:var(--mute)}
+.chip.pend{background:transparent;border:1px dashed var(--mute);color:var(--mute)}
+/* النوافذ */
+.sheet{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:20;padding:12px}
+.sheet.open{display:flex}
+.box{background:var(--card);border-radius:18px;padding:20px;max-width:460px;width:100%;max-height:92vh;overflow:auto}
+.box h3{font-family:"Amiri";font-size:25px}
+.box.reader{max-width:820px;padding:0;display:flex;flex-direction:column;height:94vh}
+.rhead{padding:14px 16px 10px;border-bottom:1px solid var(--line)}
+.rhead .top{display:flex;gap:10px;align-items:center}
+.rhead h3{flex:1}
+.mode{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.mode button{min-height:40px;font-size:14px}
+.mode .on{background:var(--em);border-color:var(--em);color:#fff}
+.tip{font-size:14px;color:var(--mute);margin-top:8px}
+.rbody{flex:1;overflow:auto;padding:10px 14px;background:var(--bg)}
+.rfoot{padding:12px 16px;border-top:1px solid var(--line);display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.rfoot .q{flex:1 1 220px;font-weight:600}
+.pg{position:relative;background:#fff;border-radius:10px;margin:0 auto 10px;max-width:760px;overflow:hidden;user-select:none;-webkit-user-select:none}
+.pg img{display:block;width:100%;height:auto;pointer-events:none}
+.pg .no{position:absolute;bottom:4px;left:10px;font-size:12px;color:#888}
+.pg.mark{cursor:pointer}
+.tint{position:absolute;background:rgba(15,140,100,.16);border-radius:4px;pointer-events:none}
+.tint.new{background:rgba(231,184,74,.30)}
+.sel{position:absolute;border:3px solid #0f6b52;background:rgba(15,107,82,.12);border-radius:6px;pointer-events:none;box-shadow:0 0 0 4px rgba(15,107,82,.18)}
+.cur{position:absolute;width:4px;background:#c2412a;border-radius:2px;pointer-events:none}
+.mk{position:absolute;left:0;width:100%;background:repeating-linear-gradient(90deg,#e8efeb 0 14px,#dfe8e3 14px 28px);border-radius:6px;cursor:pointer}
+.hint .mk{width:80%}
+.mk.nx{box-shadow:inset 0 0 0 3px #0f6b52;background:repeating-linear-gradient(90deg,#dff0e8 0 14px,#d3eadf 14px 28px)}
+.tline{position:absolute;left:0;width:100%;border-radius:6px;pointer-events:none}.okL{background:rgba(47,165,124,.16)}.badL{background:rgba(214,85,58,.2)}.curL{box-shadow:inset 0 0 0 3px #0f6b52}
+.toast{position:fixed;bottom:18px;inset-inline:0;margin:auto;width:max-content;max-width:92vw;background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;display:flex;gap:12px;align-items:center;transform:translateY(140px);transition:transform .3s;z-index:40}
+.toast{visibility:hidden}.toast.show{transform:none;visibility:visible}
+.toast button{min-height:34px;background:transparent;color:inherit;border-color:currentColor}
+.note{font-size:13px;color:var(--mute)}
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:var(--card);border-radius:20px;padding:6px;margin-bottom:16px;box-shadow:0 4px 14px rgba(0,0,0,.08);position:sticky;top:8px;z-index:6}
+.tabs button{border:0;min-height:58px;border-radius:15px;font-size:18px;font-family:"Reem Kufi";display:flex;align-items:center;justify-content:center;gap:10px;background:transparent;color:var(--mute)}
+.tabs button svg{width:24px;height:24px;flex:none}
+.tabs button[aria-selected=true]{background:var(--em);color:#fff;box-shadow:inset 0 -3px 0 #e7c56a}
+.tabs .cnt{font-family:"IBM Plex Sans Arabic";font-size:13px;background:#e7c56a;color:#3a2a00;border-radius:99px;padding:0 8px;min-width:22px}
+.qcard{position:relative;text-align:center;padding:18px 16px 14px;margin:4px 0 16px;border-radius:18px;background:var(--card);box-shadow:0 2px 0 var(--line);overflow:hidden}
+.qcard::before,.qcard::after{content:"";position:absolute;width:70px;height:70px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Cg fill='none' stroke='%23e7c56a' stroke-width='1.1' opacity='.55'%3E%3Crect x='22' y='22' width='36' height='36'/%3E%3Crect x='22' y='22' width='36' height='36' transform='rotate(45 40 40)'/%3E%3Ccircle cx='40' cy='40' r='9'/%3E%3Cpath d='M0 0L22 22M80 0L58 22M0 80L22 58M80 80L58 58M40 0V14M40 80V66M0 40H14M80 40H66'/%3E%3C/g%3E%3C/svg%3E") 0 0/70px 70px;opacity:.7}
+.qcard::before{top:-35px;right:-35px}.qcard::after{bottom:-35px;left:-35px}
+.qcard p{margin:0;font-family:"Amiri",serif;font-size:clamp(19px,3.4vw,24px);font-weight:700;color:var(--em);line-height:1.7}
+.qcard small{display:block;color:var(--gold);font-family:"Amiri",serif;font-size:15px;margin-top:2px}
+.face{text-shadow:0 1px 3px rgba(0,0,0,.45);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Cg fill='none' stroke='%23ffffff' stroke-width='1.1' opacity='.18'%3E%3Crect x='22' y='22' width='36' height='36'/%3E%3Crect x='22' y='22' width='36' height='36' transform='rotate(45 40 40)'/%3E%3Ccircle cx='40' cy='40' r='9'/%3E%3Cpath d='M0 0L22 22M80 0L58 22M0 80L22 58M80 80L58 58M40 0V14M40 80V66M0 40H14M80 40H66'/%3E%3C/g%3E%3C/svg%3E");background-size:56px 56px;background-position:center;background-repeat:no-repeat}
+.sect{display:flex;align-items:center;gap:10px;margin:22px 4px 12px;font-family:"Reem Kufi";font-size:19px}
+.sect::before,.sect::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+.today{display:flex;justify-content:space-between;align-items:center;gap:12px;background:var(--card);border-radius:18px;padding:14px 18px;margin-bottom:16px;color:inherit;text-decoration:none;box-shadow:0 2px 0 var(--line);font-weight:600}
+.today b{display:inline-grid;place-items:center;min-width:40px;height:40px;border-radius:50%;background:var(--goldS);color:var(--gold);margin-inline-end:10px;font-family:"Reem Kufi";font-size:20px}
+.today .go{color:var(--em)}
+.icons{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px;margin-bottom:18px}
+.ic{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px;background:var(--card);border:0;border-radius:22px;padding:18px 10px 14px;min-height:0;font-weight:400;box-shadow:0 2px 0 var(--line);transition:transform .2s}
+.ic:hover{transform:translateY(-3px)}
+.ring{--p:0;width:104px;height:104px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--c) calc(var(--p)*1%),var(--line) 0);flex:none}
+.face{width:86px;height:86px;border-radius:50%;display:grid;place-items:center;color:#fff;font-family:"Amiri",serif;font-weight:700;font-size:18px;line-height:1.15;padding:8px;box-shadow:inset 0 -6px 0 rgba(0,0,0,.15),0 0 0 4px var(--card)}
+.cyccard{background:var(--card);border-radius:26px;padding:18px 20px;margin:14px 0 16px;box-shadow:0 12px 30px -20px rgba(0,40,30,.3);border-inline-start:5px solid #00b386}
+.cyccard.empty2{display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.cyccard b{display:block;font-family:"Alexandria";font-size:18px}.cyccard span{font-size:14px;color:var(--mute)}
+.cyccard.empty2>div{flex:1 1 240px}
+.cyctop{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.cycrail{display:flex;gap:6px;overflow-x:auto;margin:12px 0 4px;padding-bottom:4px}
+.cycrail span{flex:none;display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;padding:6px 10px;border-radius:99px;background:var(--bg);color:var(--ink)}
+.cycrail i{width:9px;height:9px;border-radius:50%}
+.cycrail em{font-style:normal;font-size:12px;color:var(--mute)}
+.cycrail .cur3{background:var(--emS);box-shadow:inset 0 0 0 2px var(--em)}
+.cycrail .ok3{opacity:.55;text-decoration:line-through}
+.ctag{display:inline-block;font-size:11px;font-weight:700;background:linear-gradient(135deg,#00b386,#00805d);color:#fff;border-radius:99px;padding:1px 8px;margin-inline-end:6px;vertical-align:2px}
+.ordlist{display:grid;gap:6px;margin:10px 0}
+.ordrow{display:flex;align-items:center;gap:8px;background:var(--bg);border-radius:14px;padding:8px 10px}
+.ordrow .on2{flex:none;width:28px;height:28px;border-radius:50%;background:var(--em);color:#fff;display:grid;place-items:center;font-weight:700;font-size:13px}
+.ordrow .nm2{flex:1;font-weight:600}.ordrow small{display:block;font-weight:400;font-size:12px;color:var(--mute)}
+.ordrow button{min-height:36px;width:36px;padding:0;border-radius:10px}
+.ordrow button:disabled{opacity:.3}
+.catl{display:grid;gap:8px;margin:10px 0}
+.catr{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;background:var(--bg);border-radius:16px;padding:10px 12px}
+.catr small{display:block;font-size:12px;color:var(--mute)}
+.catr .b{display:flex;gap:6px;flex-wrap:wrap}.catr button{min-height:38px;font-size:13px}
+.onb h2{font-size:24px;margin-bottom:6px}
+.acct{position:relative;display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:14px}
+.acct button{min-height:40px;border-radius:99px;font-size:14px;background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.25);backdrop-filter:blur(6px)}
+.acct .gbtn{background:#fff;color:#1f1f1f;border:0;display:inline-flex;gap:8px;align-items:center;font-weight:600;padding:0 16px}
+.who2{display:inline-flex;align-items:center;gap:8px;font-weight:600;font-size:14px}
+.who2 b{width:30px;height:30px;border-radius:50%;background:#f3c96f;color:#3a2600;display:grid;place-items:center}
+.face.plus{background:var(--bg);color:var(--mute);font-size:40px;font-family:inherit}
+.planic{opacity:.6}.planic .face{filter:grayscale(.7)}
+.ic .ttl{font-family:"Amiri",serif;font-weight:700;font-size:17px;line-height:1.3;margin-top:6px}
+.ic .st{font-size:13px;color:var(--mute)}
+.ic .fr{font-size:13px;background:var(--emS);color:var(--em);border-radius:99px;padding:2px 10px;margin-top:2px}
+.ic .fr b{font-size:15px}
+.ic .nx2{font-size:12px;color:var(--gold)}
+.dot{position:absolute;top:12px;inset-inline-start:12px;min-width:26px;height:26px;border-radius:13px;background:var(--red);color:#fff;font-size:14px;font-weight:700;display:grid;place-items:center;padding:0 6px}
+.box.matn{max-width:640px}
+.mhead{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+.mhead .ring{width:76px;height:76px}.mhead .face{width:62px;height:62px;font-size:14px}
+.kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:6px}
+.kpis div{background:var(--bg);border-radius:12px;padding:10px;text-align:center}
+.kpis b{display:block;font-family:"Reem Kufi";font-size:22px}
+.kpis span{font-size:12px;color:var(--mute)}
+.khatma{display:flex;align-items:center;gap:14px;background:linear-gradient(135deg,var(--goldS),var(--card));border:1px solid var(--line);border-radius:16px;padding:12px 16px;margin-bottom:12px}
+.khatma .kn{flex:none;width:64px;height:64px;display:grid;place-items:center;font-family:"Reem Kufi";font-size:30px;color:#fff;background:#b58a22;clip-path:polygon(50% 0,61% 15%,79% 9%,79% 28%,97% 32%,88% 50%,97% 68%,79% 72%,79% 91%,61% 85%,50% 100%,39% 85%,21% 91%,21% 72%,3% 68%,12% 50%,3% 32%,21% 28%,21% 9%,39% 15%)}
+.khatma span:last-child{font-weight:600}
+.planbox{border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px;background:var(--bg)}
+.planbox .pt{font-family:"Reem Kufi";font-size:18px;color:var(--em);margin-bottom:4px}
+.pline{font-size:14px;color:var(--mute);margin:4px 0}
+.ptoday{background:var(--emS);color:var(--em);border-radius:10px;padding:8px 12px;margin-top:8px;font-weight:600;font-size:15px}
+.pbar{position:relative;height:12px;border-radius:8px;background:var(--line);margin:10px 0 6px}
+.pbar i{position:absolute;inset-block:0;inset-inline-start:0;border-radius:8px;background:var(--em)}
+.pbar.gold i{background:#c99a2e}
+.pbar b{position:absolute;top:-5px;width:3px;height:22px;background:var(--ink);border-radius:2px;margin-inline-start:-1px}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0}
+.seg label{position:relative}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg span{display:flex;align-items:center;justify-content:center;text-align:center;min-height:46px;border:1px solid var(--line);border-radius:12px;padding:4px 8px;font-size:14px;font-weight:600;cursor:pointer;background:var(--card)}
+.seg input:checked+span{background:var(--em);color:#fff;border-color:var(--em)}
+.seg input:focus-visible+span{outline:3px solid var(--em);outline-offset:2px}
+.prow{display:grid;grid-template-columns:110px minmax(0,1fr);gap:10px;align-items:center}
+.prow .calc{font-size:14px;font-weight:600;color:var(--em)}
+.listenbox{border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin-bottom:12px}
+.listenbox summary{cursor:pointer;font-family:"Reem Kufi";font-size:18px;color:var(--em)}
+.listenbox #lis{margin-top:10px}
+#aud{width:100%}
+.aud-tools{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:6px}
+.aud-tools button,.fbtn,.ytb{min-height:40px;font-size:14px;padding:0 12px;border-radius:10px}
+.aud-tools .on{background:var(--em);color:#fff;border-color:var(--em)}
+.fbtn{display:inline-flex;align-items:center;border:1px solid var(--line);background:var(--card);font-weight:600;cursor:pointer}
+.fbtn.pri{background:var(--em);color:#fff;border-color:var(--em)}
+.ytb{display:inline-flex;align-items:center;background:#c4302b;color:#fff;text-decoration:none;font-weight:600}
+.audcard{display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#0c4d3b,#14805f);color:#fff;text-decoration:none;border-radius:14px;padding:12px 14px;margin-bottom:12px;box-shadow:inset 0 -3px 0 #e7c56a}
+.audcard .play{flex:none;width:48px;height:48px;border-radius:50%;background:#e7c56a;color:#0c4d3b;display:grid;place-items:center}
+.audcard .play svg{width:26px;height:26px;margin-inline-start:3px}
+.audcard b{display:block;font-family:"Reem Kufi";font-size:17px}
+.audcard small{display:block;font-size:13px;opacity:.85}
+.trk-who{font-weight:600;font-size:14px;margin-bottom:8px;color:var(--em)}
+.tracks{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px;margin-bottom:10px;max-height:220px;overflow:auto}
+.tracks button{min-height:40px;font-size:13px;font-weight:500;text-align:start;display:flex;gap:8px;align-items:center;padding:4px 10px}
+.tracks button span{flex:none;width:22px;height:22px;border-radius:50%;background:var(--bg);display:grid;place-items:center;font-size:12px}
+.tracks button.on{background:var(--em);color:#fff;border-color:var(--em)}.tracks button.on span{background:rgba(255,255,255,.25)}
+.abv{font-size:13px;color:var(--gold);font-weight:600}
+.stats3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:6px}
+.stats3 div{background:var(--card);border-radius:14px;padding:10px;text-align:center;box-shadow:0 2px 0 var(--line)}
+.stats3 b{display:block;font-family:"Reem Kufi";font-size:26px;color:var(--em)}
+.stats3 span{font-size:12px;color:var(--mute)}
+.cele{position:fixed;inset:0;z-index:60;display:grid;place-items:center;pointer-events:none;background:radial-gradient(circle,rgba(12,77,59,.35),transparent 60%)}
+.cele div{display:grid;justify-items:center;gap:8px;animation:pop 2.6s ease forwards}
+.cele svg{width:120px;height:120px;filter:drop-shadow(0 4px 12px rgba(0,0,0,.3));animation:spin 2.6s ease}
+.cele b{font-family:"Reem Kufi";font-size:24px;color:#fff;background:#0c4d3b;padding:6px 18px;border-radius:99px;box-shadow:0 0 0 3px #e7c56a}
+@keyframes pop{0%{transform:scale(.3);opacity:0}15%{transform:scale(1.08);opacity:1}25%{transform:scale(1)}80%{opacity:1}100%{opacity:0}}
+@keyframes spin{to{transform:rotate(180deg)}}
+@media(prefers-reduced-motion:reduce){.cele div,.cele svg{animation:none}}
+.box h4{font-family:"Reem Kufi";font-size:17px;margin:18px 0 4px}
+@media(max-width:600px){.kpis b{font-size:18px}.icons{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.ring{width:92px;height:92px}.face{width:76px;height:76px;font-size:16px}}
+@media(max-width:600px){.row{grid-template-columns:minmax(0,1fr)}.row .b{justify-content:flex-start}.step{padding:16px}.box.reader{height:100vh;height:100dvh;max-height:100dvh;border-radius:0}.sheet{padding:0}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* ===== الطابع العصري ===== */
+:root{--bg:light-dark(#f2f4f1,#090d0c);--card:light-dark(#ffffff,#121917);--ink:light-dark(#0e1b17,#e9f1ed);--mute:light-dark(#66756f,#8fa39b);--line:light-dark(#e6ebe8,#1f2a26);--em:light-dark(#00936b,#2fd39d);--emS:light-dark(#e2f6ee,#0f2f25);--gold:light-dark(#c9811a,#f3b552);--goldS:light-dark(#fdf1dc,#2d2412);--red:light-dark(#e2513d,#ff7a66);--redS:light-dark(#fde9e5,#34191494)}
+body{font-family:"IBM Plex Sans Arabic",system-ui,sans-serif;background:var(--bg)}
+body::before,body::after{content:"";position:fixed;z-index:-1;width:60vmax;height:60vmax;border-radius:50%;filter:blur(90px);opacity:.45;pointer-events:none}
+body::before{top:-25vmax;inset-inline-end:-20vmax;background:radial-gradient(circle,#7fe3c1,transparent 65%)}
+body::after{bottom:-30vmax;inset-inline-start:-20vmax;background:radial-gradient(circle,#ffd59a,transparent 65%)}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]) body::before,:root:not([data-theme=light]) body::after{opacity:.16}}
+:root[data-theme=dark] body::before,:root[data-theme=dark] body::after{opacity:.16}
+h1,h2,h3,.sh h2,.sect,.tabs button,.planbox .pt,.listenbox summary,.box h4,.kpis b,.stats3 b,.big b,.khatma .kn,.audcard b,.cele b,.count{font-family:"Alexandria","IBM Plex Sans Arabic",sans-serif!important;letter-spacing:0}
+header{background:none!important;padding:18px 0 0!important;text-align:start}
+header::before,header::after{display:none!important}
+.herocard{position:relative;overflow:hidden;border-radius:32px;padding:30px clamp(20px,4vw,40px) 26px;color:#fff;background:radial-gradient(120% 140% at 100% 0%,#14b386 0%,#05624a 45%,#032b22 100%);box-shadow:0 30px 60px -30px rgba(3,60,45,.6)}
+.herocard::after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 40%,rgba(255,255,255,.08) 50%,transparent 60%);background-size:250% 100%;animation:sheen 9s linear infinite}
+@keyframes sheen{from{background-position:150% 0}to{background-position:-100% 0}}
+.hstar{position:absolute;width:260px;height:260px;top:-70px;inset-inline-start:-60px;color:#f3c96f;opacity:.35;animation:rot 60s linear infinite}
+.hstar.s2{top:auto;bottom:-110px;inset-inline-start:auto;inset-inline-end:-80px;width:220px;height:220px;opacity:.2;animation-direction:reverse}
+@keyframes rot{to{transform:rotate(360deg)}}
+.hlabel{position:relative;display:inline-block;font-family:"Alexandria";font-size:13px;font-weight:600;padding:4px 12px;border-radius:99px;background:rgba(255,255,255,.14);backdrop-filter:blur(6px);letter-spacing:.3px}
+.verse{position:relative;margin:16px 0 4px!important;max-width:none!important;text-shadow:none!important;font-size:clamp(22px,3.8vw,34px)!important}
+.verse i{color:#f3c96f!important}
+.who{position:relative;color:#f6d995!important;font-size:15px}
+.sync{position:relative;opacity:.65!important}
+main{margin-top:18px!important}
+.tabs{border-radius:999px!important;padding:6px!important;background:color-mix(in srgb,var(--card) 80%,transparent)!important;backdrop-filter:blur(14px);box-shadow:0 12px 30px -14px rgba(0,40,30,.25)!important;top:10px!important}
+.tabs button{border-radius:999px!important;min-height:54px!important;font-size:17px!important;font-weight:700}
+.tabs button[aria-selected=true]{background:linear-gradient(135deg,#00b386,#00805d)!important;box-shadow:0 8px 20px -8px rgba(0,140,100,.7)!important;color:#fff!important}
+.tabs .cnt{background:#ffcf6e!important}
+.qcard{border-radius:24px!important;background:linear-gradient(135deg,var(--card),color-mix(in srgb,var(--goldS) 60%,var(--card)))!important;box-shadow:0 10px 30px -18px rgba(0,40,30,.3)!important;text-align:start!important;padding:18px 22px 16px 22px!important;border-inline-start:5px solid var(--gold)}
+.qcard::before,.qcard::after{display:none}
+.qcard p{color:var(--ink)!important}
+.sect{justify-content:flex-start;font-size:20px!important;font-weight:700;margin:26px 4px 12px!important}
+.sect::before{display:none}.sect::after{background:linear-gradient(90deg,var(--line),transparent)!important}
+.icons{grid-template-columns:repeat(auto-fill,minmax(170px,1fr))!important;gap:14px!important}
+.ic{border-radius:26px!important;box-shadow:0 12px 30px -18px rgba(0,40,30,.35)!important;padding:20px 12px 16px!important;background:var(--card)!important;transition:transform .25s,box-shadow .25s!important}
+.ic:hover{transform:translateY(-5px)!important;box-shadow:0 22px 40px -20px rgba(0,60,40,.45)!important}
+.ring{position:relative;background:none!important}
+.ring::before{content:"";position:absolute;inset:0;border-radius:50%;background:conic-gradient(var(--c) calc(var(--p)*1%),var(--line) 0);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 7px),#000 calc(100% - 6px));mask:radial-gradient(farthest-side,transparent calc(100% - 7px),#000 calc(100% - 6px))}
+.face{position:relative;box-shadow:inset 0 -10px 20px rgba(0,0,0,.18),inset 0 8px 14px rgba(255,255,255,.25)!important;font-family:"Alexandria",sans-serif!important;font-weight:700!important;font-size:15px!important}
+.ic .fr{border-radius:99px;font-weight:600}
+.dot{background:linear-gradient(135deg,#ff7a66,#e2513d)!important;box-shadow:0 4px 10px -3px rgba(226,81,61,.7)}
+.step{border-radius:26px!important;box-shadow:0 12px 30px -20px rgba(0,40,30,.3)!important}
+.stats3 div{border-radius:20px!important;box-shadow:0 10px 24px -18px rgba(0,40,30,.35)!important;background:var(--card)}
+.stats3 b{background:linear-gradient(135deg,#00b386,#0a7d9b);-webkit-background-clip:text;background-clip:text;color:transparent!important;font-weight:800}
+button{border-radius:14px}
+.ok{background:var(--emS)!important}.again{background:var(--redS)!important}
+.pri{background:linear-gradient(135deg,#00b386,#00805d)!important;border-color:transparent!important;color:#fff!important}
+.box{border-radius:28px!important}
+.khatma{border-radius:22px!important;background:linear-gradient(135deg,#fff3d6,#ffe2a8)!important;border:0!important;color:#3a2600}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]) .khatma{background:linear-gradient(135deg,#3a2c10,#2a210f)!important;color:#f6e2b0}}
+:root[data-theme=dark] .khatma{background:linear-gradient(135deg,#3a2c10,#2a210f)!important;color:#f6e2b0}
+.khatma .kn{background:linear-gradient(135deg,#f3b552,#c9811a)!important}
+.planbox,.listenbox{border-radius:22px!important;border:0!important;background:var(--bg)!important}
+.pbar{height:10px!important}.pbar i{background:linear-gradient(90deg,#00b386,#2fd39d)!important}
+.pbar.gold i{background:linear-gradient(90deg,#f3b552,#c9811a)!important}
+.audcard{border-radius:18px!important;background:linear-gradient(135deg,#032b22,#05624a 60%,#14b386)!important}
+.row{border-top-color:var(--line)!important}
+.kpis div{border-radius:18px!important}
+
+.face.plus{font-size:40px!important;font-weight:400!important}
+@media(max-width:600px){.herocard{border-radius:26px;padding:24px 18px 20px}.icons{grid-template-columns:repeat(2,minmax(0,1fr))!important}.ic{padding:16px 8px 12px!important}}
+@media(prefers-reduced-motion:reduce){.hstar,.herocard::after{animation:none!important}}
+</style>
+</head>
+<body>
+<header><div class="wrap"><div class="herocard"><svg class="hstar" viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="45" y="45" width="110" height="110" rx="6"/><rect x="45" y="45" width="110" height="110" rx="6" transform="rotate(45 100 100)"/><circle cx="100" cy="100" r="38"/><circle cx="100" cy="100" r="88" stroke-dasharray="2 8"/></svg><svg class="hstar s2" viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="45" y="45" width="110" height="110" rx="6"/><rect x="45" y="45" width="110" height="110" rx="6" transform="rotate(45 100 100)"/><circle cx="100" cy="100" r="38"/><circle cx="100" cy="100" r="88" stroke-dasharray="2 8"/></svg>
+  <div class="hlabel">خزانة المحفوظات</div>
+  <div class="verse"><span>عِلْمِي مَعِي حَيْثُمَا يَمَّمْتُ يَنْفَعُنِي</span><i><svg viewBox="0 0 40 40" fill="currentColor"><path d="M20 2l4 9 9-4-4 9 9 4-9 4 4 9-9-4-4 9-4-9-9 4 4-9-9-4 9-4-4-9 9 4z" opacity=".9"/><circle cx="20" cy="20" r="4.5" fill="#0c4d3b"/></svg></i><span>قَلْبِي وِعَاءٌ لَهُ لَا بَطْنُ صُنْدُوقِ</span></div>
+  <div class="who">الإمام الشافعي رحمه الله</div>
+  <div class="acct" id="acct"></div>
+  <div class="sync" id="sync">جارٍ التحميل…</div>
+</div></div></header>
+<main><div class="wrap" id="app"></div></main>
+<div class="sheet" id="sheet"><div class="box" id="box"></div></div>
+<div class="toast" id="toast"><span id="toastT"></span><button id="undoB">تراجع</button></div>
+<script src="firebase-config.js"></script>
+<script>
+{
+const LIB={"nukhba":{"title":"نخبة الفكر — نسخة متون طالب العلم","dir":"nukhba/","parts":[["المقدمة",15,15],["الخبر وأقسامه: المتواتر والآحاد والفرد المطلق والنسبي",16,17],["خبر الآحاد: الصحيح لذاته والحسن، وزيادة الثقة",18,18],["المحفوظ والشاذ، والمعروف والمنكر، والمتابع والشاهد",19,20],["المقبول: المحكم ومختلف الحديث والناسخ والمنسوخ",21,21],["المردود بالسقط: المعلق والمرسل والمعضل والمنقطع والمدلس",22,23],["الطعن في الراوي: الموضوع والمتروك والمنكر والمعلل",24,24],["المخالفة: المدرج والمقلوب والمزيد والمضطرب والمصحف",25,25],["الجهالة والبدعة وسوء الحفظ",26,28],["الإسناد: المرفوع والموقوف والمقطوع",29,29],["المسند والعلو والنزول",30,31],["الأقران والمدبج والأكابر عن الأصاغر والسابق واللاحق والمهمل",32,33],["صيغ الأداء",34,35],["المتفق والمفترق والمؤتلف والمختلف والمتشابه",36,36],["الخاتمة: طبقات الرواة ومراتب الجرح والتعديل",37,38],["الكنى والأسماء والألقاب والموالي والإخوة",39,41],["آداب الشيخ والطالب وسبب الحديث والختام",42,43]],"words":{"15":[[0.0138,0.1144,[[0.31,0.681,6248]]],[0.1144,0.2182,[[0.732,0.871,1700],[0.646,0.711,1000],[0.523,0.623,1427],[0.453,0.502,773],[0.356,0.432,990],[0.212,0.333,1530],[0.057,0.188,1478]]],[0.2182,0.3041,[[0.811,0.942,1634],[0.715,0.786,1119],[0.603,0.692,1125],[0.465,0.581,1415],[0.311,0.438,1589],[0.189,0.287,1408],[0.047,0.169,1545]]],[0.3041,0.3869,[[0.879,0.946,976],[0.737,0.856,1416],[0.605,0.717,1293],[0.436,0.581,1664],[0.291,0.403,1445],[0.222,0.273,781],[0.047,0.198,1854]]],[0.3869,0.4736,[[0.838,0.942,1426],[0.695,0.818,1555],[0.569,0.675,1289]]],[0.4736,0.5653,[[0.824,0.875,778],[0.714,0.799,977]]],[0.5653,0.6659,[[0.811,0.871,817],[0.597,0.785,1812],[0.523,0.573,591],[0.329,0.501,1924],[0.229,0.307,905],[0.047,0.205,1423]]],[0.6659,0.7405,[[0.901,0.942,527],[0.769,0.879,1114],[0.591,0.744,1508],[0.336,0.567,2083],[0.17,0.304,1379],[0.047,0.149,1087]]],[0.7405,0.8273,[[0.772,0.941,1632],[0.705,0.75,527],[0.525,0.684,1596],[0.457,0.502,485],[0.286,0.433,1433],[0.198,0.263,579],[0.056,0.173,1091]]],[0.8273,0.923,[[0.808,0.942,1454],[0.721,0.786,720],[0.558,0.697,1260],[0.429,0.527,789],[0.233,0.403,1789],[0.156,0.21,611],[0.047,0.133,947]]],[0.923,0.983,[[0.76,0.941,1570]]]],"16":[[0.0105,0.0889,[[0.742,0.873,1831]]],[0.0889,0.1742,[[0.84,0.872,442],[0.684,0.817,1570],[0.601,0.651,609],[0.53,0.575,527],[0.4,0.508,1158],[0.343,0.378,438],[0.227,0.318,1149],[0.151,0.206,585],[0.047,0.124,774]]],[0.1742,0.2491,[[0.806,0.943,1239],[0.734,0.776,467],[0.656,0.712,691],[0.514,0.632,1017],[0.426,0.494,580],[0.314,0.399,983],[0.117,0.29,1638],[0.045,0.087,467]]],[0.2491,0.3289,[[0.841,0.944,939],[0.769,0.81,464],[0.61,0.748,1110]]],[0.3289,0.4066,[[0.716,0.871,1524],[0.502,0.682,1611],[0.344,0.469,1249],[0.21,0.321,1266],[0.047,0.184,1472]]],[0.4066,0.4913,[[0.214,0.944,1539]]],[0.4913,0.5717,[[0.692,0.871,1554],[0.44,0.657,1944],[0.32,0.407,846],[0.047,0.298,2248]]],[0.5717,0.6599,[[0.916,0.94,75],[0.814,0.891,790],[0.714,0.791,886],[0.649,0.69,113]]],[0.6599,0.7341,[[0.694,0.871,1604],[0.52,0.66,1260],[0.378,0.488,1017],[0.247,0.355,1086],[0.047,0.223,1928]]],[0.7341,0.8188,[[0.917,0.941,75],[0.783,0.891,1141],[0.689,0.76,726],[0.568,0.664,912],[0.056,0.543,143]]],[0.8188,0.9069,[[0.716,0.871,1526],[0.532,0.681,1325]]],[0.9069,0.9846,[[0.77,0.871,1339],[0.716,0.741,75],[0.594,0.691,842],[0.46,0.568,1144],[0.41,0.435,75],[0.289,0.392,897]]]],"17":[[0.0172,0.1202,[[0.734,0.871,1311],[0.498,0.704,1831],[0.247,0.474,1911],[0.047,0.216,1622]]],[0.1202,0.2328,[[0.742,0.941,1961],[0.672,0.72,617],[0.566,0.643,790],[0.415,0.541,1192],[0.334,0.392,599],[0.188,0.31,1172],[0.051,0.165,1196]]],[0.2328,0.3435,[[0.916,0.94,75],[0.817,0.892,739],[0.684,0.792,1145],[0.61,0.659,174],[0.509,0.578,762],[0.424,0.488,961],[0.332,0.401,861],[0.272,0.305,326],[0.17,0.247,891],[0.048,0.145,1084]]],[0.3435,0.458,[[0.808,0.941,1605],[0.638,0.786,1456],[0.588,0.612,75],[0.486,0.562,784],[0.314,0.46,1402],[0.251,0.291,113]]],[0.458,0.5744,[[0.832,0.873,592],[0.663,0.806,1315],[0.586,0.633,589],[0.515,0.56,527],[0.393,0.493,1107],[0.32,0.369,586],[0.204,0.299,975],[0.056,0.178,1035]]],[0.5744,0.6689,[[0.902,0.943,461],[0.831,0.88,429]]],[0.6689,0.7824,[[0.72,0.871,1504],[0.597,0.685,994],[0.423,0.571,1703]]],[0.7824,0.896,[[0.69,0.871,1570],[0.547,0.655,1089],[0.342,0.523,1629],[0.2,0.308,1224],[0.047,0.178,1559]]],[0.896,0.98,[[0.818,0.941,1402],[0.705,0.794,898]]]],"18":[[0.0126,0.0801,[[0.839,0.871,434],[0.708,0.817,1350],[0.553,0.686,1581],[0.435,0.532,1044],[0.322,0.411,895],[0.243,0.3,644],[0.056,0.217,1597]]],[0.0801,0.1559,[[0.798,0.943,1411],[0.618,0.773,1200],[0.5,0.586,774],[0.353,0.479,1319],[0.27,0.329,621],[0.14,0.243,873],[0.045,0.108,626]]],[0.1559,0.2395,[[0.782,0.941,1872],[0.658,0.76,979]]],[0.2395,0.3244,[[0.686,0.871,1709],[0.58,0.662,850],[0.399,0.558,1462],[0.298,0.375,764],[0.056,0.273,1899]]],[0.3244,0.4017,[[0.864,0.942,749],[0.8,0.841,551],[0.71,0.775,860],[0.551,0.686,1466],[0.343,0.527,1747],[0.27,0.311,592],[0.119,0.247,1190],[0.048,0.089,592]]],[0.4017,0.4817,[[0.773,0.942,1711]]],[0.4817,0.5744,[[0.811,0.871,786],[0.7,0.787,832],[0.529,0.676,1530],[0.339,0.496,1509],[0.205,0.317,1055],[0.045,0.171,1402]]],[0.5744,0.6594,[[0.853,0.941,1078],[0.684,0.832,1689]]],[0.6594,0.7465,[[0.812,0.871,781],[0.691,0.788,966],[0.533,0.662,1544],[0.46,0.509,586],[0.327,0.435,1228],[0.207,0.303,917],[0.056,0.182,1350]]],[0.7465,0.8336,[[0.871,0.942,885],[0.7,0.843,1469],[0.519,0.681,1478]]],[0.8336,0.9206,[[0.748,0.871,1268],[0.572,0.726,1448],[0.412,0.545,1452],[0.355,0.39,341],[0.283,0.327,537],[0.189,0.261,983],[0.047,0.167,1256]]],[0.9206,0.9853,[[0.872,0.944,731],[0.796,0.848,571],[0.674,0.776,1114]]]],"19":[[0.0346,0.2511,[[0.81,0.871,790],[0.657,0.786,1227],[0.483,0.636,1517],[0.287,0.45,1795],[0.055,0.262,2054]]],[0.2511,0.5,[[0.787,0.942,1551],[0.641,0.753,1154]]],[0.5,0.7294,[[0.78,0.871,971],[0.535,0.755,1842],[0.329,0.499,1689],[0.055,0.304,2100]]],[0.7294,0.9524,[[0.787,0.942,1551],[0.619,0.753,1372]]]],"20":[[0.0358,0.2547,[[0.734,0.871,1311],[0.522,0.708,1592],[0.45,0.492,529],[0.31,0.426,1187],[0.165,0.286,1089],[0.045,0.131,971]]],[0.2547,0.4779,[[0.801,0.941,1522]]],[0.4779,0.72,[[0.805,0.871,759],[0.695,0.781,818],[0.607,0.673,730],[0.458,0.585,1357],[0.359,0.425,866],[0.191,0.336,1407]]],[0.72,0.9558,[[0.778,0.871,1269],[0.637,0.752,1439],[0.491,0.614,1193],[0.406,0.458,571],[0.221,0.383,1598]]]],"21":[[0.019,0.1801,[[0.832,0.873,590],[0.634,0.805,1646],[0.561,0.603,529],[0.458,0.538,759],[0.382,0.434,485],[0.146,0.355,1810],[0.045,0.113,876]]],[0.1801,0.3177,[[0.776,0.941,1667]]],[0.3177,0.5022,[[0.805,0.871,759],[0.635,0.781,1285],[0.476,0.613,1182],[0.378,0.443,815],[0.243,0.355,1180],[0.057,0.216,1562]]],[0.5022,0.6471,[[0.877,0.942,866],[0.715,0.856,1544],[0.523,0.69,1469]]],[0.6471,0.8141,[[0.831,0.873,468],[0.727,0.811,751],[0.517,0.701,1652],[0.409,0.484,911],[0.221,0.386,1667],[0.045,0.189,1305]]],[0.8141,0.9693,[[0.756,0.941,1806],[0.651,0.723,890],[0.431,0.625,2069],[0.36,0.401,587],[0.185,0.334,1589]]]],"22":[[0.0083,0.0875,[[0.839,0.871,434],[0.769,0.82,876],[0.559,0.744,2073],[0.473,0.528,634],[0.403,0.448,527],[0.264,0.38,1203],[0.11,0.241,1360],[0.045,0.087,468]]],[0.0875,0.1653,[[0.842,0.942,1017]]],[0.1653,0.2417,[[0.693,0.873,2380],[0.61,0.66,609],[0.54,0.584,523],[0.408,0.517,1156],[0.33,0.385,529],[0.184,0.306,1175],[0.047,0.16,1001]]],[0.2417,0.3161,[[0.885,0.943,544],[0.687,0.861,1527],[0.614,0.656,467],[0.536,0.593,539],[0.417,0.516,864],[0.321,0.397,731],[0.117,0.296,1685],[0.045,0.087,467]]],[0.3161,0.3926,[[0.879,0.942,659],[0.763,0.858,955]]],[0.3926,0.4793,[[0.72,0.871,1508],[0.545,0.685,1544]]],[0.4793,0.5737,[[0.717,0.871,1427],[0.524,0.683,1443]]],[0.5737,0.6543,[[0.672,0.871,1725],[0.598,0.64,529],[0.497,0.577,767],[0.331,0.475,1390],[0.127,0.307,1614],[0.047,0.105,701]]],[0.6543,0.7342,[[0.79,0.941,1432],[0.692,0.757,866],[0.491,0.669,1818],[0.386,0.457,886],[0.176,0.359,2258]]],[0.7342,0.8216,[[0.833,0.873,580],[0.767,0.807,530],[0.644,0.744,1176],[0.484,0.621,1257],[0.419,0.461,468],[0.292,0.397,1022]]],[0.8216,0.9112,[[0.711,0.871,1549],[0.573,0.679,1143],[0.448,0.55,996],[0.238,0.422,1742],[0.12,0.206,784],[0.048,0.097,591]]],[0.9112,0.9848,[[0.83,0.945,1370],[0.747,0.808,691],[0.577,0.722,1544]]]],"23":[[0.0329,0.3589,[[0.703,0.912,1553],[0.485,0.669,1627],[0.367,0.453,850],[0.212,0.345,1342],[0.047,0.19,1430]]],[0.3589,0.6274,[[0.822,0.941,1279],[0.748,0.79,385],[0.607,0.729,959],[0.43,0.575,1226]]],[0.6274,0.9397,[[0.786,0.871,894],[0.612,0.757,1404],[0.469,0.588,1402],[0.396,0.447,509],[0.24,0.371,1182],[0.18,0.219,507],[0.08,0.157,829]]]],"24":[[0.0106,0.1062,[[0.829,0.875,845],[0.661,0.805,1951],[0.581,0.629,599],[0.509,0.554,527],[0.382,0.488,1143],[0.235,0.36,1246],[0.056,0.211,1370]]],[0.1062,0.1965,[[0.902,0.944,467],[0.777,0.882,1158],[0.627,0.755,1204],[0.554,0.597,467],[0.422,0.533,1152],[0.276,0.398,1278],[0.204,0.246,467],[0.056,0.182,1296]]],[0.1965,0.2805,[[0.902,0.944,468],[0.769,0.88,1069],[0.696,0.739,468],[0.554,0.675,1021],[0.482,0.524,468],[0.295,0.46,1640],[0.222,0.264,468],[0.056,0.201,1424]]],[0.2805,0.3832,[[0.902,0.944,467],[0.759,0.882,1118],[0.687,0.729,467],[0.587,0.664,636],[0.445,0.563,1261]]],[0.3832,0.4885,[[0.72,0.871,1504],[0.493,0.685,1960]]],[0.4885,0.5894,[[0.717,0.871,1430],[0.518,0.683,1600]]],[0.5894,0.7018,[[0.702,0.871,1566],[0.545,0.668,1333],[0.498,0.523,75],[0.397,0.473,785],[0.296,0.373,886],[0.231,0.271,113]]],[0.7018,0.7973,[[0.786,0.871,890],[0.651,0.757,1236],[0.429,0.628,1664]]],[0.7973,0.8938,[[0.833,0.873,587],[0.677,0.806,1227],[0.603,0.645,502],[0.49,0.582,1334],[0.39,0.466,875],[0.196,0.368,1561],[0.047,0.164,1223]]],[0.8938,0.9805,[[0.803,0.941,1498],[0.052,0.771,1847]]]],"25":[[0.0118,0.0908,[[0.828,0.873,612],[0.596,0.802,1993],[0.522,0.564,529],[0.389,0.5,1023],[0.242,0.367,1188],[0.057,0.219,1415]]],[0.0908,0.1623,[[0.814,0.942,1503],[0.64,0.789,1381]]],[0.1623,0.2323,[[0.831,0.873,467],[0.713,0.811,1154],[0.552,0.69,1444],[0.374,0.531,1520],[0.213,0.341,1504],[0.074,0.188,1022]]],[0.2323,0.3169,[[0.831,0.873,468],[0.695,0.811,1331],[0.521,0.671,1354],[0.288,0.488,2059]]],[0.3169,0.3877,[[0.831,0.873,467],[0.708,0.815,1092],[0.607,0.691,604],[0.441,0.579,1389],[0.373,0.422,600],[0.242,0.354,1273],[0.05,0.221,1511]]],[0.3877,0.4619,[[0.831,0.872,464],[0.693,0.811,1277],[0.611,0.67,621],[0.427,0.585,1380],[0.147,0.394,2442],[0.047,0.115,752]]],[0.4619,0.5361,[[0.882,0.944,950],[0.723,0.857,1428],[0.604,0.699,899],[0.434,0.584,1385]]],[0.5361,0.6137,[[0.831,0.872,464],[0.64,0.811,1420],[0.474,0.618,1277],[0.39,0.452,721],[0.271,0.368,843],[0.057,0.246,1555]]],[0.6137,0.6817,[[0.733,0.942,2139],[0.505,0.709,1910]]],[0.6817,0.7601,[[0.812,0.871,621],[0.669,0.786,1126],[0.534,0.649,1126],[0.39,0.511,1105],[0.245,0.367,1087],[0.047,0.222,1679]]],[0.7601,0.8412,[[0.732,0.942,1795],[0.653,0.701,655],[0.532,0.628,1090],[0.457,0.509,494],[0.333,0.431,1103],[0.152,0.308,1404]]],[0.8412,0.9161,[[0.8,0.871,840],[0.665,0.777,1075],[0.448,0.64,1498],[0.266,0.416,1549],[0.172,0.245,751],[0.047,0.149,1035]]],[0.9161,0.9847,[[0.783,0.941,1311],[0.653,0.75,948],[0.461,0.628,1683]]]],"26":[[0.0099,0.0896,[[0.831,0.873,595],[0.64,0.805,1725],[0.452,0.605,1341],[0.375,0.42,555],[0.219,0.35,1299],[0.154,0.195,527],[0.045,0.131,1056]]],[0.0896,0.1708,[[0.819,0.944,1276],[0.661,0.795,1388],[0.537,0.641,943],[0.474,0.515,371],[0.307,0.449,1397],[0.246,0.287,382],[0.056,0.223,1433]]],[0.1708,0.2498,[[0.803,0.942,1407],[0.729,0.776,548],[0.529,0.703,1754]]],[0.2498,0.3303,[[0.795,0.871,797],[0.657,0.774,1239],[0.537,0.634,1104],[0.453,0.513,704],[0.321,0.428,1167],[0.176,0.298,1251],[0.056,0.153,847]]],[0.3303,0.4146,[[0.803,0.942,1407],[0.729,0.776,548],[0.53,0.703,1566]]],[0.4146,0.4951,[[0.831,0.872,464],[0.777,0.809,391],[0.633,0.751,1063],[0.414,0.612,1709],[0.303,0.382,813],[0.056,0.277,2029]]],[0.4951,0.5816,[[0.883,0.942,621],[0.756,0.858,1174],[0.583,0.731,1520],[0.487,0.558,730],[0.372,0.467,1137],[0.24,0.349,1262],[0.047,0.214,1656]]],[0.5816,0.6651,[[0.917,0.941,75],[0.814,0.891,790],[0.656,0.789,1531],[0.592,0.631,113]]],[0.6651,0.7525,[[0.805,0.871,816],[0.673,0.782,994],[0.519,0.649,1300],[0.388,0.496,957],[0.27,0.363,799],[0.047,0.237,1985]]],[0.7525,0.8299,[[0.831,0.941,1059]]],[0.8299,0.9157,[[0.831,0.873,441],[0.712,0.812,1018],[0.503,0.689,1628],[0.402,0.471,765],[0.262,0.378,1216],[0.047,0.228,1941]]],[0.9157,0.9833,[[0.807,0.941,1178],[0.696,0.774,801],[0.509,0.673,1431]]]],"27":[[0.019,0.1889,[[0.833,0.873,587],[0.671,0.806,1313],[0.594,0.64,589],[0.431,0.568,1410],[0.358,0.401,468],[0.196,0.339,1384]]],[0.1889,0.3514,[[0.72,0.871,1504],[0.654,0.687,391],[0.548,0.629,1017],[0.378,0.524,1394],[0.171,0.349,1783]]],[0.3514,0.5154,[[0.698,0.871,1519],[0.568,0.667,1156],[0.488,0.545,542],[0.419,0.465,541],[0.307,0.396,999],[0.176,0.284,1083],[0.126,0.151,75],[0.047,0.102,616]]],[0.5154,0.672,[[0.804,0.941,1555],[0.731,0.779,174],[0.652,0.7,655],[0.586,0.628,529],[0.476,0.563,768],[0.417,0.453,341],[0.285,0.391,1236],[0.151,0.264,1135],[0.047,0.127,948]]],[0.672,0.8214,[[0.916,0.94,75],[0.802,0.891,846],[0.607,0.778,1525],[0.536,0.584,174],[0.442,0.502,592],[0.31,0.417,1094],[0.047,0.286,2272]]],[0.8214,0.9693,[[0.916,0.94,75],[0.809,0.891,1128],[0.645,0.784,1430],[0.58,0.62,113]]]],"28":[[0.0155,0.2021,[[0.824,0.873,630],[0.713,0.799,738],[0.519,0.689,1626],[0.447,0.489,529],[0.346,0.425,762],[0.215,0.322,986],[0.047,0.191,1515]]],[0.2021,0.4076,[[0.916,0.94,75],[0.814,0.891,790],[0.714,0.791,886],[0.64,0.69,174],[0.568,0.61,468],[0.448,0.545,1021],[0.228,0.423,2161]]],[0.4076,0.5855,[[0.772,0.871,900],[0.663,0.749,1046],[0.518,0.639,1210],[0.363,0.493,1455],[0.212,0.341,1246],[0.164,0.188,75],[0.051,0.138,905]]],[0.5855,0.7565,[[0.733,0.941,1647],[0.479,0.7,1835],[0.244,0.446,1793],[0.171,0.218,139],[0.045,0.137,716]]],[0.7565,0.962,[[0.801,0.942,1589],[0.654,0.777,946],[0.591,0.623,391],[0.455,0.565,1011],[0.379,0.424,539],[0.152,0.357,2003]]]],"29":[[0.0118,0.0884,[[0.84,0.872,442],[0.778,0.82,820],[0.597,0.753,1902],[0.517,0.564,594],[0.447,0.492,527],[0.324,0.425,1226],[0.242,0.303,695],[0.129,0.216,1026],[0.045,0.107,1031]]],[0.0884,0.1754,[[0.742,0.944,1725],[0.67,0.712,467],[0.496,0.647,1311],[0.405,0.462,544],[0.268,0.38,1083],[0.196,0.238,467],[0.056,0.174,1139]]],[0.1754,0.2394,[[0.902,0.943,435],[0.757,0.882,1168]]],[0.2394,0.3138,[[0.831,0.873,464],[0.746,0.811,715],[0.532,0.722,1937],[0.366,0.51,1374],[0.233,0.334,885],[0.145,0.2,527],[0.047,0.121,885]]],[0.3138,0.3834,[[0.852,0.941,1038],[0.768,0.83,1031],[0.647,0.746,1061],[0.594,0.626,337],[0.458,0.57,941],[0.356,0.435,796],[0.183,0.332,1493],[0.134,0.159,75],[0.045,0.109,690]]],[0.3834,0.4635,[[0.81,0.944,1448],[0.726,0.787,729],[0.655,0.704,586],[0.498,0.631,1535],[0.185,0.472,143]]],[0.4635,0.5393,[[0.831,0.873,464],[0.746,0.811,715],[0.553,0.721,1641],[0.439,0.52,821],[0.361,0.417,532],[0.263,0.339,890],[0.047,0.238,1903]]],[0.5393,0.6075,[[0.817,0.944,1258]]],[0.6075,0.6875,[[0.72,0.871,1504],[0.523,0.685,1735]]],[0.6875,0.7627,[[0.717,0.871,1425],[0.498,0.683,1820]]],[0.7627,0.8365,[[0.688,0.871,1640],[0.475,0.653,2106],[0.425,0.45,75],[0.319,0.401,762],[0.22,0.295,739],[0.047,0.195,1546]]],[0.8365,0.9061,[[0.874,0.942,612],[0.772,0.84,883],[0.707,0.746,113]]],[0.9061,0.9847,[[0.765,0.871,1190],[0.545,0.742,1903],[0.408,0.509,1035]]]],"30":[[0.0118,0.0836,[[0.84,0.872,442],[0.633,0.817,2128],[0.48,0.598,1377],[0.304,0.455,1478],[0.189,0.282,809],[0.045,0.165,1273]]],[0.0836,0.1588,[[0.768,0.941,1724]]],[0.1588,0.2444,[[0.793,0.871,893],[0.703,0.77,808],[0.548,0.68,1163],[0.414,0.515,1035],[0.344,0.388,523],[0.148,0.321,1596],[0.047,0.126,790]]],[0.2444,0.3134,[[0.803,0.941,1280],[0.698,0.781,1130],[0.626,0.667,464],[0.529,0.606,780],[0.417,0.507,859],[0.335,0.394,662],[0.196,0.31,1062],[0.047,0.172,1231]]],[0.3134,0.3907,[[0.91,0.944,345],[0.419,0.89,1407]]],[0.3907,0.4847,[[0.72,0.871,1508],[0.592,0.685,1179],[0.421,0.569,1703]]],[0.4847,0.5794,[[0.717,0.871,1424],[0.546,0.683,1375]]],[0.5794,0.6581,[[0.791,0.871,818],[0.581,0.767,1906],[0.439,0.549,977],[0.244,0.404,1538],[0.159,0.222,710],[0.047,0.135,1086]]],[0.6581,0.7444,[[0.867,0.944,728],[0.664,0.841,1812],[0.589,0.64,509],[0.5,0.564,663],[0.056,0.478,1219]]],[0.7444,0.8294,[[0.714,0.871,1410],[0.582,0.683,885],[0.385,0.546,1548],[0.299,0.364,711],[0.185,0.275,1126],[0.047,0.162,1135]]],[0.8294,0.9011,[[0.817,0.944,1258]]],[0.9011,0.9854,[[0.637,0.871,2014],[0.491,0.605,990],[0.323,0.46,1221],[0.219,0.299,757],[0.047,0.194,1388]]]],"31":[[0.031,0.2138,[[0.87,0.943,595],[0.693,0.844,1366],[0.589,0.671,805],[0.435,0.57,1046],[0.333,0.403,761],[0.169,0.311,1182],[0.047,0.146,834]]],[0.2138,0.3862,[[0.748,0.941,1844]]],[0.3862,0.5897,[[0.607,0.871,2488],[0.463,0.575,982],[0.26,0.429,1589],[0.184,0.236,671],[0.047,0.162,1110]]],[0.5897,0.7586,[[0.862,0.943,915],[0.658,0.836,1622]]],[0.7586,0.9638,[[0.749,0.871,1403],[0.631,0.724,1124],[0.448,0.611,1458],[0.279,0.412,1336]]]],"32":[[0.0119,0.0801,[[0.799,0.871,846],[0.63,0.778,1324],[0.463,0.604,1321],[0.35,0.439,802],[0.239,0.326,768],[0.132,0.214,793],[0.047,0.109,649]]],[0.0801,0.1756,[[0.849,0.941,894],[0.7,0.825,1502],[0.592,0.677,930],[0.406,0.556,1539]]],[0.1756,0.2851,[[0.805,0.871,759],[0.694,0.782,768],[0.616,0.673,801],[0.497,0.594,1086],[0.411,0.468,562],[0.254,0.385,1080],[0.055,0.22,1941]]],[0.2851,0.3785,[[0.805,0.871,759],[0.695,0.782,768],[0.544,0.671,1088],[0.398,0.519,1000],[0.148,0.364,1973],[0.047,0.126,685]]],[0.3785,0.4579,[[0.734,0.941,1774],[0.583,0.701,974],[0.438,0.547,1034],[0.347,0.413,612],[0.164,0.321,1382],[0.047,0.131,866]]],[0.4579,0.6243,[[0.814,0.942,2026],[0.661,0.792,1128],[0.517,0.629,937],[0.428,0.485,537],[0.316,0.404,768],[0.23,0.293,624],[0.134,0.207,722],[0.048,0.111,624]]],[0.6243,0.7282,[[0.805,0.871,732],[0.655,0.783,1303],[0.537,0.635,1008],[0.453,0.513,614],[0.314,0.428,1256],[0.168,0.282,1271],[0.047,0.144,905]]],[0.7282,0.816,[[0.77,0.944,1497],[0.652,0.739,930],[0.495,0.618,1274],[0.293,0.471,1760]]],[0.816,0.9143,[[0.805,0.871,759],[0.695,0.782,768],[0.608,0.671,597],[0.479,0.586,1123],[0.32,0.455,1489],[0.152,0.296,1267],[0.048,0.118,772]]],[0.9143,0.9853,[[0.817,0.944,1130],[0.56,0.783,2200],[0.376,0.539,1531],[0.264,0.35,1000],[0.086,0.238,1609]]]],"33":[[0.0282,0.2023,[[0.805,0.871,759],[0.654,0.782,1055],[0.476,0.63,1677],[0.322,0.454,1222],[0.153,0.298,1090],[0.056,0.119,579]]],[0.2023,0.3947,[[0.902,0.944,440],[0.711,0.883,1497],[0.615,0.678,813],[0.565,0.59,75],[0.492,0.542,591],[0.333,0.467,1539],[0.26,0.308,174],[0.132,0.227,847],[0.047,0.099,517]]],[0.3947,0.5937,[[0.834,0.942,1009],[0.69,0.81,1041]]],[0.5937,0.7861,[[0.805,0.871,732],[0.663,0.783,1236],[0.511,0.638,1233],[0.42,0.489,686],[0.272,0.396,1187],[0.117,0.247,1133],[0.045,0.087,467]]],[0.7861,0.9635,[[0.839,0.942,1080],[0.761,0.812,480],[0.543,0.736,1664],[0.446,0.511,866],[0.236,0.423,1757]]]],"34":[[0.0111,0.0819,[[0.84,0.872,442],[0.693,0.817,1881],[0.54,0.668,1473],[0.313,0.504,1563],[0.056,0.288,1988]]],[0.0819,0.1528,[[0.903,0.944,592],[0.675,0.877,1782],[0.492,0.642,1486],[0.346,0.468,1144],[0.273,0.315,597],[0.148,0.248,1095],[0.047,0.125,884]]],[0.1528,0.2243,[[0.874,0.942,739],[0.692,0.848,1482],[0.617,0.66,602],[0.411,0.591,1696],[0.337,0.381,607],[0.122,0.311,1643],[0.048,0.091,602]]],[0.2243,0.2993,[[0.683,0.941,2205],[0.598,0.651,656],[0.441,0.572,1097],[0.301,0.419,1164],[0.216,0.27,656],[0.056,0.19,1071]]],[0.2993,0.3757,[[0.783,0.942,1499]]],[0.3757,0.4646,[[0.667,0.871,1916],[0.537,0.635,866],[0.397,0.512,1057],[0.254,0.372,1061],[0.168,0.232,579],[0.048,0.144,1110]]],[0.4646,0.5479,[[0.808,0.941,1503],[0.717,0.776,785],[0.603,0.693,1034],[0.509,0.58,918],[0.393,0.486,877]]],[0.5479,0.6396,[[0.728,0.871,1497],[0.54,0.696,1577],[0.37,0.511,1646],[0.294,0.343,584],[0.122,0.268,1403]]],[0.6396,0.7368,[[0.701,0.871,1600],[0.498,0.669,1627],[0.395,0.466,726],[0.317,0.369,637],[0.18,0.295,1020]]],[0.7368,0.8299,[[0.812,0.871,780],[0.677,0.788,1098],[0.578,0.643,866],[0.357,0.558,1702]]],[0.8299,0.9132,[[0.698,0.871,1601],[0.53,0.667,1201],[0.332,0.504,1514],[0.255,0.302,655],[0.172,0.227,616],[0.047,0.149,992]]],[0.9132,0.9847,[[0.726,0.941,1995],[0.629,0.694,866],[0.461,0.609,1608],[0.399,0.441,385],[0.266,0.379,940]]]],"35":[[0.0114,0.094,[[0.744,0.871,1386],[0.551,0.719,1470],[0.381,0.53,1545],[0.28,0.358,795],[0.119,0.255,1332],[0.05,0.098,655]]],[0.094,0.1838,[[0.887,0.943,505],[0.677,0.861,1552],[0.525,0.644,1103],[0.356,0.493,1400],[0.224,0.334,1094],[0.051,0.202,1620]]],[0.1838,0.2655,[[0.879,0.942,686],[0.797,0.857,670],[0.748,0.773,75],[0.645,0.724,801],[0.476,0.623,1436],[0.413,0.454,113]]],[0.2655,0.3619,[[0.71,0.871,1786],[0.49,0.681,1963],[0.411,0.466,614],[0.238,0.387,1472],[0.048,0.214,1846]]],[0.3619,0.4526,[[0.869,0.944,716],[0.66,0.836,1823],[0.588,0.637,586],[0.419,0.563,1442],[0.223,0.396,1682],[0.135,0.202,660]]],[0.4526,0.5392,[[0.671,0.871,1935],[0.591,0.646,619],[0.456,0.57,1094],[0.242,0.435,1695],[0.051,0.214,1682]]],[0.5392,0.6364,[[0.826,0.944,1294],[0.666,0.808,1408],[0.619,0.643,75],[0.512,0.598,898],[0.408,0.494,1150],[0.293,0.39,1175],[0.127,0.27,1442],[0.061,0.107,105]]],[0.6364,0.719,[[0.768,0.871,985],[0.507,0.742,1935],[0.373,0.472,1130],[0.283,0.35,676],[0.056,0.258,1708]]],[0.719,0.8088,[[0.778,0.942,1633],[0.569,0.756,1679],[0.344,0.537,1950],[0.239,0.31,886],[0.158,0.212,674],[0.046,0.13,858]]],[0.8088,0.8873,[[0.816,0.944,1215],[0.766,0.79,75],[0.543,0.743,1941],[0.349,0.519,1481],[0.047,0.315,2533]]],[0.8873,0.9828,[[0.762,0.942,1741],[0.712,0.737,75],[0.61,0.688,790],[0.453,0.586,1531],[0.38,0.429,586],[0.253,0.356,1120],[0.134,0.23,954]]]],"36":[[0.009,0.0905,[[0.84,0.872,442],[0.778,0.82,820],[0.643,0.753,1600],[0.583,0.624,502],[0.443,0.561,1350],[0.218,0.421,1917],[0.047,0.186,1243]]],[0.0905,0.1667,[[0.83,0.948,1328],[0.626,0.804,1593],[0.408,0.594,1854],[0.149,0.386,2302],[0.045,0.116,891]]],[0.1667,0.2504,[[0.822,0.941,1448],[0.61,0.797,1921]]],[0.2504,0.3311,[[0.805,0.871,727],[0.636,0.783,1471],[0.441,0.611,1460],[0.294,0.417,1184],[0.047,0.261,2000]]],[0.3311,0.411,[[0.842,0.944,1157],[0.743,0.809,866],[0.558,0.72,1782],[0.318,0.534,2129]]],[0.411,0.4977,[[0.805,0.871,727],[0.658,0.783,1357],[0.478,0.633,1389],[0.268,0.454,1829],[0.117,0.244,1103],[0.045,0.087,467]]],[0.4977,0.5762,[[0.756,0.944,1629],[0.651,0.723,896],[0.439,0.628,1717],[0.318,0.406,910],[0.251,0.293,529],[0.154,0.227,968],[0.047,0.131,932]]],[0.5762,0.6614,[[0.797,0.941,1684],[0.722,0.774,601],[0.58,0.696,1153],[0.452,0.555,990],[0.304,0.425,1024],[0.047,0.271,2251]]],[0.6614,0.7353,[[0.893,0.942,584],[0.748,0.869,1114]]],[0.7353,0.8183,[[0.711,0.871,1539],[0.629,0.689,620],[0.512,0.604,867],[0.408,0.484,923],[0.262,0.387,1391],[0.123,0.23,955],[0.047,0.091,526]]],[0.8183,0.8944,[[0.814,0.944,1401],[0.649,0.788,1659],[0.586,0.628,441],[0.391,0.562,1665],[0.312,0.36,655],[0.237,0.286,584],[0.109,0.212,957],[0.045,0.087,468]]],[0.8944,0.9834,[[0.798,0.942,1296],[0.726,0.768,468],[0.559,0.706,1609],[0.355,0.534,1681],[0.22,0.322,1005],[0.104,0.199,954]]]],"37":[[0.0122,0.1156,[[0.409,0.582,2717]]],[0.1156,0.2211,[[0.839,0.871,423],[0.729,0.817,770],[0.543,0.703,1445],[0.374,0.51,1327],[0.189,0.351,2023],[0.045,0.165,1625]]],[0.2211,0.2994,[[0.716,0.942,2064],[0.491,0.684,1950],[0.267,0.457,1949],[0.048,0.235,1976]]],[0.2994,0.3841,[[0.916,0.94,75],[0.75,0.893,1377],[0.528,0.718,1722],[0.36,0.496,1473],[0.296,0.336,113]]],[0.3841,0.4781,[[0.697,0.871,1386],[0.501,0.672,1553],[0.258,0.468,1815],[0.047,0.223,1536]]],[0.4781,0.552,[[0.805,0.944,1414],[0.729,0.775,405],[0.573,0.709,1328],[0.387,0.547,1271],[0.313,0.356,602],[0.117,0.287,1497],[0.045,0.087,468]]],[0.552,0.6396,[[0.764,0.941,1726],[0.692,0.734,468],[0.503,0.669,1487]]],[0.6396,0.7265,[[0.68,0.871,1915],[0.518,0.644,1187],[0.446,0.488,468],[0.314,0.423,1070],[0.117,0.292,1709],[0.045,0.087,468]]],[0.7265,0.8162,[[0.876,0.941,701],[0.769,0.853,888],[0.622,0.745,1113]]],[0.8162,0.9081,[[0.705,0.871,1351],[0.481,0.68,1823],[0.251,0.448,1861],[0.047,0.215,1501]]],[0.9081,0.9842,[[0.817,0.944,1323],[0.743,0.785,385],[0.617,0.723,1188],[0.441,0.593,1162]]]],"38":[[0.0162,0.1213,[[0.832,0.873,592],[0.775,0.807,326],[0.665,0.749,993],[0.544,0.643,1110],[0.48,0.522,468],[0.332,0.457,1279],[0.266,0.309,390],[0.174,0.246,900],[0.056,0.153,1001]]],[0.1213,0.2245,[[0.902,0.943,464],[0.81,0.879,888],[0.645,0.786,1376]]],[0.2245,0.3457,[[0.692,0.871,1554],[0.617,0.658,371],[0.47,0.591,1087],[0.283,0.452,1478],[0.199,0.261,564],[0.047,0.176,1292]]],[0.3457,0.4575,[[0.768,0.941,1816],[0.694,0.737,385],[0.538,0.674,1457]]],[0.4575,0.5597,[[0.751,0.871,1361],[0.588,0.727,1535],[0.509,0.565,534],[0.365,0.485,1080],[0.146,0.344,1734],[0.045,0.114,715]]],[0.5597,0.6714,[[0.892,0.943,509],[0.766,0.867,894],[0.717,0.741,75],[0.615,0.692,785],[0.456,0.59,1531],[0.392,0.431,113]]],[0.6714,0.7813,[[0.719,0.871,1644],[0.604,0.696,1142],[0.5,0.581,806],[0.333,0.476,1536],[0.269,0.311,529],[0.15,0.245,776],[0.047,0.129,899]]],[0.7813,0.8883,[[0.888,0.943,529],[0.747,0.864,1070],[0.561,0.726,1389],[0.467,0.529,800],[0.369,0.443,752],[0.282,0.342,609],[0.138,0.26,1271],[0.047,0.115,837]]],[0.8883,0.979,[[0.816,0.943,1309],[0.767,0.791,75],[0.665,0.741,785],[0.494,0.64,1392],[0.431,0.47,113]]]],"39":[[0.0127,0.0963,[[0.84,0.872,442],[0.646,0.817,2185],[0.525,0.627,1240],[0.246,0.5,2682],[0.048,0.213,1907]]],[0.0963,0.1798,[[0.783,0.942,2216]]],[0.1798,0.2761,[[0.794,0.871,705],[0.676,0.772,930],[0.556,0.654,1116]]],[0.2761,0.3644,[[0.794,0.871,737],[0.663,0.772,1107],[0.568,0.64,817],[0.505,0.547,464],[0.376,0.486,1157]]],[0.3644,0.4574,[[0.793,0.871,742],[0.642,0.769,1269],[0.535,0.621,1098],[0.435,0.513,748],[0.327,0.412,774],[0.255,0.297,467],[0.056,0.235,1614]]],[0.4574,0.5378,[[0.902,0.943,464],[0.799,0.882,1081],[0.707,0.777,888],[0.553,0.684,1148]]],[0.5378,0.6333,[[0.789,0.871,762],[0.661,0.767,826],[0.574,0.64,720],[0.477,0.549,711],[0.363,0.457,814],[0.291,0.332,467],[0.205,0.271,720],[0.108,0.181,716],[0.051,0.087,346]]],[0.6333,0.7232,[[0.85,0.944,979],[0.768,0.829,691],[0.63,0.742,1227]]],[0.7232,0.8083,[[0.783,0.871,760],[0.658,0.761,1146],[0.519,0.637,1043],[0.384,0.496,1069],[0.278,0.361,775],[0.117,0.255,1156],[0.045,0.087,467]]],[0.8083,0.899,[[0.841,0.942,1014],[0.714,0.817,1076],[0.581,0.69,1314],[0.455,0.557,1071],[0.269,0.431,1482]]],[0.899,0.9825,[[0.794,0.871,705],[0.691,0.772,1032],[0.592,0.669,784],[0.464,0.567,1071],[0.284,0.441,1486],[0.188,0.26,699]]]],"40":[[0.0169,0.1338,[[0.84,0.872,442],[0.688,0.817,1890],[0.513,0.663,1846],[0.334,0.488,1577],[0.128,0.31,1685]]],[0.1338,0.2518,[[0.786,0.871,1273],[0.629,0.758,1651],[0.395,0.597,1919],[0.156,0.362,1776]]],[0.2518,0.3751,[[0.782,0.871,1190],[0.698,0.761,700],[0.522,0.673,1479],[0.305,0.49,1858],[0.255,0.279,75],[0.117,0.232,1027],[0.045,0.087,467]]],[0.3751,0.4837,[[0.825,0.941,1120],[0.64,0.799,1536],[0.438,0.606,1630],[0.374,0.414,113]]],[0.4837,0.6175,[[0.785,0.871,921],[0.617,0.761,1656],[0.417,0.594,1509]]],[0.6175,0.7366,[[0.784,0.871,1180],[0.696,0.761,840],[0.529,0.667,1659],[0.328,0.505,1787],[0.113,0.307,1680]]],[0.7366,0.8588,[[0.803,0.871,757],[0.72,0.782,944],[0.587,0.697,1175]]],[0.8588,0.9768,[[0.741,0.871,1885],[0.59,0.72,1094],[0.471,0.567,959]]]],"41":[[0.0443,0.3296,[[0.84,0.872,442],[0.643,0.817,2205],[0.431,0.619,2281],[0.343,0.408,584],[0.171,0.32,1272],[0.048,0.139,814]]],[0.3296,0.6343,[[0.817,0.944,1197],[0.661,0.786,1231],[0.589,0.631,468],[0.403,0.568,1523]]],[0.6343,0.9418,[[0.84,0.872,442],[0.688,0.817,1890],[0.534,0.663,1901],[0.294,0.512,1885]]]],"42":[[0.0228,0.1906,[[0.84,0.872,442],[0.688,0.817,1892],[0.57,0.669,1104],[0.435,0.546,1935],[0.226,0.411,2360]]],[0.1906,0.3556,[[0.781,0.871,808],[0.617,0.755,1502],[0.438,0.594,1291]]],[0.3556,0.4993,[[0.722,0.871,1293],[0.552,0.7,1277],[0.291,0.528,1807],[0.056,0.259,1597]]],[0.4993,0.6543,[[0.768,0.942,1375],[0.548,0.736,1606],[0.368,0.516,1445],[0.276,0.345,578]]],[0.6543,0.8165,[[0.688,0.871,1734],[0.574,0.664,856],[0.335,0.548,1632],[0.262,0.304,440],[0.056,0.239,1578]]],[0.8165,0.9687,[[0.902,0.944,440],[0.756,0.879,1207],[0.684,0.727,440],[0.478,0.661,1735]]]],"43":[[0.0191,0.1444,[[0.84,0.872,442],[0.683,0.817,1914],[0.562,0.66,1005],[0.356,0.539,2027],[0.256,0.324,762],[0.12,0.231,1024],[0.047,0.097,568]]],[0.1444,0.2804,[[0.843,0.944,1081],[0.713,0.82,1257],[0.545,0.688,1418],[0.46,0.522,695],[0.349,0.438,971],[0.268,0.328,649],[0.125,0.243,1051]]],[0.2804,0.4236,[[0.732,0.871,1402],[0.655,0.704,586],[0.526,0.632,978],[0.433,0.502,724],[0.262,0.409,1565]]],[0.4236,0.5442,[[0.774,0.871,958],[0.663,0.752,999],[0.472,0.64,1461],[0.302,0.439,1379],[0.056,0.277,1860]]],[0.5442,0.6921,[[0.803,0.943,1547],[0.723,0.78,567],[0.545,0.697,1532],[0.365,0.515,1768],[0.295,0.343,666],[0.055,0.267,2061]]],[0.6921,0.9737,[[0.777,0.865,1376],[0.623,0.753,1974],[0.355,0.599,4093],[0.287,0.333,825],[0.216,0.266,868],[0.126,0.191,813]]]]}},"jazari":{"title":"المقدمة الجزرية","dir":"jazari/","parts":[["الأبيات ١–١٤: مقدمة الناظم وأول المخارج",2,2],["الأبيات ١٥–٢٩: بقية المخارج والصفات",3,3],["الأبيات ٣٠–٤٣: التجويد والترقيق والراءات",4,4],["الأبيات ٤٤–٥٨: اللامات والتحذيرات والضاد",5,5],["الأبيات ٥٩–٧٢: الظاء والغنة والنون الساكنة والمد",6,6],["الأبيات ٧٣–٨٧: الوقف والابتداء والمقطوع والموصول",7,7],["الأبيات ٨٨–١٠٧: بقية المقطوع والتاءات وهمز الوصل والخاتمة",8,9]],"words":{"2":[[0.1028,0.1483,[[0.758,0.81,77],[0.699,0.744,56],[0.646,0.688,60],[0.605,0.634,37],[0.526,0.593,79],[0.355,0.43,140],[0.323,0.345,46],[0.233,0.313,164],[0.125,0.223,126]]],[0.1628,0.2014,[[0.719,0.81,104],[0.654,0.709,68],[0.561,0.644,102],[0.527,0.549,41],[0.346,0.43,90],[0.266,0.333,77],[0.128,0.255,169]]],[0.2221,0.2621,[[0.72,0.81,102],[0.639,0.709,79],[0.524,0.629,118],[0.35,0.43,113],[0.235,0.34,124],[0.177,0.224,62],[0.13,0.168,59]]],[0.28,0.3193,[[0.737,0.81,88],[0.705,0.724,33],[0.63,0.693,69],[0.53,0.62,91],[0.413,0.43,30],[0.381,0.402,25],[0.331,0.37,53],[0.248,0.32,86],[0.218,0.237,32],[0.125,0.207,101]]],[0.3372,0.3807,[[0.795,0.81,28],[0.709,0.784,83],[0.612,0.697,116],[0.525,0.603,100],[0.397,0.43,55],[0.296,0.387,121],[0.257,0.287,62],[0.228,0.247,33],[0.125,0.216,113]]],[0.3924,0.4379,[[0.724,0.81,104],[0.648,0.713,93],[0.525,0.635,137],[0.343,0.43,129],[0.229,0.33,138],[0.125,0.218,113]]],[0.4531,0.4931,[[0.76,0.81,81],[0.635,0.749,135],[0.525,0.625,128],[0.38,0.43,54],[0.323,0.368,65],[0.273,0.311,48],[0.247,0.264,30],[0.126,0.234,122]]],[0.5097,0.5572,[[0.747,0.81,88],[0.664,0.737,119],[0.561,0.653,123],[0.525,0.55,42],[0.396,0.43,49],[0.349,0.385,62],[0.184,0.333,193],[0.126,0.152,39]]],[0.629,0.6703,[[0.743,0.81,93],[0.669,0.732,82],[0.612,0.656,60],[0.525,0.602,79],[0.395,0.43,51],[0.34,0.383,63],[0.252,0.33,104],[0.216,0.241,29],[0.126,0.206,87]]],[0.6848,0.7269,[[0.757,0.81,78],[0.666,0.745,85],[0.572,0.654,112],[0.525,0.561,57],[0.313,0.43,108],[0.279,0.302,27],[0.19,0.269,109],[0.13,0.179,81]]],[0.7448,0.7848,[[0.79,0.81,39],[0.719,0.778,99],[0.63,0.707,86],[0.59,0.616,37],[0.528,0.579,51],[0.41,0.43,39],[0.294,0.399,122],[0.239,0.282,54],[0.134,0.228,80]]],[0.8028,0.8407,[[0.739,0.81,88],[0.692,0.726,39],[0.622,0.681,64],[0.528,0.609,93],[0.381,0.43,81],[0.293,0.369,78],[0.238,0.282,69],[0.204,0.226,39],[0.134,0.193,71]]],[0.8614,0.9,[[0.755,0.81,79],[0.67,0.741,108],[0.613,0.66,58],[0.553,0.603,54],[0.53,0.543,17],[0.334,0.43,99],[0.295,0.321,33],[0.199,0.285,95],[0.174,0.19,30],[0.131,0.163,50]]],[0.9186,0.9559,[[0.718,0.81,105],[0.683,0.708,32],[0.608,0.673,73],[0.581,0.597,33],[0.527,0.571,72],[0.381,0.43,63],[0.249,0.351,116],[0.134,0.237,137]]]],"3":[[0.0124,0.0531,[[0.756,0.81,66],[0.701,0.726,32],[0.642,0.691,72],[0.592,0.63,55],[0.529,0.58,80],[0.4,0.43,39],[0.306,0.389,91],[0.23,0.294,97],[0.131,0.22,105]]],[0.0703,0.1076,[[0.739,0.81,84],[0.656,0.728,73],[0.613,0.645,33],[0.573,0.6,39],[0.527,0.562,49],[0.371,0.43,77],[0.307,0.36,72],[0.206,0.293,96],[0.125,0.194,96]]],[0.1276,0.1662,[[0.777,0.81,40],[0.729,0.764,49],[0.673,0.719,71],[0.6,0.662,83],[0.525,0.588,95],[0.348,0.43,94],[0.257,0.336,80],[0.188,0.246,58],[0.132,0.176,84]]],[0.1869,0.2269,[[0.785,0.81,32],[0.688,0.774,123],[0.639,0.673,49],[0.591,0.628,57],[0.533,0.582,73],[0.393,0.43,52],[0.359,0.382,41],[0.279,0.349,86],[0.223,0.268,70],[0.124,0.21,113]]],[0.2448,0.2834,[[0.73,0.81,98],[0.66,0.716,63],[0.598,0.648,46],[0.529,0.589,63],[0.39,0.43,60],[0.267,0.361,123],[0.141,0.255,123]]],[0.3641,0.4021,[[0.735,0.81,103],[0.682,0.721,52],[0.618,0.661,60],[0.529,0.606,91],[0.348,0.43,107],[0.273,0.336,82],[0.171,0.263,116],[0.136,0.162,49]]],[0.42,0.4572,[[0.672,0.81,162],[0.602,0.661,62],[0.528,0.59,61],[0.359,0.429,79],[0.303,0.348,74],[0.235,0.271,36],[0.198,0.226,37],[0.129,0.187,66]]],[0.4807,0.5193,[[0.771,0.81,49],[0.726,0.76,48],[0.644,0.714,94],[0.615,0.63,19],[0.584,0.605,23],[0.528,0.574,50],[0.352,0.43,94],[0.286,0.326,38],[0.232,0.276,45],[0.199,0.223,31],[0.13,0.172,42]]],[0.5366,0.5731,[[0.745,0.79,49],[0.696,0.732,39],[0.654,0.685,35],[0.61,0.643,38],[0.528,0.583,83],[0.41,0.43,31],[0.38,0.399,25],[0.344,0.369,25],[0.294,0.333,43],[0.205,0.284,99],[0.124,0.192,87]]],[0.5938,0.631,[[0.746,0.81,82],[0.643,0.696,51],[0.591,0.631,51],[0.544,0.58,32],[0.34,0.422,104],[0.259,0.309,63],[0.215,0.247,29],[0.19,0.204,15],[0.127,0.175,67]]],[0.651,0.689,[[0.767,0.79,33],[0.719,0.755,41],[0.625,0.69,77],[0.53,0.613,112],[0.345,0.43,114],[0.21,0.33,134],[0.129,0.196,89]]],[0.7097,0.7503,[[0.793,0.81,30],[0.725,0.763,46],[0.675,0.705,44],[0.583,0.645,87],[0.529,0.571,66],[0.207,0.43,240],[0.137,0.197,71]]],[0.8276,0.8669,[[0.732,0.81,109],[0.626,0.721,124],[0.577,0.614,55],[0.533,0.568,60],[0.405,0.43,32],[0.38,0.39,26],[0.303,0.37,92],[0.2,0.29,111],[0.13,0.19,67]]],[0.8855,0.9241,[[0.778,0.809,58],[0.717,0.768,48],[0.613,0.706,111],[0.532,0.603,90],[0.33,0.43,122],[0.291,0.319,40],[0.25,0.282,55],[0.129,0.237,114]]],[0.9434,0.9814,[[0.777,0.81,54],[0.728,0.767,67],[0.648,0.715,85],[0.532,0.636,131],[0.325,0.43,115],[0.269,0.313,65],[0.13,0.256,151]]]],"4":[[0.0131,0.051,[[0.756,0.81,68],[0.672,0.746,100],[0.585,0.662,103],[0.528,0.572,74],[0.405,0.43,32],[0.317,0.395,89],[0.282,0.307,45],[0.126,0.27,183]]],[0.071,0.1103,[[0.724,0.81,120],[0.628,0.714,89],[0.527,0.617,112],[0.337,0.43,134],[0.31,0.328,30],[0.127,0.297,204]]],[0.1248,0.1683,[[0.75,0.81,93],[0.715,0.741,33],[0.677,0.706,40],[0.631,0.668,37],[0.529,0.621,117],[0.364,0.43,105],[0.335,0.352,30],[0.255,0.324,104],[0.221,0.245,35],[0.13,0.211,95]]],[0.1855,0.2269,[[0.73,0.81,90],[0.657,0.719,73],[0.609,0.647,56],[0.53,0.599,86],[0.408,0.43,42],[0.322,0.398,92],[0.214,0.31,106],[0.129,0.204,98]]],[0.3041,0.3434,[[0.735,0.81,99],[0.662,0.725,79],[0.625,0.651,33],[0.533,0.615,96],[0.342,0.43,104],[0.274,0.331,84],[0.198,0.264,89],[0.13,0.187,81]]],[0.4214,0.46,[[0.768,0.81,57],[0.697,0.755,63],[0.61,0.685,77],[0.531,0.597,69],[0.335,0.43,92],[0.275,0.324,61],[0.24,0.264,33],[0.162,0.21,52],[0.127,0.15,26]]],[0.4786,0.5172,[[0.723,0.81,107],[0.658,0.71,58],[0.61,0.646,42],[0.574,0.597,30],[0.53,0.564,38],[0.388,0.43,59],[0.346,0.377,37],[0.272,0.331,71],[0.21,0.262,62],[0.13,0.2,62]]],[0.5372,0.5772,[[0.77,0.81,46],[0.716,0.755,58],[0.63,0.703,74],[0.59,0.616,36],[0.531,0.579,46],[0.355,0.43,92],[0.31,0.345,51],[0.248,0.297,76],[0.183,0.236,83],[0.129,0.172,63]]],[0.5959,0.6352,[[0.778,0.81,50],[0.741,0.766,47],[0.588,0.729,142],[0.529,0.575,53],[0.353,0.43,78],[0.272,0.34,72],[0.191,0.26,81],[0.128,0.178,60]]],[0.6531,0.6924,[[0.732,0.81,85],[0.634,0.723,112],[0.606,0.625,31],[0.531,0.593,74],[0.401,0.43,48],[0.325,0.39,93],[0.18,0.312,157],[0.134,0.169,55]]],[0.7117,0.7483,[[0.662,0.81,148],[0.578,0.65,78],[0.53,0.565,51],[0.376,0.43,54],[0.274,0.362,92],[0.189,0.262,78],[0.125,0.176,58]]],[0.829,0.8683,[[0.741,0.81,96],[0.686,0.73,56],[0.656,0.676,33],[0.531,0.644,118],[0.38,0.43,69],[0.337,0.368,44],[0.261,0.327,84],[0.204,0.25,59],[0.128,0.191,80]]],[0.8862,0.9269,[[0.792,0.81,26],[0.689,0.777,115],[0.65,0.679,48],[0.595,0.64,52],[0.53,0.584,71],[0.35,0.43,100],[0.245,0.337,122],[0.181,0.234,67],[0.125,0.17,67]]],[0.9448,0.9855,[[0.748,0.81,89],[0.719,0.736,30],[0.658,0.709,60],[0.596,0.647,71],[0.529,0.585,73],[0.343,0.43,102],[0.25,0.332,115],[0.128,0.239,120]]]],"5":[[0.071,0.1166,[[0.742,0.81,96],[0.692,0.73,63],[0.656,0.682,30],[0.58,0.647,67],[0.53,0.56,37],[0.341,0.43,119],[0.315,0.33,24],[0.169,0.304,142],[0.129,0.158,35]]],[0.1303,0.1669,[[0.76,0.81,53],[0.617,0.75,127],[0.528,0.599,85],[0.355,0.43,94],[0.3,0.344,62],[0.255,0.29,51],[0.205,0.242,39],[0.133,0.192,77]]],[0.1855,0.2283,[[0.771,0.81,52],[0.694,0.76,95],[0.65,0.682,37],[0.566,0.638,81],[0.531,0.554,43],[0.367,0.429,69],[0.285,0.355,90],[0.192,0.27,111],[0.126,0.181,86]]],[0.2469,0.2862,[[0.703,0.81,122],[0.62,0.692,99],[0.585,0.61,30],[0.53,0.572,46],[0.36,0.43,72],[0.238,0.347,120],[0.184,0.227,59],[0.126,0.173,57]]],[0.3034,0.3441,[[0.749,0.81,88],[0.661,0.737,102],[0.589,0.647,68],[0.53,0.577,45],[0.378,0.43,66],[0.303,0.367,86],[0.19,0.291,114],[0.128,0.178,54]]],[0.3628,0.4055,[[0.776,0.81,57],[0.692,0.765,84],[0.597,0.682,89],[0.534,0.585,57],[0.412,0.43,22],[0.274,0.384,120],[0.178,0.263,97],[0.13,0.167,47]]],[0.4193,0.4621,[[0.761,0.81,89],[0.687,0.748,69],[0.62,0.677,64],[0.591,0.61,31],[0.53,0.579,64],[0.31,0.43,146],[0.262,0.3,37],[0.187,0.25,59],[0.129,0.173,58]]],[0.4779,0.5186,[[0.793,0.81,23],[0.754,0.782,36],[0.721,0.744,43],[0.678,0.711,47],[0.625,0.667,55],[0.579,0.611,49],[0.529,0.569,48],[0.37,0.429,60],[0.343,0.357,17],[0.271,0.333,68],[0.195,0.261,70],[0.129,0.183,73]]],[0.5917,0.6379,[[0.745,0.81,84],[0.641,0.73,123],[0.53,0.63,126],[0.353,0.43,81],[0.318,0.343,29],[0.228,0.308,91],[0.171,0.215,95],[0.13,0.16,50]]],[0.6531,0.6931,[[0.64,0.811,182],[0.586,0.63,52],[0.529,0.575,50],[0.38,0.43,66],[0.312,0.368,70],[0.251,0.3,62],[0.193,0.239,54],[0.133,0.181,66]]],[0.7117,0.7524,[[0.759,0.81,52],[0.704,0.748,47],[0.638,0.691,60],[0.576,0.626,58],[0.526,0.564,43],[0.378,0.43,69],[0.314,0.365,59],[0.248,0.302,63],[0.182,0.234,63],[0.135,0.169,40]]],[0.7703,0.8097,[[0.763,0.81,54],[0.667,0.75,95],[0.626,0.654,29],[0.576,0.616,53],[0.525,0.566,51],[0.368,0.43,61],[0.325,0.355,42],[0.264,0.315,77],[0.169,0.253,103],[0.129,0.155,36]]],[0.8255,0.8676,[[0.746,0.81,75],[0.662,0.733,85],[0.606,0.649,72],[0.527,0.595,79],[0.331,0.43,115],[0.276,0.321,55],[0.176,0.264,95],[0.127,0.163,56]]],[0.8841,0.9255,[[0.75,0.81,78],[0.668,0.738,89],[0.611,0.658,59],[0.525,0.601,90],[0.382,0.43,62],[0.33,0.37,58],[0.205,0.316,130],[0.128,0.194,74]]],[0.9414,0.9821,[[0.788,0.81,42],[0.708,0.778,102],[0.65,0.696,72],[0.599,0.639,72],[0.53,0.586,59],[0.351,0.43,100],[0.326,0.34,24],[0.243,0.314,90],[0.191,0.232,69],[0.129,0.181,75]]]],"6":[[0.0103,0.0524,[[0.759,0.81,73],[0.734,0.749,24],[0.658,0.723,75],[0.612,0.648,40],[0.53,0.6,86],[0.404,0.43,44],[0.346,0.391,44],[0.228,0.334,124],[0.129,0.215,87]]],[0.0703,0.1097,[[0.781,0.81,48],[0.69,0.77,101],[0.583,0.678,93],[0.539,0.571,45],[0.35,0.43,85],[0.265,0.34,86],[0.205,0.251,60],[0.128,0.193,79]]],[0.129,0.169,[[0.731,0.81,93],[0.696,0.72,44],[0.626,0.687,72],[0.525,0.614,120],[0.373,0.43,66],[0.304,0.362,54],[0.192,0.29,109],[0.128,0.18,70]]],[0.2462,0.2862,[[0.743,0.81,91],[0.695,0.731,69],[0.659,0.685,33],[0.59,0.649,58],[0.526,0.578,63],[0.401,0.43,33],[0.37,0.39,33],[0.334,0.359,28],[0.21,0.322,110],[0.134,0.197,86]]],[0.3034,0.3441,[[0.766,0.81,55],[0.736,0.755,31],[0.645,0.726,100],[0.603,0.634,62],[0.526,0.592,74],[0.408,0.429,22],[0.362,0.396,50],[0.26,0.35,104],[0.18,0.25,91],[0.135,0.17,58]]],[0.3621,0.4021,[[0.734,0.81,119],[0.691,0.723,42],[0.608,0.679,84],[0.527,0.596,101],[0.359,0.43,82],[0.29,0.349,63],[0.256,0.28,30],[0.22,0.244,38],[0.19,0.209,32],[0.13,0.178,82]]],[0.4793,0.5207,[[0.726,0.81,113],[0.669,0.716,56],[0.582,0.658,83],[0.53,0.57,72],[0.368,0.43,84],[0.269,0.355,90],[0.19,0.239,70],[0.126,0.177,62]]],[0.5379,0.5772,[[0.772,0.81,59],[0.708,0.761,52],[0.652,0.696,55],[0.591,0.643,68],[0.528,0.578,72],[0.413,0.43,30],[0.364,0.402,46],[0.301,0.352,57],[0.274,0.289,19],[0.17,0.263,101],[0.129,0.16,49]]],[0.5959,0.6338,[[0.693,0.81,125],[0.652,0.684,52],[0.625,0.64,28],[0.528,0.613,83],[0.408,0.43,41],[0.319,0.398,112],[0.216,0.29,83],[0.128,0.205,99]]],[0.6517,0.6931,[[0.75,0.81,85],[0.692,0.738,54],[0.647,0.682,38],[0.537,0.634,119],[0.381,0.43,62],[0.325,0.37,55],[0.278,0.313,46],[0.179,0.266,88],[0.128,0.169,56]]],[0.7703,0.809,[[0.722,0.81,92],[0.676,0.708,46],[0.655,0.665,16],[0.567,0.644,76],[0.528,0.555,46],[0.356,0.43,84],[0.288,0.345,73],[0.267,0.276,16],[0.172,0.256,97],[0.136,0.163,41]]],[0.8255,0.8683,[[0.76,0.81,59],[0.728,0.747,26],[0.659,0.715,56],[0.618,0.648,43],[0.559,0.607,59],[0.525,0.548,29],[0.346,0.429,89],[0.286,0.335,65],[0.176,0.274,136],[0.13,0.166,48]]],[0.8876,0.9255,[[0.738,0.81,80],[0.706,0.725,29],[0.637,0.694,55],[0.596,0.628,54],[0.529,0.587,80],[0.306,0.43,151],[0.231,0.294,75],[0.129,0.219,114]]],[0.9441,0.9828,[[0.698,0.81,113],[0.665,0.685,32],[0.626,0.653,44],[0.527,0.614,116],[0.366,0.43,93],[0.25,0.354,133],[0.203,0.237,67],[0.126,0.191,91]]]],"7":[[0.0724,0.1124,[[0.751,0.81,74],[0.659,0.741,112],[0.529,0.647,145],[0.369,0.429,76],[0.332,0.357,32],[0.225,0.322,114],[0.125,0.213,106]]],[0.1324,0.1697,[[0.693,0.81,122],[0.633,0.681,71],[0.57,0.622,77],[0.53,0.56,46],[0.383,0.43,72],[0.316,0.37,58],[0.219,0.303,95],[0.123,0.207,83]]],[0.1848,0.2276,[[0.771,0.81,63],[0.735,0.76,34],[0.661,0.725,69],[0.623,0.651,45],[0.597,0.607,26],[0.525,0.587,75],[0.353,0.43,107],[0.285,0.344,79],[0.229,0.272,63],[0.128,0.218,110]]],[0.2462,0.2855,[[0.758,0.81,75],[0.674,0.746,102],[0.613,0.661,92],[0.527,0.602,98],[0.41,0.43,41],[0.349,0.398,72],[0.298,0.337,64],[0.224,0.287,75],[0.128,0.213,95]]],[0.3048,0.3434,[[0.753,0.81,75],[0.691,0.743,49],[0.642,0.681,50],[0.568,0.632,85],[0.53,0.556,45],[0.357,0.43,94],[0.279,0.346,110],[0.172,0.267,105],[0.125,0.161,62]]],[0.3621,0.4021,[[0.763,0.81,60],[0.736,0.753,30],[0.675,0.724,81],[0.638,0.664,33],[0.587,0.629,65],[0.528,0.575,60],[0.407,0.43,41],[0.333,0.395,73],[0.265,0.323,68],[0.184,0.254,76],[0.127,0.171,47]]],[0.4793,0.5255,[[0.75,0.81,79],[0.667,0.739,189],[0.569,0.656,184],[0.535,0.557,36],[0.413,0.43,30],[0.328,0.402,86],[0.249,0.315,78],[0.222,0.239,30],[0.195,0.21,20],[0.164,0.184,34],[0.126,0.153,46]]],[0.5386,0.58,[[0.73,0.81,117],[0.589,0.718,149],[0.554,0.576,41],[0.529,0.544,42],[0.379,0.43,64],[0.276,0.366,90],[0.225,0.248,29],[0.158,0.214,45],[0.127,0.148,30]]],[0.6,0.6379,[[0.716,0.81,107],[0.662,0.705,41],[0.61,0.65,54],[0.556,0.599,56],[0.53,0.544,17],[0.37,0.43,67],[0.296,0.358,62],[0.22,0.284,63],[0.172,0.209,46],[0.127,0.161,36]]],[0.6566,0.6972,[[0.791,0.81,19],[0.765,0.78,21],[0.68,0.754,87],[0.652,0.666,17],[0.595,0.643,53],[0.561,0.583,42],[0.528,0.551,42],[0.369,0.43,78],[0.271,0.355,187],[0.22,0.262,44],[0.129,0.207,113]]],[0.7159,0.7552,[[0.777,0.809,47],[0.714,0.765,83],[0.634,0.701,88],[0.588,0.62,55],[0.525,0.576,71],[0.381,0.43,59],[0.28,0.37,115],[0.25,0.267,39],[0.208,0.24,58],[0.125,0.194,62]]],[0.7738,0.82,[[0.744,0.81,85],[0.68,0.731,59],[0.619,0.669,73],[0.562,0.607,74],[0.53,0.551,34],[0.396,0.43,58],[0.367,0.387,55],[0.2,0.355,191],[0.169,0.19,50],[0.132,0.159,40]]],[0.8359,0.8779,[[0.751,0.81,82],[0.64,0.737,200],[0.57,0.627,78],[0.53,0.559,40],[0.356,0.43,88],[0.251,0.344,113],[0.177,0.241,88],[0.13,0.168,62]]],[0.8945,0.9324,[[0.773,0.81,104],[0.724,0.764,56],[0.629,0.71,91],[0.526,0.599,83],[0.355,0.43,80],[0.255,0.346,129],[0.18,0.244,82],[0.129,0.17,46]]],[0.9524,0.9931,[[0.732,0.809,89],[0.658,0.722,68],[0.622,0.646,54],[0.595,0.611,29],[0.528,0.584,68],[0.374,0.43,60],[0.3,0.363,80],[0.211,0.287,78],[0.165,0.198,43],[0.126,0.153,38]]]],"8":[[0.0131,0.0524,[[0.772,0.81,53],[0.694,0.762,74],[0.62,0.682,85],[0.531,0.608,102],[0.358,0.43,93],[0.27,0.345,85],[0.187,0.256,98],[0.127,0.175,51]]],[0.071,0.1117,[[0.667,0.81,231],[0.614,0.657,49],[0.592,0.602,16],[0.527,0.58,75],[0.413,0.43,30],[0.339,0.402,87],[0.253,0.327,97],[0.192,0.243,71],[0.127,0.181,72]]],[0.1276,0.1703,[[0.762,0.81,58],[0.711,0.752,112],[0.636,0.701,71],[0.586,0.624,75],[0.532,0.576,61],[0.354,0.43,81],[0.291,0.342,95],[0.229,0.279,63],[0.173,0.216,50],[0.125,0.162,43]]],[0.1903,0.2297,[[0.744,0.809,86],[0.684,0.733,58],[0.611,0.672,65],[0.527,0.598,122],[0.362,0.43,96],[0.304,0.35,42],[0.211,0.29,65],[0.164,0.192,68],[0.127,0.154,61]]],[0.249,0.2883,[[0.73,0.81,129],[0.655,0.717,58],[0.58,0.643,72],[0.527,0.568,46],[0.372,0.43,87],[0.343,0.36,30],[0.262,0.33,93],[0.191,0.251,69],[0.126,0.178,90]]],[0.3076,0.349,[[0.71,0.81,179],[0.578,0.68,193],[0.53,0.568,42],[0.382,0.43,51],[0.341,0.372,32],[0.301,0.329,38],[0.25,0.29,62],[0.214,0.239,37],[0.189,0.203,17],[0.125,0.179,67]]],[0.4262,0.4641,[[0.73,0.81,82],[0.616,0.716,124],[0.574,0.605,50],[0.532,0.562,46],[0.365,0.43,88],[0.326,0.352,46],[0.182,0.315,144],[0.124,0.17,77]]],[0.4841,0.5262,[[0.744,0.809,87],[0.651,0.732,91],[0.529,0.641,148],[0.382,0.43,56],[0.295,0.37,90],[0.217,0.285,94],[0.161,0.206,62],[0.124,0.15,40]]],[0.5386,0.5814,[[0.741,0.81,94],[0.709,0.73,39],[0.525,0.698,213],[0.33,0.43,101],[0.259,0.317,61],[0.227,0.246,33],[0.124,0.215,108]]],[0.6,0.64,[[0.743,0.81,72],[0.671,0.729,71],[0.609,0.66,66],[0.526,0.596,105],[0.369,0.43,82],[0.284,0.354,77],[0.225,0.245,34],[0.182,0.214,58],[0.124,0.172,72]]],[0.6559,0.6979,[[0.733,0.809,71],[0.647,0.719,85],[0.58,0.632,49],[0.527,0.567,59],[0.39,0.43,62],[0.27,0.38,137],[0.179,0.258,92],[0.124,0.168,58]]],[0.7166,0.7559,[[0.758,0.81,60],[0.707,0.747,39],[0.638,0.692,54],[0.6,0.625,37],[0.529,0.589,84],[0.368,0.43,68],[0.298,0.353,59],[0.225,0.285,62],[0.131,0.211,91]]],[0.7752,0.8124,[[0.761,0.81,67],[0.667,0.75,94],[0.598,0.655,82],[0.531,0.588,74],[0.392,0.43,57],[0.329,0.38,77],[0.27,0.318,56],[0.206,0.259,72],[0.13,0.194,76]]],[0.889,0.9338,[[0.77,0.81,64],[0.723,0.76,54],[0.655,0.711,85],[0.577,0.646,94],[0.528,0.568,60],[0.367,0.43,79],[0.29,0.356,79],[0.253,0.279,30],[0.181,0.243,93],[0.13,0.171,66]]],[0.9503,0.9917,[[0.752,0.81,83],[0.694,0.742,50],[0.631,0.684,70],[0.564,0.622,93],[0.528,0.552,42],[0.379,0.43,73],[0.336,0.368,44],[0.18,0.326,172],[0.133,0.167,51]]]],"9":[[0.0124,0.0538,[[0.783,0.81,28],[0.736,0.771,49],[0.684,0.726,40],[0.595,0.652,61],[0.524,0.584,71],[0.34,0.43,99],[0.25,0.327,75],[0.183,0.238,66],[0.125,0.172,54]]],[0.1297,0.169,[[0.729,0.806,85],[0.634,0.717,106],[0.584,0.622,70],[0.528,0.574,73],[0.41,0.43,41],[0.379,0.399,33],[0.328,0.367,50],[0.232,0.316,108],[0.127,0.221,112]]],[0.1883,0.2345,[[0.786,0.809,42],[0.709,0.776,99],[0.682,0.698,33],[0.613,0.67,72],[0.526,0.602,96],[0.339,0.43,104],[0.269,0.328,90],[0.238,0.255,30],[0.198,0.227,59],[0.13,0.189,75]]],[0.3055,0.3455,[[0.761,0.81,61],[0.695,0.751,92],[0.63,0.683,85],[0.525,0.617,101],[0.401,0.43,47],[0.319,0.391,97],[0.232,0.308,99],[0.13,0.222,106]]],[0.3634,0.4021,[[0.714,0.81,110],[0.682,0.703,39],[0.654,0.671,33],[0.531,0.642,113],[0.41,0.43,39],[0.289,0.398,134],[0.247,0.277,47],[0.132,0.236,129]]]]}},"qawaid":{"title":"منظومة القواعد الفقهية","dir":"qawaid/","parts":[["الأبيات ١–١٠: المقدمة",2,2],["الأبيات ١١–١٧: النية والمصالح والتيسير والضرورة",3,3],["الأبيات ١٨–٢٣: اليقين والأصل في الأشياء",4,4],["الأبيات ٢٤–٣١: الوسائل والخطأ والتبع والعرف",5,5],["الأبيات ٣٢–٣٩: صيغ العموم والشروط والموانع",6,6],["الأبيات ٤٠–٤٩: الحكم وعلته والقرعة والخاتمة",7,7]],"words":{"2":[[0.2142,0.2887,[[0.834,0.968,208],[0.793,0.818,50],[0.654,0.777,207],[0.533,0.626,178],[0.351,0.47,209],[0.209,0.322,197],[0.034,0.191,274]]],[0.2925,0.3642,[[0.928,0.969,82],[0.817,0.91,168],[0.669,0.799,215],[0.533,0.651,202],[0.328,0.47,249],[0.187,0.311,206],[0.034,0.17,231]]],[0.3623,0.4406,[[0.924,0.971,97],[0.783,0.908,228],[0.719,0.768,103],[0.619,0.703,148],[0.533,0.602,124],[0.407,0.47,114],[0.281,0.389,182],[0.152,0.264,219],[0.034,0.136,189]]],[0.4377,0.5057,[[0.887,0.969,141],[0.672,0.871,282],[0.532,0.643,177],[0.314,0.469,256],[0.183,0.298,161],[0.033,0.167,213]]],[0.5123,0.5811,[[0.897,0.971,147],[0.788,0.88,153],[0.741,0.774,69],[0.637,0.728,181],[0.533,0.62,148],[0.413,0.47,124],[0.332,0.399,140],[0.232,0.316,160],[0.148,0.216,127],[0.034,0.132,172]]],[0.5868,0.6566,[[0.84,0.969,237],[0.742,0.822,151],[0.666,0.729,123],[0.533,0.648,209],[0.359,0.47,207],[0.261,0.341,141],[0.198,0.248,97],[0.034,0.181,263]]],[0.6642,0.7321,[[0.851,0.97,200],[0.773,0.834,117],[0.666,0.758,184],[0.533,0.651,229],[0.351,0.471,188],[0.179,0.334,244],[0.034,0.161,208]]],[0.7349,0.8113,[[0.867,0.97,207],[0.811,0.851,80],[0.714,0.794,155],[0.639,0.699,101],[0.533,0.624,176],[0.35,0.47,235],[0.263,0.334,125],[0.173,0.246,143],[0.121,0.158,77],[0.038,0.104,150]]],[0.8123,0.8858,[[0.873,0.969,165],[0.738,0.858,202],[0.537,0.724,315],[0.432,0.47,67],[0.357,0.423,117],[0.291,0.348,115],[0.204,0.278,148],[0.162,0.194,71],[0.038,0.151,236]]],[0.8868,0.9547,[[0.866,0.97,188],[0.739,0.848,195],[0.633,0.722,178],[0.532,0.604,131],[0.342,0.47,216],[0.28,0.327,100],[0.14,0.263,211],[0.033,0.124,149]]]],"3":[[0.0198,0.0858,[[0.868,0.969,196],[0.776,0.852,139],[0.657,0.761,162],[0.533,0.641,183],[0.427,0.473,97],[0.29,0.406,239],[0.153,0.273,205],[0.034,0.14,198]]],[0.0953,0.1689,[[0.867,0.969,185],[0.774,0.851,148],[0.692,0.758,116],[0.533,0.674,272],[0.427,0.472,85],[0.303,0.411,197],[0.189,0.283,164],[0.034,0.174,286]]],[0.1689,0.2434,[[0.916,0.97,115],[0.794,0.901,173],[0.714,0.778,110],[0.533,0.698,296],[0.396,0.472,166],[0.268,0.367,188],[0.206,0.251,73],[0.034,0.188,285]]],[0.2434,0.3047,[[0.869,0.969,174],[0.734,0.856,194],[0.533,0.717,266],[0.358,0.472,204],[0.248,0.329,158],[0.188,0.231,72],[0.034,0.171,219]]],[0.3179,0.3877,[[0.908,0.969,105],[0.802,0.893,166],[0.664,0.786,217],[0.532,0.648,198],[0.42,0.472,92],[0.35,0.408,116],[0.277,0.337,96],[0.188,0.263,124],[0.033,0.173,202]]],[0.3953,0.4594,[[0.857,0.969,176],[0.736,0.841,161],[0.666,0.721,100],[0.532,0.649,193],[0.429,0.47,84],[0.286,0.41,205],[0.209,0.269,112],[0.033,0.196,253]]],[0.467,0.5349,[[0.899,0.969,149],[0.749,0.883,235],[0.688,0.733,97],[0.533,0.67,233],[0.391,0.473,139],[0.343,0.376,55],[0.186,0.327,238],[0.034,0.169,230]]]],"4":[[0.0179,0.0887,[[0.852,0.969,220],[0.696,0.823,237],[0.533,0.681,251],[0.42,0.472,105],[0.317,0.403,161],[0.196,0.299,184],[0.034,0.182,252]]],[0.0934,0.1623,[[0.946,0.969,48],[0.85,0.938,170],[0.792,0.836,83],[0.673,0.776,175],[0.533,0.652,237],[0.448,0.47,48],[0.352,0.439,153],[0.208,0.337,217],[0.034,0.191,264]]],[0.1632,0.2434,[[0.946,0.969,48],[0.854,0.938,166],[0.8,0.839,79],[0.669,0.771,227],[0.533,0.652,237],[0.351,0.47,204],[0.312,0.334,48],[0.207,0.303,179],[0.034,0.192,283]]],[0.2434,0.3113,[[0.828,0.971,257],[0.736,0.809,127],[0.633,0.722,160],[0.533,0.614,158],[0.349,0.472,233],[0.244,0.332,147],[0.192,0.227,70],[0.138,0.177,61],[0.034,0.121,155]]],[0.3179,0.3849,[[0.946,0.969,48],[0.849,0.938,171],[0.79,0.834,84],[0.664,0.773,185],[0.533,0.632,180],[0.393,0.471,132],[0.286,0.379,167],[0.166,0.268,162],[0.034,0.137,184]]],[0.3887,0.4594,[[0.87,0.969,161],[0.717,0.853,221],[0.648,0.697,77],[0.532,0.619,156],[0.412,0.47,109],[0.324,0.396,143],[0.267,0.309,83],[0.152,0.251,168],[0.033,0.132,174]]]],"5":[[0.0151,0.0934,[[0.858,0.969,190],[0.742,0.829,156],[0.533,0.731,312],[0.364,0.47,208],[0.284,0.351,139],[0.16,0.263,201],[0.034,0.147,210]]],[0.0934,0.1585,[[0.843,0.969,234],[0.801,0.823,48],[0.703,0.793,176],[0.533,0.688,257],[0.353,0.473,223],[0.201,0.337,228],[0.034,0.181,236]]],[0.167,0.2358,[[0.901,0.971,142],[0.847,0.884,90],[0.718,0.818,203],[0.628,0.704,146],[0.533,0.61,140],[0.354,0.47,218],[0.227,0.338,224],[0.153,0.21,105],[0.034,0.137,200]]],[0.2434,0.3179,[[0.911,0.969,101],[0.803,0.894,158],[0.669,0.774,208],[0.616,0.654,78],[0.533,0.599,157],[0.368,0.472,175],[0.329,0.353,50],[0.281,0.313,71],[0.14,0.263,219],[0.034,0.124,193]]],[0.3198,0.3925,[[0.839,0.969,221],[0.694,0.823,211],[0.646,0.681,59],[0.6,0.631,71],[0.533,0.58,84],[0.403,0.471,145],[0.354,0.391,64],[0.261,0.341,170],[0.141,0.249,190],[0.101,0.132,71],[0.034,0.091,116]]],[0.3934,0.4594,[[0.847,0.969,209],[0.668,0.829,281],[0.588,0.653,130],[0.533,0.576,76],[0.436,0.471,75],[0.382,0.422,68],[0.239,0.368,216],[0.213,0.231,36],[0.158,0.197,92],[0.034,0.142,171]]],[0.4651,0.5358,[[0.922,0.969,98],[0.866,0.913,88],[0.748,0.852,209],[0.7,0.737,77],[0.627,0.691,109],[0.533,0.613,153],[0.442,0.473,61],[0.329,0.428,169],[0.252,0.313,112],[0.152,0.239,136],[0.034,0.136,182]]],[0.5396,0.617,[[0.851,0.969,210],[0.748,0.836,166],[0.658,0.733,121],[0.533,0.643,190],[0.416,0.473,99],[0.307,0.399,194],[0.209,0.293,158],[0.146,0.193,93],[0.034,0.131,155]]]],"6":[[0.0189,0.0943,[[0.891,0.969,142],[0.806,0.876,135],[0.712,0.788,162],[0.656,0.698,82],[0.533,0.639,194],[0.43,0.472,81],[0.309,0.412,202],[0.27,0.292,48],[0.179,0.262,162],[0.034,0.167,234]]],[0.0934,0.1689,[[0.81,0.969,271],[0.75,0.796,85],[0.644,0.734,149],[0.533,0.628,177],[0.387,0.472,176],[0.27,0.37,186],[0.226,0.257,61],[0.132,0.211,138],[0.034,0.116,172]]],[0.1651,0.2425,[[0.894,0.972,143],[0.81,0.878,111],[0.733,0.792,101],[0.716,0.726,21],[0.627,0.701,143],[0.601,0.619,35],[0.537,0.584,85],[0.424,0.474,108],[0.299,0.408,194],[0.26,0.284,50],[0.173,0.243,137],[0.038,0.159,204]]],[0.2425,0.3085,[[0.853,0.969,202],[0.704,0.836,216],[0.667,0.691,57],[0.533,0.653,205],[0.389,0.472,190],[0.287,0.373,147],[0.187,0.269,151],[0.146,0.17,46],[0.034,0.128,176]]],[0.3179,0.3849,[[0.927,0.969,84],[0.86,0.911,110],[0.74,0.842,206],[0.654,0.724,124],[0.533,0.641,217],[0.426,0.474,109],[0.29,0.408,210],[0.139,0.274,254],[0.034,0.126,190]]],[0.3925,0.4585,[[0.907,0.969,106],[0.84,0.893,100],[0.776,0.827,85],[0.683,0.756,136],[0.623,0.667,72],[0.533,0.607,132],[0.437,0.471,73],[0.312,0.422,199],[0.27,0.297,49],[0.224,0.252,62],[0.144,0.208,114],[0.034,0.127,167]]],[0.466,0.5349,[[0.863,0.969,207],[0.733,0.847,195],[0.673,0.717,72],[0.532,0.656,207],[0.442,0.473,64],[0.37,0.427,107],[0.281,0.354,142],[0.182,0.266,124],[0.033,0.167,217]]],[0.5415,0.6104,[[0.897,0.969,152],[0.846,0.881,58],[0.758,0.828,111],[0.682,0.738,90],[0.533,0.666,214],[0.397,0.472,139],[0.329,0.383,95],[0.239,0.317,124],[0.034,0.226,309]]]],"7":[[0.016,0.0953,[[0.898,0.969,151],[0.787,0.882,171],[0.707,0.771,112],[0.644,0.691,100],[0.533,0.628,166],[0.406,0.47,126],[0.329,0.389,123],[0.28,0.313,73],[0.159,0.267,181],[0.034,0.144,197]]],[0.0934,0.1689,[[0.891,0.969,157],[0.787,0.874,145],[0.712,0.772,120],[0.533,0.699,263],[0.431,0.472,80],[0.341,0.413,158],[0.204,0.326,246],[0.034,0.188,262]]],[0.166,0.233,[[0.937,0.971,82],[0.806,0.919,204],[0.669,0.787,190],[0.537,0.652,188],[0.442,0.473,61],[0.326,0.427,176],[0.168,0.311,263],[0.038,0.152,212]]],[0.2434,0.3189,[[0.841,0.971,233],[0.727,0.823,198],[0.654,0.71,100],[0.533,0.637,205],[0.428,0.47,70],[0.291,0.411,237],[0.247,0.277,61],[0.17,0.233,111],[0.034,0.152,213]]],[0.3179,0.3821,[[0.922,0.969,97],[0.803,0.908,167],[0.664,0.786,214],[0.537,0.65,198],[0.377,0.47,177],[0.221,0.363,231],[0.038,0.203,262]]],[0.3915,0.4557,[[0.897,0.969,152],[0.739,0.88,232],[0.67,0.723,107],[0.533,0.654,219],[0.377,0.47,168],[0.212,0.359,244],[0.034,0.196,269]]],[0.4679,0.5349,[[0.899,0.969,114],[0.828,0.886,118],[0.756,0.811,92],[0.652,0.742,141],[0.537,0.636,160],[0.437,0.472,70],[0.299,0.42,235],[0.254,0.286,64],[0.172,0.241,120],[0.038,0.158,224]]],[0.5434,0.617,[[0.862,0.969,214],[0.738,0.846,215],[0.677,0.721,79],[0.533,0.659,220],[0.351,0.474,232],[0.206,0.334,218],[0.148,0.192,88],[0.06,0.131,135],[0.034,0.052,35]]],[0.6189,0.6925,[[0.818,0.969,240],[0.777,0.801,50],[0.673,0.76,138],[0.533,0.657,204],[0.423,0.472,89],[0.321,0.406,140],[0.164,0.304,241],[0.034,0.148,205]]],[0.6906,0.7689,[[0.929,0.971,92],[0.794,0.911,218],[0.734,0.78,98],[0.638,0.719,143],[0.533,0.622,172],[0.401,0.47,120],[0.3,0.383,152],[0.162,0.283,202],[0.034,0.146,225]]]]}},"nazm":{"title":"النظم الصغير على مختصر التحرير","dir":"nazm/","parts":[["الأبيات ١–١٥: المقدمة والحكم التكليفي والوضعي",2,2],["الأبيات ١٦–٣٠: الصحة والفساد والكتاب والسنة",3,3],["الأبيات ٣١–٤٥: النسخ والإجماع والقياس",4,4],["الأبيات ٤٦–٦٠: بقية الأدلة ودلالة الألفاظ والأمر",5,5],["الأبيات ٦١–٧٥: النهي والعموم والمطلق والمجمل",6,6],["الأبيات ٧٦–٩٠: المفاهيم والاجتهاد والتعارض والخاتمة",7,7]],"words":{"2":[[0.009,0.076,[[0.923,0.976,110],[0.826,0.861,79],[0.695,0.763,122],[0.557,0.632,169],[0.388,0.451,129],[0.271,0.329,107],[0.164,0.212,92],[0.025,0.104,150]]],[0.076,0.1422,[[0.896,0.975,160],[0.796,0.85,119],[0.68,0.749,154],[0.556,0.634,159],[0.37,0.452,163],[0.2,0.274,156],[0.024,0.105,157]]],[0.1422,0.2084,[[0.954,0.976,54],[0.877,0.911,74],[0.749,0.833,168],[0.674,0.706,64],[0.557,0.632,131],[0.397,0.45,129],[0.21,0.272,125],[0.025,0.086,109]]],[0.2084,0.2739,[[0.928,0.975,166],[0.795,0.891,291],[0.704,0.76,137],[0.557,0.663,221],[0.365,0.449,186],[0.196,0.294,199],[0.025,0.124,213]]],[0.2739,0.3394,[[0.882,0.975,294],[0.746,0.843,208],[0.688,0.712,56],[0.56,0.651,160],[0.367,0.452,187],[0.301,0.321,48],[0.196,0.256,148],[0.11,0.154,84],[0.025,0.066,78]]],[0.3394,0.4056,[[0.946,0.976,72],[0.773,0.896,370],[0.646,0.723,161],[0.556,0.598,93],[0.377,0.452,139],[0.202,0.282,155],[0.025,0.095,152]]],[0.4056,0.471,[[0.954,0.975,40],[0.881,0.931,88],[0.78,0.846,146],[0.727,0.746,39],[0.659,0.693,73],[0.557,0.625,178],[0.426,0.452,61],[0.35,0.401,89],[0.247,0.312,119],[0.171,0.212,108],[0.025,0.135,273]]],[0.471,0.535,[[0.896,0.975,172],[0.779,0.832,126],[0.68,0.715,71],[0.557,0.617,124],[0.372,0.452,153],[0.207,0.322,231],[0.125,0.169,107],[0.025,0.079,96]]],[0.535,0.5989,[[0.954,0.975,40],[0.889,0.908,40],[0.812,0.844,86],[0.694,0.769,129],[0.621,0.651,64],[0.557,0.577,39],[0.351,0.451,173],[0.216,0.31,169],[0.129,0.178,92],[0.025,0.089,138]]],[0.5989,0.6644,[[0.946,0.976,72],[0.843,0.909,194],[0.762,0.808,113],[0.705,0.728,41],[0.632,0.67,82],[0.557,0.596,100],[0.384,0.449,118],[0.285,0.345,123],[0.195,0.246,114],[0.112,0.157,121],[0.025,0.073,160]]],[0.6644,0.7299,[[0.936,0.975,93],[0.844,0.882,78],[0.71,0.789,163],[0.556,0.657,307],[0.361,0.448,179],[0.312,0.335,60],[0.262,0.283,40],[0.17,0.232,139],[0.115,0.142,66],[0.025,0.087,117]]],[0.7299,0.7961,[[0.896,0.976,254],[0.774,0.846,227],[0.658,0.72,94],[0.557,0.609,124],[0.353,0.451,193],[0.181,0.276,209],[0.025,0.106,172]]],[0.7961,0.86,[[0.879,0.975,200],[0.704,0.808,219],[0.557,0.636,155],[0.43,0.451,66],[0.294,0.363,124],[0.158,0.222,133],[0.025,0.09,136]]],[0.86,0.9255,[[0.893,0.975,209],[0.8,0.832,69],[0.692,0.74,92],[0.557,0.632,157],[0.38,0.451,170],[0.279,0.312,69],[0.163,0.211,92],[0.025,0.094,160]]],[0.9255,0.991,[[0.913,0.975,127],[0.777,0.861,243],[0.679,0.726,107],[0.557,0.626,128],[0.389,0.451,136],[0.28,0.332,174],[0.155,0.225,131],[0.025,0.099,154]]]],"3":[[0.0091,0.0759,[[0.939,0.975,72],[0.841,0.861,39],[0.701,0.762,110],[0.557,0.621,127],[0.358,0.451,287],[0.189,0.275,175],[0.025,0.107,228]]],[0.0759,0.1419,[[0.903,0.975,140],[0.808,0.855,91],[0.679,0.76,142],[0.555,0.632,157],[0.346,0.451,313],[0.193,0.265,162],[0.023,0.111,184]]],[0.1419,0.2079,[[0.904,0.975,252],[0.792,0.88,164],[0.709,0.767,122],[0.659,0.686,61],[0.557,0.635,164],[0.367,0.449,150],[0.305,0.346,83],[0.208,0.288,142],[0.123,0.19,151],[0.025,0.106,164]]],[0.2079,0.2739,[[0.904,0.975,201],[0.799,0.847,176],[0.695,0.745,109],[0.557,0.639,159],[0.409,0.451,81],[0.282,0.361,169],[0.154,0.235,180],[0.025,0.106,160]]],[0.2739,0.3384,[[0.913,0.975,126],[0.779,0.878,177],[0.673,0.744,146],[0.556,0.638,198],[0.362,0.451,169],[0.272,0.296,56],[0.145,0.205,130],[0.028,0.079,117]]],[0.3384,0.4029,[[0.925,0.973,122],[0.824,0.899,127],[0.774,0.796,40],[0.707,0.746,99],[0.557,0.679,219],[0.363,0.451,177],[0.321,0.342,40],[0.18,0.3,193],[0.025,0.159,230]]],[0.4029,0.4689,[[0.946,0.976,65],[0.798,0.89,270],[0.675,0.745,137],[0.557,0.621,116],[0.399,0.451,120],[0.259,0.334,133],[0.165,0.196,69],[0.025,0.101,136]]],[0.4689,0.5357,[[0.955,0.975,66],[0.816,0.909,242],[0.734,0.768,74],[0.657,0.686,62],[0.556,0.61,106],[0.403,0.451,105],[0.283,0.353,106],[0.155,0.229,175],[0.028,0.104,121]]],[0.5357,0.6002,[[0.921,0.975,125],[0.795,0.859,113],[0.652,0.733,160],[0.557,0.592,81],[0.396,0.451,121],[0.303,0.358,104],[0.181,0.263,149],[0.087,0.138,98],[0.025,0.047,50]]],[0.6002,0.6646,[[0.94,0.975,71],[0.854,0.901,115],[0.781,0.815,60],[0.702,0.743,87],[0.56,0.663,179],[0.393,0.451,126],[0.263,0.331,165],[0.157,0.199,93],[0.024,0.096,155]]],[0.6646,0.7307,[[0.898,0.975,259],[0.804,0.831,61],[0.699,0.75,89],[0.557,0.633,171],[0.351,0.451,173],[0.23,0.29,105],[0.151,0.172,40],[0.025,0.093,154]]],[0.7307,0.7951,[[0.947,0.977,64],[0.879,0.908,64],[0.759,0.837,150],[0.699,0.719,39],[0.636,0.659,60],[0.557,0.606,89],[0.416,0.451,61],[0.303,0.348,115],[0.139,0.232,180],[0.025,0.071,88]]],[0.7951,0.8596,[[0.893,0.975,192],[0.85,0.874,56],[0.718,0.827,214],[0.659,0.697,83],[0.555,0.638,173],[0.371,0.451,187],[0.324,0.348,56],[0.236,0.297,117],[0.148,0.208,135],[0.023,0.123,188]]],[0.8596,0.9241,[[0.918,0.977,150],[0.812,0.845,69],[0.692,0.74,92],[0.556,0.62,119],[0.405,0.452,81],[0.265,0.335,167],[0.163,0.196,68],[0.024,0.094,121]]],[0.9241,0.9909,[[0.882,0.975,302],[0.725,0.796,167],[0.558,0.635,176],[0.394,0.451,123],[0.228,0.281,107],[0.026,0.114,177]]]],"4":[[0.0092,0.0743,[[0.894,0.975,183],[0.736,0.795,134],[0.558,0.635,171],[0.431,0.45,40],[0.309,0.395,169],[0.232,0.275,81],[0.144,0.197,108],[0.026,0.108,169]]],[0.0743,0.1402,[[0.903,0.973,152],[0.783,0.848,131],[0.681,0.738,125],[0.557,0.629,134],[0.392,0.452,124],[0.253,0.329,158],[0.14,0.189,111],[0.025,0.076,84]]],[0.1402,0.2054,[[0.906,0.974,144],[0.775,0.847,154],[0.696,0.72,54],[0.556,0.638,192],[0.429,0.452,60],[0.329,0.375,106],[0.245,0.275,66],[0.112,0.191,167],[0.024,0.057,85]]],[0.2054,0.272,[[0.924,0.975,109],[0.779,0.877,314],[0.689,0.734,85],[0.556,0.64,189],[0.43,0.451,66],[0.279,0.379,226],[0.179,0.227,92],[0.024,0.124,213]]],[0.272,0.3372,[[0.887,0.975,182],[0.707,0.791,220],[0.557,0.615,115],[0.418,0.452,81],[0.294,0.36,157],[0.159,0.236,146],[0.025,0.1,146]]],[0.3372,0.4023,[[0.948,0.975,76],[0.86,0.912,116],[0.781,0.824,108],[0.663,0.744,147],[0.556,0.625,126],[0.429,0.452,60],[0.341,0.396,135],[0.205,0.309,186],[0.14,0.171,69],[0.024,0.107,146]]],[0.4023,0.4674,[[0.908,0.975,133],[0.765,0.848,162],[0.646,0.706,113],[0.557,0.588,69],[0.388,0.451,151],[0.249,0.329,142],[0.129,0.189,122],[0.025,0.07,105]]],[0.4674,0.5326,[[0.95,0.977,61],[0.845,0.909,110],[0.718,0.806,169],[0.658,0.682,56],[0.557,0.619,137],[0.379,0.451,151],[0.232,0.314,142],[0.128,0.166,83],[0.023,0.062,79]]],[0.5326,0.6,[[0.955,0.975,66],[0.798,0.891,251],[0.68,0.73,115],[0.557,0.613,118],[0.382,0.451,127],[0.25,0.31,139],[0.135,0.179,113],[0.025,0.061,82]]],[0.6,0.6651,[[0.914,0.976,154],[0.746,0.812,140],[0.56,0.644,170],[0.4,0.451,132],[0.272,0.351,168],[0.136,0.222,172],[0.025,0.087,153]]],[0.6651,0.7303,[[0.904,0.975,149],[0.78,0.866,158],[0.676,0.739,152],[0.558,0.641,177],[0.348,0.452,203],[0.264,0.283,40],[0.129,0.201,133],[0.026,0.065,89]]],[0.7303,0.7954,[[0.955,0.974,40],[0.882,0.929,95],[0.836,0.86,56],[0.742,0.808,151],[0.654,0.714,136],[0.555,0.627,152],[0.362,0.451,190],[0.188,0.27,169],[0.023,0.082,141]]],[0.7954,0.8605,[[0.917,0.975,128],[0.716,0.836,250],[0.556,0.636,203],[0.431,0.45,40],[0.328,0.391,158],[0.201,0.288,169],[0.119,0.159,108],[0.024,0.079,105]]],[0.8605,0.9257,[[0.898,0.975,158],[0.77,0.819,128],[0.56,0.689,222],[0.378,0.452,172],[0.317,0.338,48],[0.221,0.279,115],[0.129,0.181,114],[0.028,0.091,119]]],[0.9257,0.9908,[[0.914,0.974,113],[0.736,0.848,229],[0.557,0.667,200],[0.382,0.451,127],[0.197,0.29,197],[0.025,0.105,137]]]],"5":[[0.0091,0.0736,[[0.881,0.975,181],[0.764,0.836,141],[0.687,0.719,66],[0.556,0.64,189],[0.348,0.451,219],[0.229,0.307,147],[0.149,0.188,78],[0.024,0.11,196]]],[0.0736,0.1404,[[0.905,0.975,232],[0.828,0.863,95],[0.719,0.785,186],[0.651,0.677,54],[0.555,0.606,111],[0.426,0.452,61],[0.366,0.379,48],[0.249,0.322,152],[0.138,0.203,131],[0.023,0.092,147]]],[0.1404,0.2064,[[0.908,0.975,242],[0.767,0.861,221],[0.693,0.721,64],[0.632,0.646,48],[0.557,0.587,63],[0.412,0.451,69],[0.273,0.365,139],[0.154,0.223,153],[0.025,0.107,160]]],[0.2064,0.2709,[[0.936,0.975,93],[0.837,0.888,116],[0.722,0.79,160],[0.657,0.676,40],[0.557,0.611,121],[0.362,0.451,201],[0.266,0.318,154],[0.177,0.225,92],[0.113,0.134,40],[0.025,0.071,115]]],[0.2709,0.3369,[[0.893,0.975,245],[0.787,0.848,120],[0.69,0.742,127],[0.557,0.645,157],[0.378,0.452,126],[0.258,0.329,152],[0.145,0.207,133],[0.025,0.093,137]]],[0.3369,0.4014,[[0.913,0.975,126],[0.729,0.855,262],[0.557,0.674,205],[0.346,0.451,199],[0.196,0.253,130],[0.025,0.103,163]]],[0.4014,0.4659,[[0.919,0.976,136],[0.827,0.889,119],[0.671,0.804,204],[0.556,0.644,180],[0.357,0.451,189],[0.231,0.319,200],[0.123,0.193,131],[0.024,0.085,106]]],[0.4659,0.5326,[[0.955,0.975,66],[0.822,0.903,162],[0.732,0.768,80],[0.557,0.678,301],[0.407,0.452,90],[0.336,0.374,69],[0.246,0.306,119],[0.172,0.211,77],[0.122,0.142,39],[0.025,0.093,130]]],[0.5326,0.5986,[[0.829,0.975,380],[0.704,0.768,124],[0.557,0.643,194],[0.426,0.452,61],[0.371,0.384,48],[0.301,0.331,68],[0.239,0.261,40],[0.141,0.198,139],[0.025,0.102,177]]],[0.5986,0.6631,[[0.841,0.975,234],[0.712,0.795,192],[0.645,0.669,56],[0.555,0.598,104],[0.36,0.449,201],[0.237,0.301,150],[0.135,0.178,81],[0.023,0.074,116]]],[0.6631,0.7291,[[0.904,0.975,217],[0.795,0.85,124],[0.669,0.744,177],[0.557,0.616,126],[0.394,0.45,112],[0.252,0.339,181],[0.14,0.197,104],[0.024,0.087,139]]],[0.7291,0.7936,[[0.94,0.975,61],[0.858,0.908,113],[0.759,0.826,132],[0.685,0.729,78],[0.557,0.648,203],[0.36,0.451,175],[0.22,0.32,222],[0.157,0.181,56],[0.025,0.116,204]]],[0.7936,0.8596,[[0.9,0.975,151],[0.773,0.837,143],[0.657,0.713,126],[0.555,0.596,110],[0.36,0.451,187],[0.244,0.312,247],[0.15,0.209,120],[0.025,0.104,187]]],[0.8596,0.9256,[[0.901,0.975,163],[0.807,0.842,61],[0.702,0.75,116],[0.556,0.643,195],[0.395,0.45,115],[0.237,0.343,204],[0.163,0.187,56],[0.023,0.109,234]]],[0.9256,0.9909,[[0.896,0.976,168],[0.82,0.844,56],[0.688,0.767,145],[0.556,0.636,164],[0.374,0.451,182],[0.301,0.339,69],[0.212,0.267,100],[0.141,0.188,81],[0.024,0.106,165]]]],"6":[[0.0091,0.0735,[[0.917,0.975,131],[0.845,0.892,86],[0.746,0.814,132],[0.695,0.718,60],[0.646,0.667,40],[0.555,0.617,131],[0.38,0.451,126],[0.263,0.341,139],[0.133,0.225,211],[0.023,0.096,167]]],[0.0735,0.1402,[[0.891,0.975,296],[0.729,0.81,177],[0.557,0.647,199],[0.382,0.451,147],[0.2,0.288,165],[0.025,0.117,176]]],[0.1402,0.2045,[[0.906,0.975,119],[0.854,0.887,78],[0.754,0.84,189],[0.68,0.738,127],[0.626,0.665,101],[0.557,0.609,115],[0.382,0.45,144],[0.304,0.354,114],[0.241,0.277,70],[0.181,0.216,61],[0.119,0.156,82],[0.025,0.092,138]]],[0.2045,0.2705,[[0.924,0.975,107],[0.857,0.897,78],[0.753,0.83,258],[0.679,0.729,132],[0.628,0.654,66],[0.555,0.601,107],[0.389,0.452,112],[0.279,0.34,134],[0.206,0.228,40],[0.109,0.156,103],[0.025,0.058,65]]],[0.2705,0.3364,[[0.936,0.975,93],[0.84,0.892,116],[0.765,0.798,69],[0.691,0.723,64],[0.558,0.648,186],[0.403,0.451,92],[0.277,0.347,153],[0.18,0.224,95],[0.025,0.126,340]]],[0.3364,0.4008,[[0.907,0.975,159],[0.789,0.872,165],[0.672,0.751,189],[0.557,0.635,211],[0.38,0.451,133],[0.302,0.361,111],[0.218,0.282,134],[0.128,0.198,165],[0.025,0.103,175]]],[0.4008,0.4652,[[0.924,0.974,127],[0.84,0.886,91],[0.762,0.8,100],[0.7,0.723,60],[0.639,0.662,41],[0.557,0.599,95],[0.374,0.451,164],[0.192,0.299,199],[0.025,0.119,198]]],[0.4652,0.5318,[[0.869,0.975,306],[0.738,0.81,155],[0.556,0.677,229],[0.416,0.451,61],[0.338,0.39,122],[0.29,0.311,48],[0.216,0.262,109],[0.155,0.19,56],[0.024,0.129,206]]],[0.5318,0.5962,[[0.885,0.976,215],[0.716,0.821,236],[0.556,0.652,224],[0.364,0.451,187],[0.267,0.311,94],[0.122,0.214,139],[0.024,0.07,117]]],[0.5962,0.6621,[[0.898,0.975,139],[0.772,0.872,185],[0.702,0.743,79],[0.555,0.674,360],[0.353,0.451,197],[0.213,0.328,200],[0.148,0.189,79],[0.023,0.124,310]]],[0.6621,0.728,[[0.867,0.975,370],[0.768,0.823,124],[0.676,0.724,92],[0.557,0.631,156],[0.408,0.451,81],[0.296,0.357,143],[0.169,0.243,147],[0.025,0.118,177]]],[0.728,0.7939,[[0.914,0.975,154],[0.732,0.809,176],[0.555,0.63,159],[0.4,0.451,100],[0.296,0.338,79],[0.18,0.233,130],[0.023,0.117,314]]],[0.7939,0.8598,[[0.854,0.975,355],[0.755,0.811,149],[0.663,0.712,92],[0.558,0.62,117],[0.369,0.45,258],[0.31,0.329,40],[0.193,0.268,148],[0.1,0.154,116],[0.026,0.06,72]]],[0.8598,0.9265,[[0.912,0.975,137],[0.719,0.838,369],[0.556,0.643,198],[0.392,0.451,133],[0.323,0.347,56],[0.171,0.275,174],[0.024,0.124,213]]],[0.9265,0.9909,[[0.91,0.975,155],[0.742,0.797,124],[0.558,0.633,163],[0.379,0.452,147],[0.212,0.269,120],[0.026,0.105,148]]]],"7":[[0.0092,0.0763,[[0.868,0.975,363],[0.739,0.821,168],[0.671,0.696,56],[0.557,0.624,142],[0.429,0.451,41],[0.379,0.393,44],[0.293,0.346,108],[0.224,0.259,61],[0.128,0.192,120],[0.025,0.091,191]]],[0.0763,0.1426,[[0.95,0.977,61],[0.875,0.912,90],[0.769,0.836,156],[0.646,0.732,153],[0.557,0.608,84],[0.403,0.451,115],[0.312,0.332,39],[0.192,0.24,111],[0.026,0.12,254]]],[0.1426,0.209,[[0.946,0.976,72],[0.789,0.897,329],[0.648,0.744,180],[0.56,0.6,85],[0.376,0.451,170],[0.238,0.312,156],[0.149,0.176,66],[0.025,0.087,114]]],[0.209,0.2738,[[0.887,0.976,178],[0.747,0.861,202],[0.631,0.721,174],[0.557,0.605,90],[0.378,0.451,146],[0.213,0.28,134],[0.025,0.117,208]]],[0.2738,0.3387,[[0.873,0.975,214],[0.798,0.827,76],[0.69,0.754,136],[0.557,0.643,140],[0.367,0.451,151],[0.307,0.33,60],[0.207,0.27,114],[0.147,0.171,60],[0.025,0.112,171]]],[0.3387,0.4035,[[0.89,0.975,187],[0.756,0.836,145],[0.667,0.705,69],[0.557,0.616,118],[0.396,0.45,120],[0.267,0.332,125],[0.163,0.202,78],[0.025,0.099,143]]],[0.4035,0.4683,[[0.886,0.975,198],[0.782,0.832,142],[0.682,0.731,107],[0.557,0.629,142],[0.344,0.452,236],[0.229,0.322,192],[0.103,0.205,198],[0.025,0.08,135]]],[0.4683,0.5355,[[0.9,0.975,213],[0.735,0.823,143],[0.557,0.66,207],[0.38,0.451,151],[0.185,0.308,230],[0.025,0.111,184]]],[0.5355,0.6003,[[0.9,0.975,181],[0.738,0.791,126],[0.557,0.63,170],[0.391,0.451,140],[0.196,0.282,204],[0.025,0.087,161]]],[0.6003,0.6651,[[0.943,0.975,84],[0.868,0.904,95],[0.767,0.826,105],[0.69,0.726,80],[0.557,0.646,186],[0.4,0.452,111],[0.329,0.353,56],[0.226,0.279,123],[0.129,0.177,96],[0.025,0.083,129]]],[0.6651,0.73,[[0.907,0.975,135],[0.755,0.802,135],[0.557,0.648,182],[0.429,0.453,66],[0.34,0.388,79],[0.281,0.302,48],[0.176,0.244,136],[0.104,0.138,61],[0.025,0.067,83]]],[0.73,0.7963,[[0.923,0.976,92],[0.789,0.877,248],[0.655,0.742,171],[0.555,0.607,124],[0.373,0.451,172],[0.279,0.347,162],[0.234,0.254,66],[0.165,0.209,90],[0.118,0.138,43],[0.025,0.092,128]]],[0.7963,0.8612,[[0.907,0.975,159],[0.774,0.854,178],[0.686,0.721,56],[0.558,0.633,183],[0.429,0.453,56],[0.305,0.378,123],[0.162,0.258,188],[0.026,0.113,179]]],[0.8612,0.926,[[0.94,0.975,88],[0.811,0.866,122],[0.691,0.739,106],[0.556,0.618,127],[0.431,0.451,43],[0.336,0.4,109],[0.207,0.308,212],[0.157,0.175,56],[0.107,0.129,40],[0.025,0.078,110]]],[0.926,0.9908,[[0.868,0.975,210],[0.713,0.802,143],[0.557,0.646,180],[0.388,0.451,129],[0.271,0.329,107],[0.164,0.212,92],[0.025,0.104,150]]]]}}};
+const DAY=864e5,COLORS=['#0f6b52','#1f4aa8','#7a3e9d','#b0562a','#2a7f8f','#8a6d1f','#9c2f4b','#3d5a2a'];
+const ar=n=>Number(n).toLocaleString('ar-EG');
+const nP=n=>ar(n)+' '+(n>=3&&n<=10?'مقاطع':n==2?'مقطعان':'مقطعًا');
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const dnum=(d=new Date())=>Math.floor((d.getTime()-d.getTimezoneOffset()*6e4)/DAY);
+const uid=()=>Math.random().toString(36).slice(2,9);
+const ord=['الأول','الثاني','الثالث','الرابع','الخامس','السادس','السابع','الثامن'];
+let T=dnum();
+
+/* فهرسة كلمات المتن المرفق */
+for(const k in LIB){const L=LIB[k];L.W=[];L.pos={};let c=0;
+  for(const g of Object.keys(L.words).map(Number).sort((a,b)=>a-b)){L.pos[g]=[];L.words[g].forEach((ln,li)=>{L.pos[g][li]=L.W.length;ln[2].forEach((w,wi)=>{c+=w[2];L.W.push({g,li,wi,c})})})}
+  L.total=c;L.endOf=g=>{let e=-1;for(const i in L.W)if(L.W[i].g<=g)e=+i;return e};
+}
+const pctOf=(L,i)=>i<0?0:L.W[Math.min(i,L.W.length-1)].c/L.total;
+const pc=x=>ar(Math.round(x*100))+'٪';
+
+function P(label,extra){return Object.assign({id:uid(),label,interval:0,due:T,last:null,reps:0,lapses:0,added:null},extra||{})}
+function parts(prefix,n){return Array.from({length:n},(_,i)=>P(prefix+' '+ord[i]))}
+function libPortions(k='nukhba'){return LIB[k].parts.map(([l,a,b])=>P(l,{pg:[a,b]}))}
+const LINKS=[[/نخبة/,'nukhba'],[/جزري/,'jazari'],[/النظم الصغير/,'nazm'],[/القواعد الفقهية/,'qawaid']];
+function linkLib(m){const e=LINKS.find(([r,k])=>k!=='nukhba'&&r.test(m.name));if(!e||m.lib)return;const k=e[0]&&e[1],L=LIB[k],old=m.portions||[],np=libPortions(k);
+  np.forEach((p,i)=>{const q=old[Math.min(old.length-1,Math.floor((i+.5)*old.length/np.length))];if(q&&q.last!=null)Object.assign(p,{interval:q.interval,due:q.due,last:q.last,reps:q.reps,lapses:q.lapses})});
+  m.portions=np;m.lib=k;if(m.status=='done'){m.ptr=L.W.length-1;m.hist=[{d:T,p:m.ptr,init:1}]}else{m.ptr=-1;m.hist=[]}}
+const CATALOG=[
+  {name:'نخبة الفكر',cat:'مصطلح الحديث',lib:'nukhba',color:COLORS[5],short:'النخبة'},
+  {name:'المنظومة البيقونية',cat:'مصطلح الحديث',color:COLORS[0],short:'البيقونية',parts:['الأبيات ١–٩','الأبيات ١٠–١٧','الأبيات ١٨–٢٦','الأبيات ٢٧–٣٤']},
+  {name:'المقدمة الجزرية',cat:'التجويد',lib:'jazari',color:COLORS[1],short:'الجزرية'},
+  {name:'النظم الصغير على مختصر التحرير',cat:'أصول الفقه',lib:'nazm',color:COLORS[2],short:'نظم التحرير'},
+  {name:'منظومة القواعد الفقهية للسعدي',cat:'القواعد الفقهية',lib:'qawaid',color:COLORS[3],short:'قواعد السعدي'}];
+function fromCatalog(c,status){const m={id:uid(),name:c.name,cat:c.cat,status,color:c.color,short:c.short,portions:[]};
+  if(c.lib){const L=LIB[c.lib];m.lib=c.lib;m.portions=libPortions(c.lib);m.ptr=status=='done'?L.W.length-1:-1;m.hist=status=='done'?[{d:T,p:m.ptr,init:1}]:[]}
+  else m.portions=(c.parts||[]).map(l=>P(l));
+  m.portions.forEach(p=>p.rv=0);return m}
+function seed(){return {v:5,settings:{cap:6,recent:7},log:{},mutun:[]}}
+function migrate(o){
+  if((o.v||1)<2)mig2(o);
+  if(o.v==2){for(const m of o.mutun)linkLib(m);o.v=3}
+  if((o.v||1)<4){for(const m of o.mutun){if(!m.short)m.short=SHORT(m.name);for(const p of m.portions)if(p.rv==null)p.rv=p.added!=null||m.lib?Math.max(0,(p.reps||0)-1):(p.reps||0)}o.v=4}
+  if((o.v||1)<5){o.log={};delete o.cycle;for(const m of o.mutun){delete m.pm;delete m.pr;delete m.fullLog;delete m.recentDone;
+      if(m.lib&&m.status!='done'){m.ptr=-1;m.hist=[]}else if(m.lib){m.hist=[{d:T,p:m.ptr,init:1}]}
+      for(const p of m.portions)Object.assign(p,{interval:0,due:T,last:null,reps:0,lapses:0,added:null,rv:0,tests:[]})}
+    o.v=5}
+  return o;
+}
+const SHORT=n=>/نخبة/.test(n)?'النخبة':/البيقونية/.test(n)?'البيقونية':/الجزرية/.test(n)?'الجزرية':/التحرير/.test(n)?'نظم التحرير':/سعدي/.test(n)?'قواعد السعدي':/^منظومة في العقيدة/.test(n)?'العقيدة':/^نظم أو كتاب في الفقه/.test(n)?'الفقه':'';
+function mig2(o){
+  o.mutun=o.mutun.filter(m=>!/الجمع بين الصحيحين/.test(m.name));
+  for(const m of o.mutun){
+    if(/نخبة/.test(m.name)){
+      const L=LIB.nukhba,old=m.portions||[];let ptr=-1;
+      if(m.lib){const memo=old.filter(p=>p.pg&&!p.pending);if(memo.length)ptr=L.endOf(Math.max(...memo.map(p=>p.pg[1])))}
+      m.portions=libPortions().map(p=>{const q=old.find(x=>x.label==p.label&&x.last!=null);return q?Object.assign(p,{interval:q.interval,due:q.due,last:q.last,reps:q.reps,lapses:q.lapses}):p});
+      m.lib='nukhba';m.ptr=ptr;m.hist=ptr>=0?[{d:T,p:ptr,init:1}]:[];if(m.status!=='done')m.status='prog';
+    }
+    for(const p of m.portions)delete p.pending;
+  }
+  o.settings={cap:(o.settings&&o.settings.cap)||6,recent:(o.settings&&o.settings.recent)||7};o.v=2;
+}
+let S=null,undo=null,docRef=null,saveT=null;
+
+/* الحفظ في الحساب */
+const setSync=t=>document.getElementById('sync').textContent=t;
+let LKEY='hifz-state',FBU=null;
+function save(){
+  try{localStorage.setItem(LKEY,JSON.stringify(S))}catch(e){}
+  if(!docRef){setSync('محفوظ في هذا الجهاز فقط — سجّل الدخول بحساب Google ليُحفظ في حسابك');return}
+  clearTimeout(saveT);setSync('جارٍ الحفظ…');
+  saveT=setTimeout(async()=>{try{await docRef.set({json:JSON.stringify(S),at:Date.now(),name:(FBU&&FBU.displayName)||''});setSync('محفوظ في حسابك، يظهر على كل أجهزتك')}catch(e){setSync('تعذّر الحفظ في الحساب الآن؛ محفوظ في هذا الجهاز');console.warn('save',e)}},700);
+}
+function loadLocal(k){try{const j=localStorage.getItem(k||LKEY);if(j)return JSON.parse(j)}catch(e){}return null}
+function loadScript(src){return new Promise((res,rej)=>{const x=document.createElement('script');x.src=src;x.onload=res;x.onerror=rej;document.head.appendChild(x)})}
+const FB_V='10.12.2';let FBREADY=false;
+async function boot(){
+  const l=loadLocal();S=l?migrate(l):seed();render();save();renderAcct();
+  const cfg=window.FIREBASE_CONFIG;if(!cfg||!cfg.apiKey)return;
+  try{
+    await loadScript(`https://www.gstatic.com/firebasejs/${FB_V}/firebase-app-compat.js`);
+    await Promise.all([loadScript(`https://www.gstatic.com/firebasejs/${FB_V}/firebase-auth-compat.js`),loadScript(`https://www.gstatic.com/firebasejs/${FB_V}/firebase-firestore-compat.js`)]);
+    firebase.initializeApp(cfg);FBREADY=true;
+    firebase.auth().getRedirectResult().catch(e=>toast('تعذّر تسجيل الدخول: '+(e.code||''),true));
+    firebase.auth().onAuthStateChanged(onAuth);
+  }catch(e){console.warn('firebase',e)}
+  renderAcct();
+}
+async function onAuth(u){
+  FBU=u;
+  if(!u){docRef=null;LKEY='hifz-state';const l=loadLocal();S=l?migrate(l):seed();render();save();renderAcct();return}
+  LKEY='hifz-state-'+u.uid;docRef=firebase.firestore().collection('hifz').doc(u.uid);renderAcct();
+  try{
+    const snap=await docRef.get();const d=snap.exists?snap.data():null;
+    if(d&&d.json){S=migrate(JSON.parse(d.json));render();save()}
+    else{const mine=loadLocal(),anon=loadLocal('hifz-state');S=mine?migrate(mine):(anon&&anon.mutun&&anon.mutun.length?migrate(anon):seed());render();save()}
+    toast('أهلًا '+((u.displayName||'').split(' ')[0]||'بك')+'، تقدّمك محفوظ في حسابك',true);
+  }catch(e){console.warn('load',e);setSync('تعذّر الوصول إلى حسابك الآن؛ تعمل على نسخة هذا الجهاز');S=migrate(loadLocal()||seed());render()}
+}
+function signIn(){
+  if(!FBREADY)return toast('الدخول غير متاح الآن، أعد المحاولة بعد لحظات',true);
+  const prov=new firebase.auth.GoogleAuthProvider();prov.setCustomParameters({prompt:'select_account'});
+  firebase.auth().signInWithPopup(prov).catch(e=>{if(e&&e.code==='auth/popup-blocked')return firebase.auth().signInWithRedirect(prov);if(e&&e.code!=='auth/popup-closed-by-user')toast('تعذّر تسجيل الدخول: '+(e.code||''),true)});
+}
+function renderAcct(){
+  const el=document.getElementById('acct');if(!el)return;const lbl=document.querySelector('.hlabel');
+  if(FBU){const nm=FBU.displayName||FBU.email||'';el.innerHTML=`<span class="who2"><b>${esc((nm.split(' ')[0]||'؟').slice(0,1))}</b>${esc(nm)}</span><button data-signout>خروج</button>`;if(lbl)lbl.textContent='خزانة محفوظات '+(nm.split(' ')[0]||'')}
+  else{el.innerHTML=FBREADY?`<button class="gbtn" data-signin><svg viewBox="0 0 48 48" width="18" height="18"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>الدخول بحساب Google</button>`:'';if(lbl)lbl.textContent='خزانة المحفوظات'}
+}
+/* الضبط والمواعيد */
+const R=p=>p.last==null?null:Math.pow(0.9,(T-p.last)/Math.max(1,p.interval));
+const col=r=>r==null?'#8a9a94':r>=.8?'#2fa57c':r>=.55?'#d9a43a':'#d6553a';
+const isMemo=(m,p)=>!m.lib||(m.ptr>=LIB[m.lib].endOf(p.pg[1]));
+function reviewable(){const a=[];for(const m of S.mutun)if(m.status!=='plan')m.portions.forEach((p,i)=>{if(isMemo(m,p))a.push({m,p,i})});return a}
+function mStrength(m){const ps=m.portions.filter(p=>isMemo(m,p));if(!ps.length)return null;return ps.reduce((s,p)=>s+(R(p)??.3),0)/ps.length}
+function recentRange(m){
+  if(!m.lib||m.ptr<0)return null;let base=-1;
+  for(const h of m.hist||[])if(h.init||h.d<=T-S.settings.recent)base=h.p;
+  return m.ptr>base?[base+1,m.ptr]:null;
+}
+function plan(){
+  const due=[],done=[],quota=[];
+  {const cs=cycStatus();if(cs)cs.today.forEach(x=>quota.push({m:x.m,p:x.p,i:x.m.portions.indexOf(x.p),pr:80,cyc:1}))}
+  for(const m of S.mutun){if(!m.pr||m.status=='plan')continue;const st=revStatus(m);if(!st)continue;
+    const memo=m.portions.filter(p=>isMemo(m,p)),f=fullRev(m);
+    const left=memo.filter(p=>(p.rv||0)<=f&&p.last!==T);
+    left.filter(p=>!quota.some(q=>q.p===p)).slice(0,st.todo).forEach(p=>quota.push({m,p,i:m.portions.indexOf(p),pr:50,q:1}));}
+  for(const x of reviewable()){const p=x.p;
+    if(p.last===T){done.push(x);continue}
+    if(quota.some(q=>q.p===p))continue;
+    if(S.cycle&&S.cycle.order.includes(x.m.id)){if(p.interval==1&&p.due<=T&&p.lapses)quota.push(Object.assign(x,{pr:60}));continue}
+    if(x.m.pr&&x.m.status!='plan'){if(p.interval==1&&p.due<=T&&p.lapses&&!quota.some(q=>q.p===p))quota.push(Object.assign(x,{pr:60}));continue}
+    if(p.added!=null&&T-p.added<S.settings.recent&&!x.m.lib){due.push(Object.assign(x,{pr:99}));continue}
+    if(p.due<=T)due.push(Object.assign(x,{pr:p.last==null?2-x.i*.001:(T-p.due)/Math.max(1,p.interval)+1+p.lapses*.3}));
+  }
+  due.sort((a,b)=>b.pr-a.pr);
+  return {list:quota.concat(due.slice(0,S.settings.cap+due.filter(x=>x.pr==99).length)),all:due.length+quota.length,done};
+}
+function rate(mid,pid,good){
+  const m=S.mutun.find(x=>x.id==mid),p=m&&m.portions.find(x=>x.id==pid);if(!p)return;
+  undo={k:'rate',mid,pid,prev:JSON.stringify(p),log:S.log[T]||0};const f0=fullRev(m);
+  if(good){p.interval=p.last==null||p.interval<1?4:Math.min(120,Math.max(p.interval+1,Math.round(p.interval*2.2)))}
+  else{p.interval=1;p.lapses++}
+  p.last=T;p.due=T+p.interval;p.reps++;p.rv=(p.rv||0)+1;S.log[T]=(S.log[T]||0)+1;cycMark(p.id);
+  if(fullRev(m)>f0){m.fullLog=(m.fullLog||[]).concat(T);save();render();celebrate('الختمة رقم '+ar(fullRev(m))+' — '+m.name);return toast('مبارك! أتممت الختمة رقم '+ar(fullRev(m))+' لـ«'+m.name+'»',true)}
+  save();render();toast(good?'أحسنت، تعود إليك بعد '+ar(p.interval)+' يومًا':'لا بأس، تعود إليك غدًا');
+}
+function doUndo(){
+  if(!undo)return;const m=S.mutun.find(x=>x.id==undo.mid);
+  if(undo.k=='rate'&&m){const i=m.portions.findIndex(x=>x.id==undo.pid);if(i>-1)m.portions[i]=JSON.parse(undo.prev);S.log[T]=undo.log}
+  if(undo.k=='ptr'&&m){m.ptr=undo.ptr;m.hist=undo.hist;m.portions=JSON.parse(undo.portions)}
+  if(undo.k=='recent'&&m){m.recentDone=undo.prev}
+  undo=null;save();render();hideToast();
+}
+function setPtr(m,idx){
+  const L=LIB[m.lib];undo={k:'ptr',mid:m.id,ptr:m.ptr,hist:(m.hist||[]).slice(),portions:JSON.stringify(m.portions)};
+  const first=m.ptr<0&&!(m.hist||[]).length;
+  for(const p of m.portions){const e=L.endOf(p.pg[1]);
+    if(e<=idx&&e>m.ptr&&!first&&p.last==null)Object.assign(p,{added:T,last:T,interval:S.settings.recent,due:T+S.settings.recent,reps:1});
+  }
+  m.ptr=idx;m.hist=(m.hist||[]).filter(h=>h.d!==T||h.init);m.hist.push(first?{d:T,p:idx,init:1}:{d:T,p:idx});
+  if(idx>=L.W.length-1)m.status='done';
+  save();render();
+}
+let tt=null;function toast(t,noUndo){document.getElementById('toastT').textContent=t;document.getElementById('undoB').hidden=!!noUndo;document.getElementById('toast').classList.add('show');clearTimeout(tt);tt=setTimeout(hideToast,5000)}
+function hideToast(){document.getElementById('toast').classList.remove('show')}
+function where(L,i){if(i<0)return 'لم تحدّد بعد';const w=L.W[i];return 'ص '+ar(w.g)+'، السطر '+ar(w.li+1)}
+function dueTxt(p){if(p.last==null)return 'لم تُراجَع منذ بدء المتابعة';const d=T-p.due;return d>0?'<span class="late">متأخرة '+ar(d)+' يومًا</span>':(T-p.last==0?'رُوجع اليوم':'آخر مراجعة قبل '+ar(T-p.last)+' يومًا')}
+
+/* الواجهة */
+function fullRev(m){const ps=m.portions.filter(p=>isMemo(m,p));return ps.length?Math.min(...ps.map(p=>p.rv||0)):0}
+function achieve(m){if(m.status=='plan')return 0;if(m.lib)return pctOf(LIB[m.lib],m.ptr);return m.status=='done'?1:.5}
+function statusTxt(m){if(m.status=='plan')return 'في الخطة';if(m.lib&&m.status=='prog'){const x=pctOf(LIB[m.lib],m.ptr);return 'أُنجز '+pc(x)+' · بقي '+pc(1-x)}if(m.status=='prog')return 'قيد الحفظ';return 'محفوظ كاملًا'}
+const shortOf=m=>m.short||m.name.split(' ').slice(0,2).join(' ');
+let TAB=(()=>{const h=location.hash.slice(1);if(h=='new'||h=='review')return h;try{return localStorage.getItem('hifz-tab')||'new'}catch(e){return 'new'}})();
+const ICN={new:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5V5a2 2 0 0 1 2-2h11v14H6a2 2 0 0 0-2 2.5zM6 21h13"/><path d="M10.5 7v6M7.5 10h6"/></svg>',review:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 5v6h-6"/><path d="M9 12l2 2 4-4"/></svg>'};
+function cycleProg(m){const ps=m.portions.filter(p=>isMemo(m,p));if(!ps.length)return 0;const f=fullRev(m);return ps.filter(p=>(p.rv||0)>f).length/ps.length}
+function icon(m,kind,due){
+  const plan=m.status=='plan',f=fullRev(m);let ring,st,extra='';
+  if(kind=='new'){ring=achieve(m);st=statusTxt(m);const ms=memStatus(m);if(ms&&!ms.done)extra=`<span class="nx2">ورد اليوم: حتى ${ms.target}</span>`}
+  else{ring=cycleProg(m);const r=mStrength(m);st='قوة الحفظ '+(r==null?'—':pc(r));extra=`<span class="nx2">${m.pr?'ختمة كل '+ar(m.pr.days)+' يومًا · ':''}الختمة القادمة: ${pc(ring)}</span>`}
+  return `<button class="ic ${plan?'planic':''}" data-open="${m.id}"><span class="ring" style="--p:${(ring*100).toFixed(1)};--c:${kind=='new'?m.color:'#c99a2e'}"><span class="face" style="background-color:${m.color}">${esc(shortOf(m))}</span></span>${due?`<span class="dot" title="مستحق اليوم">${ar(due)}</span>`:''}
+    <span class="ttl">${esc(m.name)}</span><span class="st">${st}</span>${plan?'':(f?`<span class="fr">رُوجع كاملًا <b>${ar(f)}</b> ${f>=3&&f<=10?'مرات':'مرة'}</span>`:`<span class="fr" style="background:var(--bg);color:var(--mute)">لم يُراجَع كاملًا بعد</span>`)}${extra}</button>`;
+}
+function render(){
+  T=dnum();const pl=plan(),prog=S.mutun.filter(m=>m.status=='prog'),planned=S.mutun.filter(m=>m.status=='plan');
+  const rec=prog.filter(m=>recentRange(m));
+  const dueBy={};for(const x of pl.list)dueBy[x.m.id]=(dueBy[x.m.id]||0)+1;for(const m of rec)if(m.recentDone!==T)dueBy[m.id]=(dueBy[m.id]||0)+1;
+  const left=pl.list.length+rec.filter(m=>m.recentDone!==T).length;
+  let h=`<nav class="tabs" role="tablist"><button role="tab" data-tab="new" aria-selected="${TAB=='new'}">${ICN.new}الحفظ الجديد</button><button role="tab" data-tab="review" aria-selected="${TAB=='review'}">${ICN.review}المراجعة${left?`<span class="cnt">${ar(left)}</span>`:''}</button></nav>`;
+  if(!S.mutun.length){h+=`<section class="step onb"><h2>أهلًا بك في خزانة محفوظاتك</h2><p class="note" style="font-size:15px">اختر المتون التي حفظتها أو تحفظها الآن، وتستطيع إضافة غيرها في أي وقت. ما تضيفه هنا يخصّك وحدك، ولا يراه غيرك.</p>${catalogHTML()}<div class="tools"><button data-addm>+ متن آخر</button></div></section>`}
+  if(TAB=='new'){
+    h+=`<div class="qcard"><p>لَيْسَ بِعِلْمٍ مَا حَوَى القِمَطْرُ ... مَا العِلْمُ إِلَّا مَا حَوَاهُ الصَّدْرُ</p><small>أنشده الخطيب البغدادي في «الجامع لأخلاق الراوي»</small></div>`;
+    h+=`<div class="sect">ما أحفظه الآن</div><div class="icons">`+(prog.map(m=>icon(m,'new')).join('')||'')+`</div>`;
+    if(!prog.length)h+=`<div class="empty">لا متن تحفظه الآن. اختر متنًا من الخطة أدناه واضغط «ابدأ حفظه».</div>`;
+    else h+=`<p class="note" style="text-align:center">اضغط على الأيقونة ثم «حدِّد أين وصلت»، واضغط على آخر كلمة حفظتها.</p>`;
+    h+=`<div class="sect">الخطة القادمة</div><div class="icons">`+planned.map(m=>icon(m,'new')).join('')+`<button class="ic addic" data-addm><span class="ring" style="--p:0;--c:#999"><span class="face plus">+</span></span><span class="ttl">إضافة متن</span></button></div>`;
+    if(S.mutun.length&&catalogHTML())h+=`<details class="step" ${S.mutun.length<4?'open':''}><summary>أضف من مكتبة المتون الجاهزة</summary>${catalogHTML()}</details>`;
+    h+=`<details class="step"><summary>اقتراحات لمتن العقيدة والفقه</summary><p class="note" style="font-size:15px">يُستأنس فيها برأي شيخك. في العقيدة: حائية ابن أبي داود، الدرة المضية للسفاريني، سلم الوصول لحافظ الحكمي. وفي الفقه: عمدة الفقه لابن قدامة، أخصر المختصرات لابن بلبان، زاد المستقنع للحجاوي. افتح أيقونة المتن في الخطة لتسميته وبدء حفظه.</p></details>`;
+  }else{
+    const act=S.mutun.filter(m=>m.status!='plan'&&m.portions.some(p=>isMemo(m,p)));
+    h+=`<div class="qcard"><p>إِنَّمَا يُذْهِبُ العِلْمَ النِّسْيَانُ وَتَرْكُ المُذَاكَرَةِ</p><small>الإمام ابن شهاب الزهري رحمه الله</small></div>`;
+    let streak=0;for(let d=(S.log[T]?T:T-1);S.log[d];d--)streak++;
+    const week=Object.entries(S.log).filter(([d])=>T-d<7).reduce((a,[,n])=>a+n,0),kh=act.reduce((a,m)=>a+fullRev(m),0);
+    h+=`<div class="stats3"><div><b>${ar(streak)}</b><span>${streak>=3&&streak<=10?'أيام':'يومًا'} متتابعة في المراجعة</span></div><div><b>${ar(week)}</b><span>مراجعة هذا الأسبوع</span></div><div><b>${ar(kh)}</b><span>ختمات المتون كلها</span></div></div>`;
+    h+=`<div class="sect">محفوظاتي</div><div class="icons">`+act.map(m=>icon(m,'review',dueBy[m.id]||0)).join('')+`</div>`;
+    h+=cycCard();
+    h+=`<section class="step" id="rev"><div class="sh"><h2>ورد اليوم<small>اضغط «اختبرني» لاختبار حفظك سطرًا سطرًا، أو قيّم المقطع مباشرة</small></h2>${left?`<span class="count">بقي ${ar(left)}</span>`:''}</div>`;
+    for(const m of rec){const L=LIB[m.lib],r=recentRange(m),dn=m.recentDone===T;
+      h+=`<div class="row ${dn?'done':''}"><div><div class="t">${esc(m.name)}: ما حفظته في آخر ${ar(S.settings.recent)} أيام</div><div class="s">من ${where(L,r[0])} إلى ${where(L,r[1])} · يُكرَّر يوميًا حتى يرسخ</div></div><div class="b"><button data-read="${m.id}|recent|test">اختبرني</button>${dn?'<span class="note">تمّ اليوم</span>':`<button class="ok" data-recent="${m.id}">راجعته</button>`}</div></div>`}
+    h+=pl.list.map(({m,p,cyc})=>rowHTML(m,p,false,cyc)).join('');
+    if(!pl.list.length&&!rec.length)h+=`<div class="empty">${pl.done.length?'أتممت ورد اليوم، بارك الله فيك.':'لا شيء مستحق اليوم.'}</div>`;
+    if(pl.all>pl.list.length)h+=`<p class="note">وبقي ${nP(pl.all-pl.list.length)} مستحقة، تأتيك في الأيام القادمة تدريجيًا كي لا يثقل الورد.</p>`;
+    if(pl.done.length)h+=`<p class="note">رُوجع اليوم: ${pl.done.map(x=>esc(x.m.name)+' ('+esc(x.p.label)+')').join('، ')}</p>`;
+    h+=`</section>`;
+  }
+  h+=`<details class="step"><summary>الإعدادات والنسخة الاحتياطية</summary><form class="form" id="setF" style="margin-top:14px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));align-items:end">
+  <label>عدد مقاطع المراجعة في اليوم<input name="cap" type="number" min="1" max="40" value="${S.settings.cap}"></label>
+  <label>أيام تكرار الحفظ الجديد يوميًا<input name="recent" type="number" min="1" max="30" value="${S.settings.recent}"></label>
+  <button class="pri">احفظ</button></form>
+  <p class="note" style="margin-top:16px">النسخة الاحتياطية: انسخ النص واحفظه، أو الصق نسخة سابقة ثم «استعد».</p>
+  <textarea id="bk" rows="4" style="direction:ltr;font-size:12px">${esc(JSON.stringify(S))}</textarea>
+  <div class="tools"><button id="cp">انسخ</button><button id="rs">استعد</button><button id="reset" class="again">ابدأ من جديد</button></div></details>`;
+  document.getElementById('app').innerHTML=h;
+  if(OPEN&&!RD&&sheet.classList.contains('open')&&!(document.getElementById('aud')&&!document.getElementById('aud').paused)){const st=box.scrollTop;matnSheet(OPEN);box.scrollTop=st}
+}
+function rowHTML(m,p,inSheet,cyc){return `<div class="row"><div><div class="t">${cyc?'<span class="ctag">الخطة</span>':''}${inSheet?'':esc(m.name)+' — '}${esc(p.label)}</div><div class="s">${p.added!=null&&T-p.added<S.settings.recent&&!m.lib?'محفوظ حديثًا، يُكرَّر يوميًا':dueTxt(p)}${p.rv?' · رُوجع '+ar(p.rv)+' مرة':''}${p.tests&&p.tests.length?' · آخر اختبار '+pc(p.tests[p.tests.length-1].s):''}</div></div><div class="b">${p.pg?`<button data-read="${m.id}|${p.id}|test">اختبرني</button>`:''}<button class="ok" data-rate="1" data-m="${m.id}" data-p="${p.id}">ثابت</button><button class="again" data-rate="0" data-m="${m.id}" data-p="${p.id}">يحتاج إعادة</button></div></div>`}
+
+/* النوافذ */
+const sheet=document.getElementById('sheet'),box=document.getElementById('box');
+function openSheet(h,reader){box.className='box'+(reader?' reader':'');box.innerHTML=h;sheet.classList.add('open');document.body.style.overflow='hidden'}
+function closeSheet(){if(RD&&OPEN){const o=OPEN;RD=null;matnSheet(o);return}sheet.classList.remove('open');document.body.style.overflow='';RD=null;OPEN=null}
+const pagesOf=m=>m.lib?Object.keys(LIB[m.lib].words).length:0;
+const f1=x=>(Math.round(x*10)/10).toLocaleString('ar-EG');
+function hijri(n){const d=new Date();d.setDate(d.getDate()+(n-T));try{return d.toLocaleDateString('ar-SA-u-ca-islamic-umalqura-nu-arab',{day:'numeric',month:'long'})+' هـ'}catch(e){return d.toLocaleDateString('ar')}}
+function units(m,kind){
+  if(kind=='mem')return {total:pagesOf(m)*(1-achieve(m)),unit:'صفحة'};
+  if(m.lib)return {total:pagesOf(m)*achieve(m),unit:'صفحة'};
+  return {total:m.portions.filter(p=>isMemo(m,p)).length,unit:'مقطع'};
+}
+function calcPlan(m,kind,mode,val){
+  const u=units(m,kind);val=+val;if(!(val>0)||!(u.total>0))return null;
+  let days,per;if(mode=='days'){days=Math.max(1,Math.round(val));per=u.total/days}else{per=val;days=Math.max(1,Math.ceil(u.total/per-1e-9))}
+  return {days,per,unit:u.unit,total:u.total};
+}
+function memStatus(m){const pl=m.pm;if(!pl||!m.lib)return null;const L=LIB[m.lib],P=pagesOf(m),d=T-pl.start+1;
+  const exp=Math.min(1,pl.sp+(1-pl.sp)*Math.max(0,d)/pl.days),exp0=Math.min(1,pl.sp+(1-pl.sp)*Math.max(0,d-1)/pl.days),act=achieve(m),diff=0,ahead=stTxt(act,exp,exp0,P/Math.max(.01,pl.per)*1);
+  let idx=L.W.findIndex(w=>w.c/L.total>=exp-1e-9);if(idx<0)idx=L.W.length-1;
+  return {d,exp,exp0,act,diff,ahead,end:pl.start+pl.days-1,target:where(L,idx),done:act>=.999}}
+function revStatus(m){const pl=m.pr;if(!pl)return null;const memo=m.portions.filter(p=>isMemo(m,p));if(!memo.length)return null;
+  const lf=(m.fullLog||[]).filter(x=>x>=pl.start).slice(-1)[0];const cs=lf!=null?lf+1:pl.start,d=T-cs+1,f=fullRev(m);
+  const n=memo.length,did=memo.filter(p=>(p.rv||0)>f).length,expN=Math.min(n,Math.ceil(n*Math.max(0,d)/pl.days-1e-9));
+  const todo=Math.max(0,expN-did+memo.filter(p=>(p.rv||0)>f&&p.last===T).length);
+  const exp0=Math.min(n,Math.ceil(n*Math.max(0,d-1)/pl.days-1e-9));return {d,cs,n,did,exp:expN/n,act:did/n,todo:Math.max(0,expN-did),end:cs+pl.days-1,ahead:stTxt(did/n,expN/n,exp0/n,pl.days)}}
+function stTxt(act,exp,exp0,daysPerWhole){const e=1e-6;
+  if(act>=exp-e){const a=Math.floor((act-exp)*daysPerWhole+e);return a>0?`<b style="color:var(--em)">أتممت ورد اليوم، ومتقدم بـ${ar(a)} ${a>=3&&a<=10?'أيام':'يوم'}</b>`:`<b style="color:var(--em)">أتممت ورد اليوم</b>`}
+  if(act>=exp0-e)return `<b style="color:var(--gold)">على الخطة، بقي ورد اليوم</b>`;
+  const b=Math.ceil((exp0-act)*daysPerWhole-e);return `<b style="color:var(--red)">متأخر ${ar(b)} ${b>=3&&b<=10?'أيام':'يوم'}</b>`}
+function aheadTxt(a){if(typeof a=='string')return a;a=Math.round(a);return a>0?`<b style="color:var(--em)">متقدم بـ${ar(a)} ${a>=3&&a<=10?'أيام':'يوم'}</b>`:a<0?`<b style="color:var(--red)">متأخر ${ar(-a)} ${-a>=3&&-a<=10?'أيام':'يوم'}</b>`:`<b style="color:var(--em)">على الخطة تمامًا</b>`}
+function planBox(m,kind){
+  const pl=kind=='mem'?m.pm:m.pr,ttl=kind=='mem'?'خطة الحفظ':'خطة المراجعة',edit=EDITP===m.id+'|'+kind;
+  let h=`<div class="planbox"><div class="pt">${ttl}</div>`;
+  if(pl&&!edit){
+    if(kind=='mem'){const st=memStatus(m);
+      h+=`<div class="pline">${ar(pl.days)} يومًا · ${f1(pl.per)} صفحة يوميًا · تنتهي ${hijri(st.end)}</div>
+      <div class="pbar"><i style="width:${st.act*100}%"></i><b style="inset-inline-start:${st.exp*100}%"></b></div>
+      <div class="pline">المطلوب بنهاية اليوم ${pc(st.exp)} · أنجزت ${pc(st.act)} — ${st.done?'<b style="color:var(--em)">أتممت الحفظ، الحمد لله</b>':aheadTxt(st.ahead)}</div>
+      ${st.done?'':`<div class="ptoday">ورد اليوم: احفظ حتى <b>${st.target}</b></div>`}`;
+    }else{const st=revStatus(m);
+      if(st)h+=`<div class="pline">ختمة كل ${ar(pl.days)} يومًا · نحو ${f1(units(m,'rev').total/pl.days)} ${units(m,'rev').unit} يوميًا · تُختم هذه في ${hijri(st.end)}</div>
+      <div class="pbar gold"><i style="width:${st.act*100}%"></i><b style="inset-inline-start:${st.exp*100}%"></b></div>
+      <div class="pline">الختمة رقم ${ar(fullRev(m)+1)}: راجعت ${ar(st.did)} من ${nP(st.n)} (${pc(st.act)}) — ${aheadTxt(st.ahead)}</div>
+      <div class="ptoday">${st.todo?`ورد اليوم: ${nP(st.todo)} تظهر لك في قسم المراجعة`:'أتممت ورد اليوم من هذه الختمة'}</div>`;
+      else h+=`<div class="pline">لا محفوظ بعد لتُراجعه.</div>`}
+    h+=`<div class="tools"><button data-editp="${m.id}|${kind}">تعديل الخطة</button><button class="again" data-delp="${m.id}|${kind}">إلغاء الخطة</button></div></div>`;return h}
+  const u=units(m,kind);if(!(u.total>0))return h+`<div class="pline">${kind=='mem'?'أتممت حفظ المتن.':'لا محفوظ بعد لتُراجعه.'}</div></div>`;
+  const mode=pl?pl.mode:'days',val=pl?pl.val:(kind=='mem'?30:7);
+  h+=`<div class="pline">${kind=='mem'?'بقي من المتن':'محفوظك من المتن'}: ${f1(u.total)} ${u.unit}${pagesOf(m)?` من ${ar(pagesOf(m))} صفحة`:''}</div>
+  <form class="pform" data-plan="${m.id}|${kind}"><div class="seg"><label><input type="radio" name="mode" value="days" ${mode=='days'?'checked':''}><span>${kind=='mem'?'أحفظه في عدد أيام':'أختمه مراجعةً في عدد أيام'}</span></label><label><input type="radio" name="mode" value="pages" ${mode=='pages'?'checked':''}><span>${u.unit=='صفحة'?'عدد صفحات يوميًا':'عدد مقاطع يوميًا'}</span></label></div>
+  <div class="prow"><input name="val" type="number" min="0.1" step="0.1" value="${val}" inputmode="decimal"><span class="calc"></span></div>
+  <div class="tools"><button class="pri">اعتمد الخطة</button>${pl?'<button type="button" data-canp>إلغاء التعديل</button>':''}</div></form></div>`;
+  return h;
+}
+function calcFill(f){const [mid,kind]=f.dataset.plan.split('|'),m=S.mutun.find(x=>x.id==mid),fd=new FormData(f),c=calcPlan(m,kind,fd.get('mode'),fd.get('val'));
+  f.querySelector('.calc').innerHTML=c?(fd.get('mode')=='days'?`= ${f1(c.per)} ${c.unit} يوميًا · ${kind=='mem'?'تنتهي':'تُختم'} ${hijri(T+c.days-1)}`:`= ${ar(c.days)} يومًا · ${kind=='mem'?'تنتهي':'تُختم'} ${hijri(T+c.days-1)}`):'أدخل رقمًا صحيحًا'}
+let EDITP=null,LOPEN=false;
+
+/* الخطة المقترحة للمراجعة: دورة على المتون واحدًا تلو الآخر */
+const CATORD=['مصطلح الحديث','أصول الفقه','القواعد الفقهية','الفقه','العقيدة','التجويد'];
+const unitOf=(m,p)=>p.pg?(p.pg[1]-p.pg[0]+1):1;
+function cycMutun(){return S.mutun.filter(m=>m.status!='plan'&&m.portions.some(p=>isMemo(m,p)))}
+function sizeOf(m){return m.portions.filter(p=>isMemo(m,p)).reduce((a,p)=>a+unitOf(m,p),0)}
+function suggestOrder(){const ms=cycMutun();const ci=c=>{const i=CATORD.indexOf(c);return i<0?99:i};
+  return ms.sort((a,b)=>ci(a.cat)-ci(b.cat)||sizeOf(a)-sizeOf(b)).map(m=>m.id)}
+function cycSeq(){const C=S.cycle;if(!C)return [];const out=[];for(const id of C.order){const m=S.mutun.find(x=>x.id==id);if(!m||m.status=='plan')continue;m.portions.forEach(p=>{if(isMemo(m,p))out.push({m,p,u:unitOf(m,p)})})}return out}
+function cycStatus(){const C=S.cycle;if(!C)return null;const seq=cycSeq();if(!seq.length)return null;
+  const total=seq.reduce((a,x)=>a+x.u,0),d=T-C.cs+1,per=total/C.days,exp=Math.min(total,per*Math.max(0,d)),exp0=Math.min(total,per*Math.max(0,d-1));
+  let doneU=0;for(const x of seq)if(C.done[x.p.id])doneU+=x.u;
+  const today=[];let acc=doneU;for(const x of seq){if(C.done[x.p.id])continue;if(acc>=exp-1e-6)break;today.push(x);acc+=x.u}
+  const cur=seq.find(x=>!C.done[x.p.id]);
+  return {seq,total,doneU,exp,exp0,d,per,today,cur,end:C.cs+C.days-1,st:stTxt(doneU/total,exp/total,exp0/total,C.days)}}
+function cycMark(pid){const C=S.cycle;if(!C)return;const seq=cycSeq();if(!seq.some(x=>x.p.id==pid))return;C.done[pid]=1;
+  if(seq.every(x=>C.done[x.p.id])){C.n=(C.n||0)+1;C.done={};C.cs=T+1;celebrate('أتممت الدورة رقم '+ar(C.n)+' على كل محفوظاتك');}}
+function cycSheetKeep(){const f=document.getElementById('cycF');const keep=f?{mode:new FormData(f).get('mode'),val:new FormData(f).get('val')}:null;cycSheet();if(keep){const g=document.getElementById('cycF');g.querySelector(`input[value=${keep.mode}]`).checked=true;g.querySelector('input[name=val]').value=keep.val;cycCalc()}}
+function cycSheet(){
+  const C=S.cycle,ord=(CEDIT||(C?C.order.slice():suggestOrder())).filter(id=>cycMutun().some(m=>m.id==id));
+  for(const m of cycMutun())if(!ord.includes(m.id)&&!(CEX||[]).includes(m.id))ord.push(m.id);
+  CEDIT=ord;const mode=C?C.mode:'days',val=C?C.val:14;
+  const rows=ord.map((id,i)=>{const m=S.mutun.find(x=>x.id==id);return `<div class="ordrow"><span class="on2">${ar(i+1)}</span><span class="nm2">${esc(m.name)}<small>${esc(m.cat||'')} · ${f1(sizeOf(m))} ${m.lib?'صفحة':'مقطع'}</small></span><button data-mv="${i}|-1" ${i==0?'disabled':''} aria-label="أعلى">▲</button><button data-mv="${i}|1" ${i==ord.length-1?'disabled':''} aria-label="أسفل">▼</button><button data-cx="${id}" aria-label="استبعد">✕</button></div>`}).join('');
+  const ex=(CEX||[]).map(id=>S.mutun.find(x=>x.id==id)).filter(Boolean);
+  openSheet(`<h3>الخطة المقترحة للمراجعة</h3><p class="note" style="font-size:14px">تمرّ على محفوظاتك متنًا بعد متن حتى تختمها كلها، ثم تبدأ دورة جديدة. الترتيب المقترح يجمع متون الفن الواحد متتالية ويبدأ في كل فن بالأقصر، ولك أن تغيّره بالأسهم.</p>
+  <div class="ordlist">${rows||'<p class="note">لا محفوظ بعد.</p>'}</div>
+  ${ex.length?`<div class="chips">${ex.map(m=>`<button class="chip pend" data-cin="${m.id}">+ ${esc(m.name)}</button>`).join('')}</div>`:''}
+  <form class="pform" id="cycF"><div class="seg"><label><input type="radio" name="mode" value="days" ${mode=='days'?'checked':''}><span>أختم الدورة في عدد أيام</span></label><label><input type="radio" name="mode" value="pages" ${mode=='pages'?'checked':''}><span>عدد صفحات يوميًا</span></label></div>
+  <div class="prow"><input name="val" type="number" min="0.1" step="0.1" value="${val}"><span class="calc" id="cycCalc"></span></div>
+  <div class="tools"><button class="pri">اعتمد الخطة</button>${C?'<button type="button" class="again" data-cdel>إلغاء الخطة</button>':''}<button type="button" data-close>إغلاق</button></div></form>`);
+  cycCalc();
+}
+let CEDIT=null,CEX=null;
+function cycTotal(){return (CEDIT||[]).reduce((a,id)=>{const m=S.mutun.find(x=>x.id==id);return a+(m?sizeOf(m):0)},0)}
+function cycCalcVals(mode,val){const t=cycTotal();val=+val;if(!(val>0)||!t)return null;let days,per;if(mode=='days'){days=Math.max(1,Math.round(val));per=t/days}else{per=val;days=Math.max(1,Math.ceil(t/per-1e-9))}return {days,per,t}}
+function cycCalc(){const f=document.getElementById('cycF');if(!f)return;const fd=new FormData(f),c=cycCalcVals(fd.get('mode'),fd.get('val'));
+  document.getElementById('cycCalc').textContent=c?(fd.get('mode')=='days'?`= ${f1(c.per)} صفحة يوميًا من ${f1(c.t)} · تُختم ${hijri(T+c.days-1)}`:`= ${ar(c.days)} يومًا لختم ${f1(c.t)} صفحة · تُختم ${hijri(T+c.days-1)}`):'أدخل رقمًا صحيحًا'}
+function cycCard(){
+  const C=S.cycle;
+  if(!C){const n=cycMutun().length;return n?`<section class="cyccard empty2"><div><b>الخطة المقترحة للمراجعة</b><span>دورة تمرّ على ${ar(n)} ${n>=3&&n<=10?'متون':'متن'} واحدًا تلو الآخر بترتيب مدروس، ويُحسب نصيب كل يوم تلقائيًا.</span></div><button class="pri" data-cyc>اقترح لي خطة</button></section>`:''}
+  const st=cycStatus();if(!st)return '';
+  const cm=st.cur?st.cur.m:null,todayNames=[...new Set(st.today.map(x=>x.m.name))];
+  return `<section class="cyccard"><div class="cyctop"><div><b>الخطة المقترحة للمراجعة</b><span>الدورة رقم ${ar((C.n||0)+1)} · تُختم ${hijri(st.end)} · ${f1(C.per)} صفحة يوميًا</span></div><button data-cyc>تعديل</button></div>
+  <div class="cycrail">${C.order.map(id=>{const m=S.mutun.find(x=>x.id==id);if(!m)return '';const ps=st.seq.filter(x=>x.m===m),dn=ps.filter(x=>C.done[x.p.id]).length;return `<span class="${dn==ps.length&&ps.length?'ok3':cm===m?'cur3':''}" title="${esc(m.name)}"><i style="background:${m.color}"></i>${esc(shortOf(m))}<em>${ar(dn)}/${ar(ps.length)}</em></span>`}).join('')}</div>
+  <div class="pbar"><i style="width:${st.doneU/st.total*100}%"></i><b style="inset-inline-start:${st.exp/st.total*100}%"></b></div>
+  <div class="pline">${f1(st.doneU)} من ${f1(st.total)} صفحة — ${st.st}</div>
+  ${st.today.length?`<div class="ptoday">ورد الخطة اليوم: ${nP(st.today.length)} من ${todayNames.map(esc).join('، ')} — تجدها أول قائمة «ورد اليوم»</div>`:''}</section>`;
+}
+let OPEN=null;
+function matnSheet(mid){
+  const m=S.mutun.find(x=>x.id==mid);if(!m)return;if(OPEN!==mid)TRK=0;OPEN=mid;
+  const a=achieve(m),f=fullRev(m),r=mStrength(m),memo=m.portions.filter(p=>isMemo(m,p)),pend=m.portions.filter(p=>!isMemo(m,p)),plan=m.status=='plan';
+  const lastFull=m.fullLog&&m.fullLog.length?m.fullLog[m.fullLog.length-1]:null;
+  let h=`<div class="mhead"><span class="ring" style="--p:${(a*100).toFixed(1)};--c:${m.color}"><span class="face" style="background-color:${m.color}">${esc(shortOf(m))}</span></span><div><h3>${esc(m.name)}</h3><div class="note">${esc(m.cat||'')}</div></div><button data-close style="margin-inline-start:auto">إغلاق</button></div>`;
+  if(!plan)h+=`<div class="kpis"><div><b>${m.lib&&m.status=='prog'?pc(a):m.status=='done'?'١٠٠٪':'—'}</b><span>الإنجاز</span></div><div><b>${r==null?'—':pc(r)}</b><span>قوة الحفظ</span></div><div><b>${lastFull==null?'—':T-lastFull==0?'اليوم':'قبل '+ar(T-lastFull)}</b><span>آخر مراجعة كاملة${lastFull!=null&&T-lastFull>0?' (يومًا)':''}</span></div></div>`;
+  if(!plan)h+=`<div class="khatma"><span class="kn">${ar(f)}</span><span>${f==1?'ختمة':'ختمات'} مراجعة كاملة للمتن${lastFull!=null?` · آخرها ${T-lastFull==0?'اليوم':'قبل '+ar(T-lastFull)+' يومًا'}`:''}</span></div>`;
+  if(!plan)h+=`<details class="listenbox" ${LOPEN?'open':''}><summary>الاستماع إلى المتن</summary><div id="lis"><p class="note">جارٍ التحميل…</p></div></details>`;
+  if(m.lib&&m.status=='prog')h+=planBox(m,'mem');
+  if(!plan&&memo.length)h+=planBox(m,'rev');
+  h+=`<div class="tools">`;
+  if(plan)h+=`<button class="pri" data-start="${m.id}">ابدأ حفظه</button>`;
+  if(m.lib&&m.status=='prog')h+=`<button class="pri" data-read="${m.id}|mark">حدِّد أين وصلت في الحفظ</button>`;
+  if(m.lib)h+=`<button data-read="${m.id}|all">افتح المتن</button>`;
+  {const ad=audOf(m);if(ad&&!plan)h+=`<a class="ytb" style="min-height:46px;border-radius:12px;padding:0 16px" href="${m.yt?esc(m.yt):ad.url}" target="_blank" rel="noopener">استمع للمتن</a>`}
+  if(memo.length)h+=`<button class="ok" data-allok="${m.id}">راجعتُ ${m.lib&&m.status=='prog'?'كل ما حفظته':'المتن كاملًا'} الآن</button>`;
+  h+=`</div>`;
+  if(m.status=='prog'&&!m.lib)h+=`<form class="form" data-new="${m.id}" style="grid-template-columns:minmax(0,1fr) auto;margin-top:12px"><input name="l" placeholder="سجّل ما حفظته اليوم" required><button class="pri">سجّل</button></form>`;
+  if(memo.length)h+=`<h4>المقاطع المحفوظة</h4>`+memo.map(p=>rowHTML(m,p,true)).join('');
+  if(pend.length&&m.lib)h+=`<h4>لم يُحفظ بعد</h4><div class="chips">${pend.map(p=>`<button class="chip pend" data-read="${m.id}|${p.id}">${esc(p.label)}</button>`).join('')}</div>`;
+  h+=`<details style="margin-top:14px"><summary class="note" style="cursor:pointer">تعديل المتن${m.lib?'':' وإضافة مقاطع'}</summary><form class="form" data-editf="${m.id}" style="margin-top:8px"><label>الاسم<input name="n" value="${esc(m.name)}" required></label><label>الاسم على الأيقونة<input name="sh" value="${esc(m.short||'')}" placeholder="كلمة أو كلمتان"></label><label>الفن<input name="c" value="${esc(m.cat||'')}"></label><label>الحالة<select name="s">${[['done','محفوظ'],['prog','قيد الحفظ'],['plan','في الخطة']].map(([v,t])=>`<option value="${v}" ${m.status==v?'selected':''}>${t}</option>`).join('')}</select></label><button class="pri">احفظ</button></form>
+  ${m.lib?'':`<form class="form" data-addp="${m.id}" style="margin-top:12px"><label>إضافة مقاطع (كل مقطع في سطر)<textarea name="t" rows="3" required></textarea></label><button>أضف</button></form>`}
+  <div class="tools"><button class="again" data-delm="${m.id}">احذف المتن</button></div></details>`;
+  openSheet(h);box.classList.add('matn');
+  box.querySelectorAll('form[data-plan]').forEach(calcFill);
+  loadAudio(m);
+}
+/* الاستماع */
+const IDB={o:null,open(){return this.o||(this.o=new Promise((res,rej)=>{try{const r=indexedDB.open('hifz-audio',1);r.onupgradeneeded=()=>r.result.createObjectStore('a');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}catch(e){rej(e)}}))},
+  async run(mode,fn){const d=await this.open();return new Promise((res,rej)=>{const t=d.transaction('a',mode),q=fn(t.objectStore('a'));t.oncomplete=()=>res(q&&q.result);t.onerror=()=>rej(t.error)})},
+  get(k){return this.run('readonly',s=>s.get(k)).catch(()=>null)},put(k,v){return this.run('readwrite',s=>s.put(v,k))},del(k){return this.run('readwrite',s=>s.delete(k))}};
+let AB={a:null,b:null},AURL=null;
+const AUD=[[/نخبة/,'BMrp_VAmrDY','قراءة الشيخ د. عبدالعزيز الصيني','١١:٣٩'],[/جزري/,'cOaNckefMU8','قراءة الشيخ د. عبدالعزيز الصيني','١٣:٥٧'],[/بيقون/,'UdCfFjfk2zU','قراءة الشيخ د. عبدالعزيز الصيني (متون طالب العلم)','٣:٥٦'],[/القواعد الفقهية/,'8_-mGRPAm-k','قراءة الشيخ د. عبدالعزيز الصيني','٥:٠٤'],[/النظم الصغير|مختصر التحرير/,'i8HBTP9XsQo','قراءة الناظم د. عامر بهجت (لا يوجد تسجيل للصيني)','٦:٤٤']];
+const audOf=m=>{const a=AUD.find(x=>x[0].test(m.name));return a?{url:'https://www.youtube.com/watch?v='+a[1],who:a[2],len:a[3]}:null};
+function ytSearch(m){return 'https://www.youtube.com/results?search_query='+encodeURIComponent(m.name+' مقروء')}
+const LOCALAUD=[[/بيقون/,{who:'بصوت الشيخ د. عبدالعزيز الصيني (متون طالب العلم)',tr:[['المنظومة كاملة','audio/bayquniyya.mp3']]}],
+ [/جزري/,{who:'بصوت الشيخ أيمن رشدي سويد · مقسّمة على الأبواب',tr:[["المقدمة", "audio/jazari_01.mp3"], ["مقدمة المنظومة", "audio/jazari_02.mp3"], ["باب مخارج الحروف", "audio/jazari_03.mp3"], ["باب الصفات", "audio/jazari_04.mp3"], ["باب التجويد", "audio/jazari_05.mp3"], ["باب التفخيم والترقيق", "audio/jazari_06.mp3"], ["باب الراءات", "audio/jazari_07.mp3"], ["باب اللامات", "audio/jazari_08.mp3"], ["باب الضاد والظاء", "audio/jazari_09.mp3"], ["باب التحذيرات", "audio/jazari_10.mp3"], ["باب الميم والنون المشددتين والميم الساكنة", "audio/jazari_11.mp3"], ["باب حكم التنوين والنون الساكنة", "audio/jazari_12.mp3"], ["باب المد والقصر", "audio/jazari_13.mp3"], ["باب معرفة الوقوف", "audio/jazari_14.mp3"], ["باب المقطوع والموصول وحكم التاء", "audio/jazari_15.mp3"], ["باب التاءات", "audio/jazari_16.mp3"], ["باب همز الوصل", "audio/jazari_17.mp3"], ["الخاتمة", "audio/jazari_18.mp3"]]}],
+ [/نخبة/,{who:'قراءة أبي عبد الرحمن علي المالكي (شبكة الإمام الآجري)',tr:[['المتن كاملًا','audio/nukhba.mp3']]}],
+ [/القواعد الفقهية/,{who:'قراءة كاملة للمنظومة (من إصدارات «كبار العلماء»)',tr:[['المنظومة كاملة','audio/qawaid.mp3']]}]];
+let TRK=0;
+function playerHTML(src,label){return `<audio id="aud" controls preload="metadata" src="${src}"></audio><div class="note" style="margin:4px 0 8px">${label}</div>
+    <div class="aud-tools"><span class="note">السرعة:</span>${[.75,1,1.25,1.5].map(v=>`<button data-spd="${v}" class="${v==1?'on':''}">${v.toLocaleString('ar-EG')}×</button>`).join('')}</div>
+    <div class="aud-tools"><span class="note">كرِّر جزءًا للحفظ:</span><button data-ab="a">بدايته من هنا</button><button data-ab="b">نهايته هنا</button><button data-ab="x">أوقف التكرار</button><button data-loop>تكرار المقطع كله</button><span class="abv" id="abv"></span></div>`}
+async function loadAudio(m){
+  const el=document.getElementById('lis');if(!el)return;
+  let rec=null;try{rec=await IDB.get(m.id)}catch(e){}
+  if(!document.getElementById('lis'))return;
+  if(AURL){URL.revokeObjectURL(AURL);AURL=null}AB={a:null,b:null};
+  let h='';const la=(LOCALAUD.find(x=>x[0].test(m.name))||[])[1];
+  if(rec&&rec.blob){AURL=URL.createObjectURL(rec.blob);
+    h+=playerHTML(AURL,esc(rec.name||'تسجيلك')+' · ملفك المحفوظ على هذا الجهاز')+`<div class="aud-tools"><label class="fbtn">استبدل الملف<input type="file" accept="audio/*" data-aud="${m.id}" hidden></label><button class="again" data-auddel="${m.id}">ارجع للتسجيل المدمج</button></div>`;
+  }else if(la){if(TRK>=la.tr.length)TRK=0;
+    h+=`<div class="trk-who">${esc(la.who)}</div>`;
+    if(la.tr.length>1)h+=`<div class="tracks">${la.tr.map((t,i)=>`<button data-trk="${i}" class="${i==TRK?'on':''}"><span>${ar(i+1)}</span>${esc(t[0])}</button>`).join('')}</div>`;
+    h+=playerHTML(la.tr[TRK][1],esc(la.tr[TRK][0]))+`<div class="aud-tools"><label class="fbtn">استعمل ملفًا من جهازك بدلًا منه<input type="file" accept="audio/*" data-aud="${m.id}" hidden></label></div>`;
+  }else h+=`<p class="note" style="margin:0 0 8px">أضف تسجيلًا صوتيًا للمتن (ملف من جهازك)، فتسمعه هنا بسرعة تختارها وتكرّر البيت الذي تحفظه.</p><div class="aud-tools"><label class="fbtn pri">اختر ملفًا صوتيًا<input type="file" accept="audio/*" data-aud="${m.id}" hidden></label></div>`;
+  const ad=audOf(m);
+  if(ad)h+=`<a class="audcard" href="${ad.url}" target="_blank" rel="noopener"><span class="play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span><span><b>${la&&/بيقون/.test(m.name)?'التسجيل نفسه على يوتيوب':'تسجيل يوتيوب'}</b><small>${esc(ad.who)} · ${ad.len} · يفتح في يوتيوب</small></span></a>`;
+  h+=`<details style="margin-top:8px"><summary class="note" style="cursor:pointer">رابط يوتيوب آخر</summary><div class="aud-tools" style="margin-top:8px"><a class="ytb" href="${ytSearch(m)}" target="_blank" rel="noopener">ابحث في يوتيوب</a>${m.yt?`<a class="ytb" href="${esc(m.yt)}" target="_blank" rel="noopener">افتح رابطك المحفوظ</a>`:''}</div>
+  <form class="form" data-yt="${m.id}" style="grid-template-columns:minmax(0,1fr) auto;margin-top:8px"><input name="u" type="url" placeholder="الصق رابط مقطع يوتيوب" value="${esc(m.yt||'')}" dir="ltr"><button>احفظ</button></form></details>`;
+  el.innerHTML=h;
+  const a=document.getElementById('aud');if(a){a.addEventListener('timeupdate',()=>{if(AB.a!=null&&AB.b!=null&&a.currentTime>=AB.b)a.currentTime=AB.a});
+    if(!(rec&&rec.blob)&&la&&la.tr.length>1)a.addEventListener('ended',()=>{if(!a.loop&&TRK<la.tr.length-1){TRK++;loadAudio(m).then(()=>{const n=document.getElementById('aud');if(n)n.play().catch(()=>{})})}})}
+}
+const mmss=t=>{t=Math.max(0,Math.floor(t));return ar(Math.floor(t/60))+':'+String(t%60).padStart(2,'0').replace(/\d/g,d=>'٠١٢٣٤٥٦٧٨٩'[d])};
+function celebrate(t){const r=document.createElement('div');r.className='cele';r.innerHTML=`<div><svg viewBox="0 0 40 40" fill="#e7c56a"><path d="M20 2l4 9 9-4-4 9 9 4-9 4 4 9-9-4-4 9-4-9-9 4 4-9-9-4 9-4-4-9 9 4z"/></svg><b></b></div>`;r.querySelector('b').textContent=t;document.body.appendChild(r);setTimeout(()=>r.remove(),2600)}
+document.addEventListener('toggle',e=>{if(e.target.classList&&e.target.classList.contains('listenbox'))LOPEN=e.target.open},true);
+document.addEventListener('input',e=>{if(e.target.closest('#cycF'))return cycCalc();const f=e.target.closest('form[data-plan]');if(f)calcFill(f)});
+document.addEventListener('change',async e=>{if(e.target.closest('#cycF'))return cycCalc();const f=e.target.closest('form[data-plan]');if(f)return calcFill(f);
+  const inp=e.target.closest('input[data-aud]');if(inp&&inp.files&&inp.files[0]){const file=inp.files[0],m=S.mutun.find(x=>x.id==inp.dataset.aud);
+    try{await IDB.put(m.id,{blob:file,name:file.name});toast('حُفظ التسجيل على هذا الجهاز',true)}catch(err){toast('تعذّر حفظ الملف في هذا المتصفح',true)}loadAudio(m)}});
+
+function catalogHTML(){const have=new Set(S.mutun.map(m=>m.name));const cs=CATALOG.map((c,i)=>[c,i]).filter(([c])=>!have.has(c.name));if(!cs.length)return '';return `<div class="catl">${cs.map(([c,i])=>`<div class="catr"><span><b>${esc(c.name)}</b><small>${esc(c.cat)}${c.lib?' · نصه وصوته في الموقع':''}</small></span><div class="b"><button data-cat="${i}|done">حفظته</button><button data-cat="${i}|prog">أحفظه الآن</button><button data-cat="${i}|plan">في خطتي</button></div></div>`).join('')}</div>`}
+function addSheet(){openSheet(`<h3>إضافة متن</h3>${catalogHTML()?'<p class="note">من المكتبة الجاهزة:</p>'+catalogHTML()+'<p class="note" style="margin-top:14px">أو متن آخر تكتبه بنفسك:</p>':''}<form class="form" id="addM"><label>اسم المتن<input name="n" required></label><label>الفن<input name="c"></label><label>الحالة<select name="s"><option value="done">محفوظ</option><option value="prog">قيد الحفظ</option><option value="plan">في الخطة</option></select></label><label>عدد المقاطع<input name="k" type="number" min="0" max="60" value="4"></label><button class="pri">أضف</button></form><div class="tools"><button data-close>إلغاء</button></div>`)}
+
+/* قارئ المتن */
+let RD=null;
+function openReader(mid,what,start){
+  const m=S.mutun.find(x=>x.id==mid),L=LIB[m.lib];if(!L)return;
+  let from,to,mode='read',title=m.name,p=null,hl=null;
+  if(what=='all'){from=+Object.keys(L.words)[0];to=+Object.keys(L.words).slice(-1)[0];mode='read'}
+  else if(what=='mark'){from=+Object.keys(L.words)[0];to=+Object.keys(L.words).slice(-1)[0];mode=m.status=='prog'?'mark':'read'}
+  else if(what=='recent'){const r=recentRange(m);hl=r;from=L.W[r[0]].g;to=L.W[r[1]].g;title='ما حفظته مؤخرًا'}
+  else{p=m.portions.find(x=>x.id==what);from=p.pg[0];to=p.pg[1];title=p.label}
+  if(start==='test')mode='test';
+  RD={m,L,from,to,mode,p,hl,sel:null,hint:false,what};resetTest();
+  const canMark=m.status=='prog';
+  openSheet(`<div class="rhead"><div class="top"><h3>${esc(title)}</h3><button data-close>إغلاق</button></div>
+  <div class="mode">${canMark?'<button data-md="mark">تحديد موضع الحفظ</button>':''}<button data-md="read">قراءة</button><button data-md="test">اختبر حفظي</button><span id="tbar" style="display:none;gap:6px;flex-wrap:wrap"><button data-tx="hint">تلميح البدايات</button><button data-tx="restart">ابدأ الاختبار من جديد</button></span></div>
+  <div class="tip" id="tip"></div></div><div class="rbody" id="rb"></div><div class="rfoot" id="rf"></div>`,true);
+  drawReader(true);
+}
+function drawReader(scroll){
+  const {m,L,from,to,mode,sel,hl}=RD,rb=document.getElementById('rb');if(!rb)return;
+  let h='',k=0;
+  for(let g=from;g<=to;g++){
+    const lines=L.words[g];if(!lines)continue;
+    h+=`<div class="pg ${mode=='mark'?'mark':''}" data-g="${g}"><img src="${L.dir}p${g}.jpg" alt="صفحة ${ar(g)}" loading="${Math.abs(g-from)<3?'eager':'lazy'}"><span class="no">ص ${ar(g)}</span>`;
+    lines.forEach((ln,li)=>{
+      const [t,b,ws]=ln,base=L.pos[g][li];
+      if(mode!=='test'){
+        let lo=null,hi=null,nlo=null,nhi=null;
+        ws.forEach((w,wi)=>{const i=base+wi;if(i<=m.ptr){if(hl&&i>=hl[0]&&i<=hl[1]){nlo=nlo==null?w[0]:Math.min(nlo,w[0]);nhi=Math.max(nhi??0,w[1])}else{lo=lo==null?w[0]:Math.min(lo,w[0]);hi=Math.max(hi??0,w[1])}}});
+        if(lo!=null)h+=`<div class="tint" style="top:${t*100}%;height:${(b-t)*100}%;left:${lo*100-.5}%;width:${(hi-lo)*100+1}%"></div>`;
+        if(nlo!=null)h+=`<div class="tint new" style="top:${t*100}%;height:${(b-t)*100}%;left:${nlo*100-.5}%;width:${(nhi-nlo)*100+1}%"></div>`;
+        if(mode=='mark'&&m.ptr>=base&&m.ptr<base+ws.length&&sel==null){const w=ws[m.ptr-base];h+=`<div class="cur" id="curp" style="top:${t*100}%;height:${(b-t)*100}%;left:calc(${w[0]*100}% - 6px)"></div>`}
+        if(sel!=null&&sel>=base&&sel<base+ws.length){const w=ws[sel-base];h+=`<div class="sel" id="selb" style="top:${t*100}%;height:${(b-t)*100}%;left:${w[0]*100-1}%;width:${(w[1]-w[0])*100+2}%"></div>`}
+      }else{const pos=`top:${t*100}%;height:${(b-t)*100}%`,cur=RD.q&&RD.q[RD.qi]===k;
+        if(k in RD.res&&!(cur&&!RD.rev))h+=`<div class="tline ${RD.res[k]?'okL':'badL'}" style="${pos}"></div>`;
+        else if(cur&&RD.rev)h+=`<div class="tline curL" id="curl" style="${pos}"></div>`;
+        else h+=`<div class="mk ${cur?'nx':''}" ${cur?'id="curl"':''} data-i="${k}" style="${pos}"></div>`;
+        k++}
+    });
+    h+=`</div>`;
+  }
+  if(mode==='test'&&RD.q==null){RD.total=k;RD.q=Array.from({length:k},(_,i)=>i);return drawReader(scroll)}
+  rb.innerHTML=h;rb.classList.toggle('hint',RD.hint);
+  box.querySelectorAll('[data-md]').forEach(b=>b.classList.toggle('on',b.dataset.md===mode));
+  const tb=document.getElementById('tbar');tb.style.display=mode=='test'?'flex':'none';
+  const hb=box.querySelector('[data-tx=hint]');if(hb)hb.classList.toggle('on',RD.hint);
+  document.getElementById('tip').textContent=mode=='mark'?'اضغط على آخر كلمة حفظتها؛ المظلَّل بالأخضر محفوظ.':mode=='test'?'اختبار سطرًا سطرًا: سمِّع السطر المحدد من حفظك، ثم اكشفه وقيّم نفسك بصدق.':'المظلَّل بالأخضر ما حفظته، وبالذهبي ما حفظته هذا الأسبوع.';
+  /* الشريط السفلي */
+  const rf=document.getElementById('rf');let f='';
+  if(mode=='mark'){
+    if(sel!=null){const nx=pctOf(L,sel);f=`<span class="q">حفظتَ حتى هذه الكلمة؟ تصبح النسبة ${pc(nx)}، ويبقى ${pc(1-nx)}</span><button class="pri" data-confirm>نعم، سجّل</button><button data-unsel>إلغاء</button>`}
+    else f=`<span class="q">حُفظ ${pc(pctOf(L,m.ptr))} · بقي ${pc(1-pctOf(L,m.ptr))}</span>`;
+  }else if(mode=='test'){
+    const q=RD.q,n=q.length;
+    if(RD.qi<n){f=RD.rev?`<span class="q">هل أصبت في هذا السطر؟</span><button class="ok" data-tv="yes">أصبت</button><button class="again" data-tv="no">أخطأت</button>`
+      :`<span class="q">سمِّع ${RD.retry?'السطر المُعاد':'السطر'} ${ar(RD.qi+1)} من ${ar(n)}، ثم اكشفه</span><button class="pri" data-tv="reveal">اكشف السطر</button>`}
+    else{const tot=RD.total,ok=Object.values(RD.first).filter(Boolean).length,sc=tot?ok/tot:0,wrong=Object.keys(RD.res).filter(i=>!RD.res[i]);
+      const memo=RD.p&&isMemo(m,RD.p);
+      f=`<span class="q">النتيجة: ${ar(ok)} من ${ar(tot)} سطرًا صحيحًا (${pc(sc)}) — ${sc>=.9?'حفظ ثابت':sc>=.7?'جيد، يحتاج تعاهدًا':'يحتاج إعادة'}</span>`
+       +(wrong.length?`<button data-tv="retry">أعد اختبار الأخطاء (${ar(wrong.length)})</button>`:'')
+       +(memo?`<button class="pri" data-tv="save">سجّل النتيجة</button>`:RD.what=='recent'&&m.recentDone!==T?`<button class="pri" data-recent="${m.id}">سجّل المراجعة</button>`:`<button data-tx="restart">أعد الاختبار</button>`)}
+  }else if(RD.p&&isMemo(m,RD.p))f=`<span class="q">كيف كان حفظك لهذا المقطع؟</span><button class="ok" data-rate="1" data-m="${m.id}" data-p="${RD.p.id}">ثابت</button><button class="again" data-rate="0" data-m="${m.id}" data-p="${RD.p.id}">يحتاج إعادة</button>`;
+  else if(RD.what=='recent')f=`<span class="q">بعد مراجعته:</span>${m.recentDone===T?'<span class="note">تمّ اليوم</span>':`<button class="ok" data-recent="${m.id}">راجعته</button>`}`;
+  rf.innerHTML=f;rf.style.display=f?'flex':'none';
+  if(scroll){const c=rb.querySelector('#curp');if(c)setTimeout(()=>c.scrollIntoView({block:'center'}),250)}
+  else{const s=rb.querySelector('#selb')||rb.querySelector('#curl');if(s)s.scrollIntoView({block:'nearest',behavior:'smooth'})}
+  if(scroll&&mode=='test'){const c=rb.querySelector('#curl');if(c)setTimeout(()=>c.scrollIntoView({block:'nearest'}),250)}
+}
+function resetTest(){Object.assign(RD,{q:null,qi:0,rev:false,res:{},first:{},retry:false})}
+function testAct(a){
+  if(a=='reveal')RD.rev=true;
+  else if(a=='yes'||a=='no'){const k=RD.q[RD.qi],v=a=='yes';RD.res[k]=v;if(!(k in RD.first))RD.first[k]=v;RD.qi++;RD.rev=false}
+  else if(a=='retry'){RD.q=Object.keys(RD.res).filter(i=>!RD.res[i]).map(Number);RD.q.forEach(i=>delete RD.res[i]);RD.qi=0;RD.rev=false;RD.retry=true}
+  else if(a=='save'){const tot=RD.total,ok=Object.values(RD.first).filter(Boolean).length,sc=tot?ok/tot:0,p=RD.p,m=RD.m;
+    p.tests=(p.tests||[]).concat({d:T,s:Math.round(sc*100)/100}).slice(-12);rate(m.id,p.id,sc>=.9);closeSheet();
+    return toast('نتيجة الاختبار '+pc(sc)+(sc>=.9?' — ثابت، يعود بعد '+ar(p.interval)+' يومًا':' — يعود إليك غدًا'))}
+  drawReader(false);
+}
+function pickWord(pgEl,ev){
+  const {L}=RD,g=+pgEl.dataset.g,r=pgEl.getBoundingClientRect(),x=(ev.clientX-r.left)/r.width,y=(ev.clientY-r.top)/r.height;
+  const lines=L.words[g];let li=lines.findIndex(l=>y>=l[0]&&y<=l[1]);
+  if(li<0){let best=1e9;lines.forEach((l,i)=>{const d=Math.min(Math.abs(y-l[0]),Math.abs(y-l[1]));if(d<best){best=d;li=i}})}
+  const ws=lines[li][2];if(!ws.length)return;let wi=ws.findIndex(w=>x>=w[0]-.01&&x<=w[1]+.01);
+  if(wi<0){let best=1e9;ws.forEach((w,i)=>{const d=Math.min(Math.abs(x-w[0]),Math.abs(x-w[1]));if(d<best){best=d;wi=i}})}
+  RD.sel=L.pos[g][li]+wi;drawReader(false);
+}
+
+/* الأحداث */
+document.addEventListener('click',e=>{
+  if(e.target===sheet)return closeSheet();
+  const pgEl=e.target.closest('.pg');
+  if(pgEl&&RD&&RD.mode=='mark')return pickWord(pgEl,e);
+  const mk=e.target.closest('.mk');if(mk&&RD&&RD.mode=='test'){if(RD.q&&+mk.dataset.i===RD.q[RD.qi])testAct('reveal');return}
+  const b=e.target.closest('button');if(!b)return;const d=b.dataset;
+  if(d.close!==undefined)return closeSheet();
+  if(d.signin!==undefined)return signIn();
+  if(d.signout!==undefined){firebase.auth().signOut().then(()=>toast('خرجت من حسابك، وتقدّمك محفوظ فيه',true));return}
+  if(d.trk!=null&&d.trk!==undefined&&b.dataset.trk!==undefined){TRK=+d.trk;const m=S.mutun.find(x=>x.id==OPEN);if(m){loadAudio(m).then(()=>{const a=document.getElementById('aud');if(a)a.play().catch(()=>{})})}return}
+  if(d.loop!==undefined){const a=document.getElementById('aud');if(a){a.loop=!a.loop;b.classList.toggle('on',a.loop)}return}
+  if(d.spd){const a=document.getElementById('aud');if(a)a.playbackRate=+d.spd;box.querySelectorAll('[data-spd]').forEach(x=>x.classList.toggle('on',x===b));return}
+  if(d.ab){const a=document.getElementById('aud');if(!a)return;if(d.ab=='a')AB.a=a.currentTime;else if(d.ab=='b')AB.b=a.currentTime;else AB={a:null,b:null};if(AB.a!=null&&AB.b!=null&&AB.b<=AB.a)AB.b=null;
+    const v=document.getElementById('abv');v.textContent=AB.a!=null?('يكرَّر من '+mmss(AB.a)+(AB.b!=null?' إلى '+mmss(AB.b):' …')):'';if(AB.a!=null&&AB.b!=null){a.currentTime=AB.a;a.play().catch(()=>{})}return}
+  if(d.auddel){if(b.dataset.sure){const m=S.mutun.find(x=>x.id==d.auddel);IDB.del(m.id).catch(()=>{}).then(()=>loadAudio(m));return}b.dataset.sure=1;b.textContent='اضغط للتأكيد';return}
+  if(d.cyc!==undefined){CEDIT=null;CEX=null;return cycSheet()}
+  if(d.mv){const [i,dir]=d.mv.split('|').map(Number),j=i+dir;if(CEDIT&&j>=0&&j<CEDIT.length){[CEDIT[i],CEDIT[j]]=[CEDIT[j],CEDIT[i]]}return cycSheetKeep()}
+  if(d.cx){CEDIT=CEDIT.filter(x=>x!=d.cx);CEX=(CEX||[]).concat(d.cx);return cycSheetKeep()}
+  if(d.cin){CEX=(CEX||[]).filter(x=>x!=d.cin);CEDIT=(CEDIT||[]).concat(d.cin);return cycSheetKeep()}
+  if(d.cdel!==undefined){if(b.dataset.sure){delete S.cycle;save();closeSheet();render();return toast('أُلغيت الخطة',true)}b.dataset.sure=1;b.textContent='اضغط للتأكيد';return}
+  if(d.cat){const [i,st]=d.cat.split('|');const c=CATALOG[+i];S.mutun.push(fromCatalog(c,st));save();if(sheet.classList.contains('open'))closeSheet();render();return toast('أُضيف «'+c.name+'»',true)}
+  if(d.editp){EDITP=d.editp;return matnSheet(d.editp.split('|')[0])}
+  if(d.canp!==undefined){const o=EDITP;EDITP=null;return matnSheet(o.split('|')[0])}
+  if(d.delp){if(b.dataset.sure){const [mi,k]=d.delp.split('|'),m=S.mutun.find(x=>x.id==mi);delete m[k=='mem'?'pm':'pr'];save();render();return toast('أُلغيت الخطة',true)}b.dataset.sure=1;b.textContent='اضغط للتأكيد';return}
+  if(d.tab){TAB=d.tab;try{localStorage.setItem('hifz-tab',TAB);history.replaceState(null,'','#'+TAB)}catch(err){}render();return window.scrollTo({top:document.querySelector('main').offsetTop-20,behavior:'smooth'})}
+  if(d.read){const [m,w,md]=d.read.split('|');return openReader(m,w,md)}
+  if(d.tv&&RD)return testAct(d.tv);
+  if(d.md&&RD){RD.mode=d.md;RD.sel=null;resetTest();return drawReader(true)}
+  if(d.tx&&RD){if(d.tx=='restart')resetTest();else RD.hint=!RD.hint;return drawReader(d.tx=='restart')}
+  if(d.unsel!==undefined&&RD){RD.sel=null;return drawReader(false)}
+  if(d.confirm!==undefined&&RD){const v=RD.sel,m=RD.m;setPtr(m,v);RD.sel=null;drawReader(false);return toast('سُجّل: حفظت '+pc(pctOf(RD.L,v))+'، وبقي '+pc(1-pctOf(RD.L,v)))}
+  if(d.rate){const keep=RD;rate(d.m,d.p,d.rate==='1');if(keep)closeSheet();return}
+  if(d.recent){const m=S.mutun.find(x=>x.id==d.recent);undo={k:'recent',mid:m.id,prev:m.recentDone};m.recentDone=T;S.log[T]=(S.log[T]||0)+1;save();render();if(RD)closeSheet();return toast('بارك الله فيك، راجعت جديدك')}
+  if(d.open)return matnSheet(d.open);
+  if(d.addm!==undefined)return addSheet();
+  if(d.start){const m=S.mutun.find(x=>x.id==d.start);m.status='prog';save();render();return toast('بدأت حفظ «'+m.name+'»',true)}
+  if(d.allok){const m=S.mutun.find(x=>x.id==d.allok),ps=m.portions.filter(p=>isMemo(m,p));for(const p of ps){p.interval=Math.max(3,p.interval>0?Math.round(p.interval*1.5):3);p.last=T;p.due=T+p.interval;p.reps++;p.rv=(p.rv||0)+1;cycMark(p.id)}m.fullLog=(m.fullLog||[]).concat(T);S.log[T]=(S.log[T]||0)+ps.length;save();render();celebrate('الختمة رقم '+ar(fullRev(m))+' — '+m.name);return toast('سُجّلت مراجعة كاملة لـ«'+m.name+'» — المرة '+ar(fullRev(m)),true)}
+  if(d.delm){if(b.dataset.sure){S.mutun=S.mutun.filter(x=>x.id!=d.delm);OPEN=null;save();closeSheet();render()}else{b.dataset.sure=1;b.textContent='اضغط مرة أخرى للتأكيد'}return}
+  if(b.id=='undoB')return doUndo();
+  if(b.id=='cp'){try{navigator.clipboard.writeText(JSON.stringify(S)).then(()=>toast('نُسخت',true),()=>toast('حدّد النص وانسخه يدويًا',true))}catch(err){toast('حدّد النص وانسخه يدويًا',true)}return}
+  if(b.id=='rs'){try{const o=JSON.parse(document.getElementById('bk').value);if(!o.mutun)throw 0;S=migrate(o);save();render();toast('استُعيدت النسخة',true)}catch(err){toast('النص غير صالح',true)}return}
+  if(b.id=='reset'){if(b.dataset.sure){S=seed();save();render();toast('بدأت من جديد',true)}else{b.dataset.sure=1;b.textContent='سيُمسح كل شيء — اضغط للتأكيد'}return}
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSheet()});
+document.addEventListener('submit',e=>{
+  e.preventDefault();const f=e.target,fd=new FormData(f),d=f.dataset;
+  if(d.new){const m=S.mutun.find(x=>x.id==d.new),l=(fd.get('l')||'').trim();if(!l)return;m.portions.push(P(l,{added:T,last:T,interval:1,due:T+1,reps:1}));S.log[T]=(S.log[T]||0)+1;save();render();return toast('بارك الله في حفظك',true)}
+  if(d.yt){const m=S.mutun.find(x=>x.id==d.yt),u=String(fd.get('u')||'').trim();if(u&&!/^https:\/\/(www\.|m\.)?(youtube\.com|youtu\.be)\//.test(u))return toast('الصق رابطًا من يوتيوب يبدأ بـ https',true);if(u)m.yt=u;else delete m.yt;save();loadAudio(m);return toast(u?'حُفظ الرابط':'حُذف الرابط',true)}
+  if(f.id=='cycF'){const c=cycCalcVals(fd.get('mode'),fd.get('val'));if(!c||!CEDIT||!CEDIT.length)return toast('اختر متونًا وأدخل رقمًا صحيحًا',true);
+    const old=S.cycle;S.cycle={order:CEDIT.slice(),mode:fd.get('mode'),val:+fd.get('val'),days:c.days,per:c.per,cs:old?old.cs:T,done:old?old.done:{},n:old?old.n||0:0};
+    if(old&&old.order.join()!==CEDIT.join()){S.cycle.cs=T;S.cycle.done={}}CEDIT=null;save();closeSheet();render();return toast('اعتُمدت الخطة: دورة كل '+ar(c.days)+' يومًا',true)}
+  if(d.plan){const [mi,k]=d.plan.split('|'),m=S.mutun.find(x=>x.id==mi),mode=fd.get('mode'),val=+fd.get('val'),c=calcPlan(m,k,mode,val);if(!c)return toast('أدخل رقمًا صحيحًا',true);
+    const o={mode,val,start:T,days:c.days,per:c.per};if(k=='mem'){o.sp=achieve(m);m.pm=o}else m.pr=o;EDITP=null;save();render();return toast('اعتُمدت الخطة: '+ar(c.days)+' يومًا',true)}
+  if(d.editf){const m=S.mutun.find(x=>x.id==d.editf);m.name=fd.get('n').trim()||m.name;m.short=fd.get('sh').trim();m.cat=fd.get('c').trim();m.status=fd.get('s');save();render();return toast('حُفظ التعديل',true)}
+  if(d.addp){const m=S.mutun.find(x=>x.id==d.addp);const ls=String(fd.get('t')).split('\n').map(s=>s.trim()).filter(Boolean);for(const l of ls)m.portions.push(P(l));save();render();return toast('أُضيف '+nP(ls.length),true)}
+  if(f.id=='addM'){const k=Math.max(0,Math.min(60,+fd.get('k')||0));S.mutun.push({id:uid(),name:fd.get('n').trim(),cat:fd.get('c').trim(),status:fd.get('s'),color:COLORS[S.mutun.length%COLORS.length],portions:Array.from({length:k},(_,i)=>P('المقطع '+(ord[i]||ar(i+1))))});save();closeSheet();render();return}
+  if(f.id=='setF'){S.settings.cap=Math.max(1,+fd.get('cap')||6);S.settings.recent=Math.max(1,+fd.get('recent')||7);save();render();return toast('حُفظت الإعدادات',true)}
+});
+boot();
+}
+</script>
+</body>
+</html>
