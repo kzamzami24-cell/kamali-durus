@@ -1,5 +1,5 @@
 {
-"fetched": "2026-11-22T16:20:12Z",
+"fetched": "2026-11-23T04:32:14Z",
 "playlists": {
 "PLEbfLDlcXKwo": {
 "id": "PLEbfLDlcXKwo",
@@ -50,7 +50,7 @@
 "items": [
 {
 "v": "T6FnbFJA7uE",
-"t": "مجالس الموطأ - 24- كتاب الجامع -الفاروق عمر.. قصة حياة تهزّ القلوب - الشيخ سعيد الكملي",
+"t": "Al-Muwatta Sessions - 24 - The Comprehensive Book - Al-Farooq Umar.. A Life Story That Shakes Hea...",
 "d": 2636
 },
 {
@@ -1096,6 +1096,11 @@
 "title": "مجالس الموطأ | الشيخ سعيد الكملي",
 "channel": "elkamali",
 "items": [
+{
+"v": "06U2Z_zYm6Y",
+"t": "372",
+"d": 2585
+},
 {
 "v": "m6HScvI95bw",
 "t": "371",
@@ -11777,7 +11782,7 @@
 "items": [
 {
 "v": "WLph7K7YXUY",
-"t": "محاضرة بعنوان: لماذا نحتاج لى علم أصول الفقه؟ I الشيخ سعيد الكملي",
+"t": "Lecture: Why Do We Need the Science of Usul al-Fiqh? | Sheikh Said Al-Kamali",
 "d": 960
 },
 {
@@ -22015,7 +22020,7 @@
 },
 "videos_extra": {
 "T6FnbFJA7uE": {
-"t": "مجالس الموطأ - 24- كتاب الجامع -الفاروق عمر.. قصة حياة تهزّ القلوب - الشيخ سعيد الكملي",
+"t": "Al-Muwatta Sessions - 24 - The Comprehensive Book - Al-Farooq Umar.. A Life Story That Shakes Hea...",
 "d": 2636
 },
 "1BlFud7sSLk": {
@@ -22173,9 +22178,14 @@
 "qHmNpj2QV1U": {
 "t": "هل يبطل الاعتكاف بزيارة المريض ؟ الشيخ سعيد الكملي",
 "d": 404
+},
+"06U2Z_zYm6Y": {
+"t": "372",
+"d": 2585
 }
 },
 "latest": [
+"06U2Z_zYm6Y",
 "T6FnbFJA7uE",
 "1BlFud7sSLk",
 "7RLKMz7cC_4",
@@ -22214,7 +22224,6 @@
 "Fnm0tLRsj2s",
 "tUHt7CnZnaQ",
 "kl9J6Q-gt7Y",
-"C-AsVm4xmFE",
-"qHmNpj2QV1U"
+"C-AsVm4xmFE"
 ]
 }
