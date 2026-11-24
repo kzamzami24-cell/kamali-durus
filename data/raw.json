@@ -1,5 +1,5 @@
 {
-"fetched": "2026-11-24T04:23:01Z",
+"fetched": "2026-11-24T16:31:34Z",
 "playlists": {
 "PLEbfLDlcXKwo": {
 "id": "PLEbfLDlcXKwo",
@@ -48,6 +48,11 @@
 "title": "مجالس الموطأ - كتاب الجامع",
 "channel": "elkamali",
 "items": [
+{
+"v": "6HSB5_RUgXw",
+"t": "Al-Muwatta Sessions - 34 - The Comprehensive Book - If Everything Is Predestined... Why Are We He...",
+"d": 0
+},
 {
 "v": "T6FnbFJA7uE",
 "t": "Al-Muwatta Sessions - 24 - The Comprehensive Book - Al-Farooq Umar.. A Life Story That Shakes Hea...",
@@ -2829,7 +2834,7 @@
 },
 {
 "v": "PbsrMml0MOU",
-"t": "شرح ابواب الصيام لابن أبي زيد القيرواني المالكي ـ ( الجزء الثاني ) - الشيخ  سعيد الكملي",
+"t": "Explanation of the Chapters on Fasting by Ibn Abi Zayd al-Qayrawani al-Maliki - (Part Two) - Shei...",
 "d": 6416
 },
 {
@@ -7861,7 +7866,7 @@
 },
 {
 "v": "sc2AXk_Uxac",
-"t": "مداخلة أكثرمن رائعة للشيخ سعيد الكملي في التعريف بصحيح البخاري ومكانته",
+"t": "An Outstanding Presentation by Sheikh Said Al-Kamali Introducing Sahih al-Bukhari and Its Signifi...",
 "d": 3784
 },
 {
@@ -22182,9 +22187,14 @@
 "06U2Z_zYm6Y": {
 "t": "372",
 "d": 2585
+},
+"6HSB5_RUgXw": {
+"t": "Al-Muwatta Sessions - 34 - The Comprehensive Book - If Everything Is Predestined... Why Are We He...",
+"d": 0
 }
 },
 "latest": [
+"6HSB5_RUgXw",
 "06U2Z_zYm6Y",
 "T6FnbFJA7uE",
 "1BlFud7sSLk",
@@ -22223,7 +22233,6 @@
 "Do4eYHsawQo",
 "Fnm0tLRsj2s",
 "tUHt7CnZnaQ",
-"kl9J6Q-gt7Y",
-"C-AsVm4xmFE"
+"kl9J6Q-gt7Y"
 ]
 }
