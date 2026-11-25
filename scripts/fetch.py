@@ -13,6 +13,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RAW = os.path.join(ROOT, 'data', 'raw.json')
 SRC = os.path.join(ROOT, 'data', 'sources.json')
 KEY = os.environ.get('YT_API_KEY', '').strip()
+AR = re.compile('[\u0600-\u06ff]')
 
 
 def log(*a):
@@ -22,6 +23,7 @@ def log(*a):
 # ---------------- YouTube Data API ----------------
 def api(path, **params):
     params['key'] = KEY
+    params.setdefault('hl', 'ar')
     url = 'https://www.googleapis.com/youtube/v3/' + path + '?' + urllib.parse.urlencode(params)
     for attempt in range(3):
         try:
@@ -83,7 +85,10 @@ def api_playlist(pid, limit=None):
 
 # ---------------- yt-dlp ----------------
 def ytdlp(url, end=None):
-    cmd = ['yt-dlp', '--flat-playlist', '-J', '--no-warnings', '--extractor-args', 'youtubetab:approximate_date']
+    # youtube:lang=ar يجعل يوتيوب يعيد العناوين العربية الأصلية؛ فخادم التحديث في أمريكا،
+    # ويوتيوب يترجم العناوين له إلى الإنجليزية تلقائيًا إن لم تُحدَّد اللغة.
+    cmd = ['yt-dlp', '--flat-playlist', '-J', '--no-warnings',
+           '--extractor-args', 'youtubetab:approximate_date', '--extractor-args', 'youtube:lang=ar']
     if end: cmd += ['--playlist-end', str(end)]
     r = subprocess.run(cmd + [url], capture_output=True, text=True, timeout=600)
     if r.returncode != 0: raise RuntimeError(r.stderr.strip()[-300:])
@@ -131,7 +136,9 @@ def main():
             for pid, _ in pls: targets[pid] = h
             if ch.get('rank', 9) == 0:
                 latest = [x['v'] for x in up[:40]]
+                ve = raw.setdefault('videos_extra', {})
                 for x in up[:40]:
+                    if not AR.search(x['t']) and AR.search(ve.get(x['v'], {}).get('t', '')): continue
                     raw.setdefault('videos_extra', {})[x['v']] = {'t': x['t'], 'd': x['d']}
             log(f'@{h}: {len(pls)} playlists')
         except Exception as e:
@@ -154,8 +161,11 @@ def main():
         if not items: continue
         # احتفظ بالمدد المعروفة إن لم ترجع
         oldd = {x['v']: x.get('d', 0) for x in (old or {}).get('items', [])}
+        oldt = {x['v']: x.get('t', '') for x in (old or {}).get('items', [])}
         for x in items:
             if not x.get('d'): x['d'] = oldd.get(x['v'], 0)
+            # لا تستبدل عنوانًا عربيًا معروفًا بعنوان مترجم
+            if not AR.search(x['t']) and AR.search(oldt.get(x['v'], '')): x['t'] = oldt[x['v']]
             x.pop('p', None)
         new = {'id': pid, 'title': title or (old or {}).get('title', pid),
                'channel': h or (old or {}).get('channel', '') or channel, 'items': items}

@@ -62,6 +62,9 @@ def lesson_no(title):
         return base
     m = re.search(r'(?:الحلقه|الجزء|المجلس|الدرس)\s+(\d+)', n)
     if m: return int(m.group(1))
+    # احتياط للعناوين المترجمة إلى الإنجليزية
+    m = re.search(r'(?:sessions?|lesson|episode|part|lecture)\s*(?:of\s+\w+(?:\s+\w+)?\s*)?(\d{1,4})', n, re.I)
+    if m: return int(m.group(1))
     m = re.search(r'(\d{1,4})', n)
     return None
 
