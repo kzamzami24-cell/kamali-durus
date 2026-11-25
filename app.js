@@ -515,7 +515,7 @@ async function play(v, sid) {
   await loadYT();
   if (!YTP) {
     YTP = new YT.Player('ytPlayer', {
-      videoId: v, host: 'https://www.youtube-nocookie.com',
+      videoId: v, host: 'https://www.youtube.com',  // youtube.com (لا nocookie) ليصل حساب المشاهد فيعمل اشتراك Premium بلا إعلانات
       playerVars: { start, autoplay: 1, rel: 0, playsinline: 1, modestbranding: 1, hl: 'ar' },
       events: {
         onReady: e => { try { e.target.setPlaybackRate(S.rate || 1); } catch (x) {} e.target.playVideo(); },
@@ -613,7 +613,7 @@ $('#resetBtn').onclick = () => {
 dlg.querySelector('.close').onclick = () => dlg.close();
 
 /* ---------------- التشغيل ---------------- */
-const APP_V = '9';
+const APP_V = '10';
 async function checkVersion() {
   try {
     const v = (await (await fetch('version.txt', { cache: 'no-store' })).text()).trim();
