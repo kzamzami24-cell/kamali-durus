@@ -398,6 +398,10 @@ function renderLessons(s) {
   const mb = $('#moreBtn'); if (mb) mb.onclick = () => { shown += 120; renderLessons(s); };
   markPlaying();
 }
+function ytUrl(v, t) {
+  if (t == null) { const p = S.p[v]; t = p && !p.done && p.t > 5 ? Math.floor(p.t - 3) : 0; }
+  return `https://www.youtube.com/watch?v=${encodeURIComponent(v)}${t > 5 ? '&t=' + Math.floor(t) + 's' : ''}`;
+}
 function lessonRow(v, s, idx) {
   const x = CAT.videos[v] || { t: v, d: 0 }, f = frac(v), p = S.p[v];
   const d = dur(v);
@@ -411,6 +415,7 @@ function lessonRow(v, s, idx) {
     <span class="num">${f >= 1 ? '✓' : idx != null ? n(idx) : '▶'}</span>
     <span class="thumb"><img src="${thumb(v)}" alt="" loading="lazy">${d ? `<span class="dur">${fmtDur(d)}</span>` : ''}<span class="p"><i style="width:${f * 100}%"></i></span></span>
     <span class="t"><b>${esc(cleanTitle(x.t))}</b><small>${sub.join(' · ')}</small></span>
+    <a class="yt-row" data-yt href="${ytUrl(v)}" target="_blank" rel="noopener" title="شاهد في يوتيوب${p && !p.done && p.t > 5 ? ' من ' + fmtDur(p.t) : ''}" aria-label="شاهد في يوتيوب"><svg viewBox="0 0 28 20" aria-hidden="true"><rect width="28" height="20" rx="5" fill="#FF0000"/><path d="M11 6v8l7-4z" fill="#fff"/></svg><span>يوتيوب</span></a>
     <button class="tick" data-tick="${v}" title="${f >= 1 ? 'إلغاء الإتمام' : 'تعليم كمكتمل'}" aria-label="${f >= 1 ? 'إلغاء الإتمام' : 'تعليم كمكتمل'}"><svg viewBox="0 0 24 24"><path d="M9 16.2l-3.5-3.5L4 14.2l5 5 11-11-1.5-1.4z"/></svg></button>
   </li>`;
 }
@@ -492,6 +497,13 @@ app.addEventListener('click', e => {
       for (const [v, p] of Object.entries(before)) { if (p) S.p[v] = p; else delete S.p[v]; }
       save(); CAT.series.forEach(x => delete x._st); refresh();
     });
+    return;
+  }
+  const yt = e.target.closest('[data-yt]');
+  if (yt) {                         // يفتح يوتيوب مباشرة (الرابط نفسه) دون تشغيل المشغّل داخل الموقع
+    e.stopPropagation();
+    const li = yt.closest('[data-play]');
+    if (li) { S.last = { v: li.dataset.play, s: li.dataset.s || (SERIES_OF[li.dataset.play] || {}).id }; S.lastAt = Date.now(); save(true); }
     return;
   }
   const tick = e.target.closest('[data-tick]');
@@ -607,7 +619,7 @@ $('#pYT').onclick = () => {
   if (!t) { const p = S.p[cur.v]; t = p && !p.done ? Math.floor(p.t || 0) : 0; }
   track(true); save(true); cloudPush(true);
   try { YTP && YTP.pauseVideo(); } catch (e) {}
-  $('#pYT').href = `https://www.youtube.com/watch?v=${encodeURIComponent(cur.v)}${t > 5 ? '&t=' + t + 's' : ''}`;
+  $('#pYT').href = ytUrl(cur.v, t);
 };
 $('#pTitle').onclick = () => { if (cur && cur.s) location.hash = '#/s/' + encodeURIComponent(cur.s); };
 // عند إغلاق الموقع أو الانتقال عنه: احفظ الموضع فورًا محليًا وفي السحابة
@@ -648,7 +660,7 @@ $('#resetBtn').onclick = () => {
 dlg.querySelector('.close').onclick = () => dlg.close();
 
 /* ---------------- التشغيل ---------------- */
-const APP_V = '12';
+const APP_V = '13';
 async function checkVersion() {
   try {
     const v = (await (await fetch('version.txt', { cache: 'no-store' })).text()).trim();
