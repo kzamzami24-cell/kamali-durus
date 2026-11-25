@@ -126,6 +126,7 @@ async function onAuth(user) {
   let first = true;
   unsub = CLOUD.ref.onSnapshot(snap => {
     const d = snap.exists ? snap.data() : {};
+    const before = cur && S.p[cur.v] ? S.p[cur.v].at || 0 : 0;
     const merged = mergeProgress(S.p, d.p || {});
     const changed = JSON.stringify(merged) !== JSON.stringify(S.p);
     S.p = merged;
@@ -135,6 +136,7 @@ async function onAuth(user) {
     try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {}
     renderProfile();
     if (changed && CAT) refresh();
+    resumeFromCloud(before);
     // ارفع ما عندي مما ليس في السحابة (أول دخول بعد تقدّم محلي)
     const remoteStr = JSON.stringify(d.p || {});
     if (first && JSON.stringify(merged) !== remoteStr) cloudPush(true);
@@ -144,14 +146,27 @@ async function onAuth(user) {
 }
 function cloudPush(now) {
   if (!CLOUD.ref) return;
-  clearTimeout(CLOUD.pushT);
-  CLOUD.pushT = setTimeout(() => {
+  // خنق لا تأجيل: أثناء التشغيل يُحفظ كل ثوانٍ، فلو أُعيد ضبط المؤقّت مع كل حفظ لما وصل الموضع إلى السحابة أبدًا
+  if (now) { clearTimeout(CLOUD.pushT); CLOUD.pushT = 0; return cloudWrite(); }
+  if (CLOUD.pushT) return;
+  CLOUD.pushT = setTimeout(() => { CLOUD.pushT = 0; cloudWrite(); }, 8000);
+}
+function cloudWrite() {
+  {
     const payload = { p: S.p, name: S.name || '', nameAt: S.nameAt || 0, last: S.last || null, lastAt: S.lastAt || 0, updated: Date.now() };
     const str = JSON.stringify(payload.p) + payload.name + JSON.stringify(payload.last);
     if (str === CLOUD.lastPushed) return;
     CLOUD.lastPushed = str;
     CLOUD.ref.set(payload).catch(e => { CLOUD.lastPushed = ''; console.warn('push', e); });
-  }, now ? 50 : 4000);
+  }
+}
+function resumeFromCloud(before) {
+  // بدأتَ الدرس هنا من أوله ثم وصل من جهازك الآخر موضعٌ أحدث: ننتقل إليه
+  if (!cur || !YTP || typeof YTP.getCurrentTime !== 'function') return;
+  const p = S.p[cur.v];
+  if (!p || p.done || (p.at || 0) <= before || Date.now() - cur.started > 60000) return;
+  const t = YTP.getCurrentTime();
+  if (p.t > t + 15) { YTP.seekTo(Math.floor(p.t - 3), true); toast(`نكمل من ${fmtDur(p.t - 3)} (من جهازك الآخر)`); }
 }
 function googleSignIn() {
   if (!CLOUD.ready) { toast('المزامنة غير مفعّلة بعد'); return; }
@@ -224,7 +239,14 @@ function home() {
   }
   const startedSeries = all.filter(s => s._st.started);
   const startedPct = startedSeries.length ? startedSeries.reduce((a, s) => a + s._st.pct * s._st.count, 0) / startedSeries.reduce((a, s) => a + s._st.count, 0) : 0;
-  const last = S.last && CAT.videos[S.last.v] ? S.last : null;
+  let last = S.last && CAT.videos[S.last.v] ? S.last : null;
+  if (last && frac(last.v) >= 1) {         // أتممتَ آخر درس: اقترح التالي في سلسلته
+    const sl = BY_ID[last.s], i = sl ? sl.videos.indexOf(last.v) : -1;
+    const nx = sl && sl.videos.slice(i + 1).find(v => frac(v) < 1);
+    last = nx ? { v: nx, s: last.s, next: true } : null;
+  }
+  const lastP = last && S.p[last.v];
+  const lastAt = lastP && !lastP.done && lastP.t > 5 ? lastP.t : 0;
   const lastS = last && BY_ID[last.s];
   inProg.sort((a, b) => (lastActivity(b) - lastActivity(a)));
 
@@ -243,7 +265,7 @@ function home() {
       </div>
       ${last ? `<button class="continue" data-play="${last.v}" data-s="${last.s}">
           <img src="${thumb(last.v)}" alt="" loading="lazy">
-          <span><small>تابع من حيث توقّفت${lastS ? ' · ' + esc(lastS.title) : ''}</small>
+          <span><small>${last.next ? 'الدرس التالي' : lastAt ? `أكمل من حيث توقّفت · عند ${fmtDur(lastAt)}${dur(last.v) ? ' من ' + fmtDur(dur(last.v)) : ''}` : 'تابع من حيث توقّفت'}${lastS ? ' · ' + esc(lastS.title) : ''}</small>
           <b>${esc(cleanTitle(CAT.videos[last.v].t))}</b>
           <div class="mini-bar"><i style="width:${frac(last.v) * 100}%"></i></div></span>
         </button>` : `<a class="btn" href="#browse">ابدأ رحلتك مع الدروس</a>`}
@@ -504,7 +526,7 @@ function loadYT() {
 }
 async function play(v, sid) {
   const s = BY_ID[sid] || SERIES_OF[v];
-  cur = { v, s: s ? s.id : null };
+  cur = { v, s: s ? s.id : null, started: Date.now() };
   const dock = $('#playerDock'); dock.hidden = false; dock.classList.remove('min');
   $('#pTitle').textContent = cleanTitle(CAT.videos[v]?.t || '');
   $('#pSeries').textContent = s ? s.title : '';
@@ -529,10 +551,12 @@ async function play(v, sid) {
   if (start) toast(`نكمل من ${fmtDur(start)}`);
   clearInterval(tick); tick = setInterval(track, 4000);
 }
-function track() {
+function track(force) {
   if (!YTP || !cur || typeof YTP.getCurrentTime !== 'function') return;
-  if (YTP.getPlayerState() !== 1) return;
+  const st = YTP.getPlayerState();
+  if (!(st === 1 || (force && (st === 2 || st === 3)))) return;
   const t = YTP.getCurrentTime(), d = YTP.getDuration();
+  if (!(t > 0)) return;
   const p = S.p[cur.v] || (S.p[cur.v] = { t: 0 });
   p.t = t; if (d) p.d = Math.round(d); p.at = Date.now();
   if (d && t / d >= DONE_AT && !p.done) { p.done = true; toast('أحسنت! أتممت هذا الدرس'); refreshSoft(); }
@@ -547,7 +571,7 @@ function onState(e) {
     const nx = neighbor(1);
     if (nx) { toast('ننتقل إلى الدرس التالي…'); setTimeout(() => play(nx, cur.s), 2500); }
   }
-  if (e.data === 2) { track(); save(true); }
+  if (e.data === 2) { track(true); save(true); }
 }
 function neighbor(dir) {
   if (!cur) return null; const s = BY_ID[cur.s]; if (!s) return null;
@@ -575,10 +599,12 @@ $('#pDone').onclick = () => {
 $('#pNext').onclick = () => { const v = neighbor(1); if (v) play(v, cur.s); };
 $('#pPrev').onclick = () => { const v = neighbor(-1); if (v) play(v, cur.s); };
 $('#pMin').onclick = () => $('#playerDock').classList.toggle('min');
-$('#pClose').onclick = () => { track(); save(true); try { YTP && YTP.pauseVideo(); } catch (e) {} $('#playerDock').hidden = true; clearInterval(tick); };
+$('#pClose').onclick = () => { track(true); save(true); try { YTP && YTP.pauseVideo(); } catch (e) {} $('#playerDock').hidden = true; clearInterval(tick); };
 $('#pTitle').onclick = () => { if (cur && cur.s) location.hash = '#/s/' + encodeURIComponent(cur.s); };
-window.addEventListener('pagehide', () => { track(); save(true); });
-document.addEventListener('visibilitychange', () => { if (document.hidden) { track(); save(true); } });
+// عند إغلاق الموقع أو الانتقال عنه: احفظ الموضع فورًا محليًا وفي السحابة
+const flush = () => { track(true); save(true); cloudPush(true); };
+window.addEventListener('pagehide', flush);
+document.addEventListener('visibilitychange', () => { if (document.hidden) flush(); });
 
 /* ---------------- التصدير والاستيراد ---------------- */
 const dlg = $('#dataDlg');
@@ -613,7 +639,7 @@ $('#resetBtn').onclick = () => {
 dlg.querySelector('.close').onclick = () => dlg.close();
 
 /* ---------------- التشغيل ---------------- */
-const APP_V = '10';
+const APP_V = '11';
 async function checkVersion() {
   try {
     const v = (await (await fetch('version.txt', { cache: 'no-store' })).text()).trim();
