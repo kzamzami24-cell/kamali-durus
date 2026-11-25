@@ -332,6 +332,9 @@ button{border-radius:14px}
 @media(prefers-reduced-motion:reduce){.hstar,.herocard::after{animation:none!important}}
 
 .herocard::after,.herocard::before{pointer-events:none}.herocard svg{pointer-events:none}.acct{z-index:3}
+
+.tabs{grid-template-columns:1fr 1fr 1fr!important}
+@media(max-width:560px){.tabs button{font-size:13.5px!important;gap:5px!important;min-height:48px!important;padding:0 4px}.tabs button svg{width:18px;height:18px}.tabs .cnt{font-size:11px;padding:0 5px;min-width:18px}}
 </style>
 </head>
 <body>
@@ -521,7 +524,7 @@ function setPtr(m,idx){
 }
 let tt=null;function toast(t,noUndo){document.getElementById('toastT').textContent=t;document.getElementById('undoB').hidden=!!noUndo;document.getElementById('toast').classList.add('show');clearTimeout(tt);tt=setTimeout(hideToast,5000)}
 function hideToast(){document.getElementById('toast').classList.remove('show')}
-function where(L,i){if(i<0)return 'لم تحدّد بعد';const w=L.W[i];return 'ص '+ar(w.g)+'، السطر '+ar(w.li+1)}
+function where(L,i){if(i<0)return 'لم تحدّد بعد';const w=L.W[i];if(L.text){const ln=L.words[w.g][w.li],mt=ln[3]||{};if(mt.n)return 'البيت '+ar(mt.n)+(w.wi>=(mt.s||0)&&mt.s?' (العجز)':'');return 'الجزء '+ar(w.g)+'، السطر '+ar(w.li+1)}return 'ص '+ar(w.g)+'، السطر '+ar(w.li+1)}
 function dueTxt(p){if(p.last==null)return 'لم تُراجَع منذ بدء المتابعة';const d=T-p.due;return d>0?'<span class="late">متأخرة '+ar(d)+' يومًا</span>':(T-p.last==0?'رُوجع اليوم':'آخر مراجعة قبل '+ar(T-p.last)+' يومًا')}
 
 /* الواجهة */
@@ -529,8 +532,8 @@ function fullRev(m){const ps=m.portions.filter(p=>isMemo(m,p));return ps.length?
 function achieve(m){if(m.status=='plan')return 0;if(m.lib)return pctOf(LIB[m.lib],m.ptr);return m.status=='done'?1:.5}
 function statusTxt(m){if(m.status=='plan')return 'في الخطة';if(m.lib&&m.status=='prog'){const x=pctOf(LIB[m.lib],m.ptr);return 'أُنجز '+pc(x)+' · بقي '+pc(1-x)}if(m.status=='prog')return 'قيد الحفظ';return 'محفوظ كاملًا'}
 const shortOf=m=>m.short||m.name.split(' ').slice(0,2).join(' ');
-let TAB=(()=>{const h=location.hash.slice(1);if(h=='new'||h=='review')return h;try{return localStorage.getItem('hifz-tab')||'new'}catch(e){return 'new'}})();
-const ICN={new:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5V5a2 2 0 0 1 2-2h11v14H6a2 2 0 0 0-2 2.5zM6 21h13"/><path d="M10.5 7v6M7.5 10h6"/></svg>',review:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 5v6h-6"/><path d="M9 12l2 2 4-4"/></svg>'};
+let TAB=(()=>{const h=location.hash.slice(1);if(h=='new'||h=='review'||h=='today')return h;try{return localStorage.getItem('hifz-tab')||'new'}catch(e){return 'new'}})();
+const ICN={today:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="m9 15 2 2 4-4"/></svg>',new:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5V5a2 2 0 0 1 2-2h11v14H6a2 2 0 0 0-2 2.5zM6 21h13"/><path d="M10.5 7v6M7.5 10h6"/></svg>',review:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 5v6h-6"/><path d="M9 12l2 2 4-4"/></svg>'};
 function cycleProg(m){const ps=m.portions.filter(p=>isMemo(m,p));if(!ps.length)return 0;const f=fullRev(m);return ps.filter(p=>(p.rv||0)>f).length/ps.length}
 function icon(m,kind,due){
   const plan=m.status=='plan',f=fullRev(m);let ring,st,extra='';
@@ -544,9 +547,22 @@ function render(){
   const rec=prog.filter(m=>recentRange(m));
   const dueBy={};for(const x of pl.list)dueBy[x.m.id]=(dueBy[x.m.id]||0)+1;for(const m of rec)if(m.recentDone!==T)dueBy[m.id]=(dueBy[m.id]||0)+1;
   const left=pl.list.length+rec.filter(m=>m.recentDone!==T).length;
-  let h=`<nav class="tabs" role="tablist"><button role="tab" data-tab="new" aria-selected="${TAB=='new'}">${ICN.new}الحفظ الجديد</button><button role="tab" data-tab="review" aria-selected="${TAB=='review'}">${ICN.review}المراجعة${left?`<span class="cnt">${ar(left)}</span>`:''}</button></nav>`;
+  let rv='';
+    rv+=`<section class="step" id="rev"><div class="sh"><h2>ورد اليوم<small>اضغط «اختبرني» لاختبار حفظك سطرًا سطرًا، أو قيّم المقطع مباشرة</small></h2>${left?`<span class="count">بقي ${ar(left)}</span>`:''}</div>`;
+    for(const m of rec){const L=LIB[m.lib],r=recentRange(m),dn=m.recentDone===T;
+      rv+=`<div class="row ${dn?'done':''}"><div><div class="t">${esc(m.name)}: ما حفظته في آخر ${ar(S.settings.recent)} أيام</div><div class="s">من ${where(L,r[0])} إلى ${where(L,r[1])} · يُكرَّر يوميًا حتى يرسخ</div></div><div class="b"><button data-read="${m.id}|recent|test">اختبرني</button>${dn?'<span class="note">تمّ اليوم</span>':`<button class="ok" data-recent="${m.id}">راجعته</button>`}</div></div>`}
+    rv+=pl.list.map(({m,p,cyc})=>rowHTML(m,p,false,cyc)).join('');
+    if(!pl.list.length&&!rec.length)rv+=`<div class="empty">${pl.done.length?'أتممت ورد اليوم، بارك الله فيك.':'لا شيء مستحق اليوم.'}</div>`;
+    if(pl.all>pl.list.length)rv+=`<p class="note">وبقي ${nP(pl.all-pl.list.length)} مستحقة، تأتيك في الأيام القادمة تدريجيًا كي لا يثقل الورد.</p>`;
+    if(pl.done.length)rv+=`<p class="note">رُوجع اليوم: ${pl.done.map(x=>esc(x.m.name)+' ('+esc(x.p.label)+')').join('، ')}</p>`;
+    rv+=`</section>`;
+  const revSec=rv;
+  const memT=memToday(),memLeft=memT.filter(x=>!x.done).length;
+  let h=`<nav class="tabs" role="tablist"><button role="tab" data-tab="today" aria-selected="${TAB=='today'}">${ICN.today}ورد اليوم${memLeft+left?`<span class="cnt">${ar(memLeft+left)}</span>`:''}</button><button role="tab" data-tab="new" aria-selected="${TAB=='new'}">${ICN.new}الحفظ الجديد</button><button role="tab" data-tab="review" aria-selected="${TAB=='review'}">${ICN.review}المراجعة</button></nav>`;
   if(!S.mutun.length){h+=`<section class="step onb"><h2>أهلًا بك في خزانة محفوظاتك</h2><p class="note" style="font-size:15px">اختر المتون التي حفظتها أو تحفظها الآن، وتستطيع إضافة غيرها في أي وقت. ما تضيفه هنا يخصّك وحدك، ولا يراه غيرك.</p>${catalogHTML()}<div class="tools"><button data-addm>+ متن آخر</button></div></section>`}
-  if(TAB=='new'){
+  if(TAB=='today'){
+    h+=todayHTML(memT,revSec);
+  }else if(TAB=='new'){
     h+=`<div class="qcard"><p>لَيْسَ بِعِلْمٍ مَا حَوَى القِمَطْرُ ... مَا العِلْمُ إِلَّا مَا حَوَاهُ الصَّدْرُ</p><small>أنشده الخطيب البغدادي في «الجامع لأخلاق الراوي»</small></div>`;
     h+=`<div class="sect">ما أحفظه الآن</div><div class="icons">`+(prog.map(m=>icon(m,'new')).join('')||'')+`</div>`;
     if(!prog.length)h+=`<div class="empty">لا متن تحفظه الآن. اختر متنًا من الخطة أدناه واضغط «ابدأ حفظه».</div>`;
@@ -562,14 +578,7 @@ function render(){
     h+=`<div class="stats3"><div><b>${ar(streak)}</b><span>${streak>=3&&streak<=10?'أيام':'يومًا'} متتابعة في المراجعة</span></div><div><b>${ar(week)}</b><span>مراجعة هذا الأسبوع</span></div><div><b>${ar(kh)}</b><span>ختمات المتون كلها</span></div></div>`;
     h+=`<div class="sect">محفوظاتي</div><div class="icons">`+act.map(m=>icon(m,'review',dueBy[m.id]||0)).join('')+`</div>`;
     h+=cycCard();
-    h+=`<section class="step" id="rev"><div class="sh"><h2>ورد اليوم<small>اضغط «اختبرني» لاختبار حفظك سطرًا سطرًا، أو قيّم المقطع مباشرة</small></h2>${left?`<span class="count">بقي ${ar(left)}</span>`:''}</div>`;
-    for(const m of rec){const L=LIB[m.lib],r=recentRange(m),dn=m.recentDone===T;
-      h+=`<div class="row ${dn?'done':''}"><div><div class="t">${esc(m.name)}: ما حفظته في آخر ${ar(S.settings.recent)} أيام</div><div class="s">من ${where(L,r[0])} إلى ${where(L,r[1])} · يُكرَّر يوميًا حتى يرسخ</div></div><div class="b"><button data-read="${m.id}|recent|test">اختبرني</button>${dn?'<span class="note">تمّ اليوم</span>':`<button class="ok" data-recent="${m.id}">راجعته</button>`}</div></div>`}
-    h+=pl.list.map(({m,p,cyc})=>rowHTML(m,p,false,cyc)).join('');
-    if(!pl.list.length&&!rec.length)h+=`<div class="empty">${pl.done.length?'أتممت ورد اليوم، بارك الله فيك.':'لا شيء مستحق اليوم.'}</div>`;
-    if(pl.all>pl.list.length)h+=`<p class="note">وبقي ${nP(pl.all-pl.list.length)} مستحقة، تأتيك في الأيام القادمة تدريجيًا كي لا يثقل الورد.</p>`;
-    if(pl.done.length)h+=`<p class="note">رُوجع اليوم: ${pl.done.map(x=>esc(x.m.name)+' ('+esc(x.p.label)+')').join('، ')}</p>`;
-    h+=`</section>`;
+    h+=revSec;
   }
   h+=`<details class="step"><summary>الإعدادات والنسخة الاحتياطية</summary><form class="form" id="setF" style="margin-top:14px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));align-items:end">
   <label>عدد مقاطع المراجعة في اليوم<input name="cap" type="number" min="1" max="40" value="${S.settings.cap}"></label>
@@ -580,6 +589,24 @@ function render(){
   <div class="tools"><button id="cp">انسخ</button><button id="rs">استعد</button><button id="reset" class="again">ابدأ من جديد</button></div></details>`;
   document.getElementById('app').innerHTML=h;
   if(OPEN&&!RD&&sheet.classList.contains('open')&&!(document.getElementById('aud')&&!document.getElementById('aud').paused)){const st=box.scrollTop;matnSheet(OPEN);box.scrollTop=st}
+}
+
+function memToday(){const o=[];for(const m of S.mutun){if(m.status!='prog')continue;
+  if(!m.lib){o.push({m,nolib:1});continue}
+  const L=LIB[m.lib],ms=memStatus(m),from=where(L,Math.min(L.W.length-1,m.ptr+1));
+  if(!ms){o.push({m,noplan:1,from});continue}
+  const done=ms.done||pctOf(L,m.ptr)>=ms.exp-1e-6;o.push({m,ms,from,to:ms.target,done,ahead:ms.ahead})}
+  return o}
+function todayHTML(memT,revSec){let h=`<div class="qcard"><p>مَنْ حَفِظَ المُتُونَ حَازَ الفُنُونَ</p><small>كلمة مأثورة عند أهل العلم</small></div>`;
+  h+=`<section class="step"><div class="sh"><h2>حفظ اليوم<small>ما عليك حفظه اليوم بحسب خطة كل متن</small></h2></div>`;
+  if(!memT.length)h+=`<div class="empty">لا متن تحفظه الآن. من «الحفظ الجديد» أضف متنًا أو ابدأ متنًا من خطتك.</div>`;
+  for(const x of memT){const m=x.m;
+    if(x.nolib)h+=`<div class="row"><div><div class="t">${esc(m.name)}</div><div class="s">لا يوجد نص لهذا المتن في الموقع بعد.</div></div><div class="b"><button data-src="${m.id}">أضف نصه</button></div></div>`;
+    else if(x.noplan)h+=`<div class="row"><div><div class="t">${esc(m.name)}</div><div class="s">${m.ptr<0?'لم تحدّد أين وصلت بعد':'تبدأ اليوم من '+x.from}. ولم تحدّد خطة حفظ له بعد.</div></div><div class="b"><button data-open="${m.id}">حدّد خطة</button><button class="pri" data-read="${m.id}|mark">حدّد أين وصلت</button></div></div>`;
+    else h+=`<div class="row ${x.done?'done':''}"><div><div class="t">${esc(m.name)}</div><div class="s">${x.done?'أتممت ورد اليوم، بارك الله فيك':'احفظ من '+x.from+' إلى '+x.to}${x.ahead?' · '+x.ahead:''}</div></div><div class="b">${x.done?'<span class="note">تمّ</span>':`<button data-read="${m.id}|mark|read">اقرأ</button><button class="pri" data-read="${m.id}|mark">حفظت، حدّد موضعي</button>`}</div></div>`;
+  }
+  h+=`</section>`;
+  return h+revSec.replace('<h2>ورد اليوم<small>','<h2>مراجعة اليوم<small>');
 }
 function rowHTML(m,p,inSheet,cyc){return `<div class="row"><div><div class="t">${cyc?'<span class="ctag">الخطة</span>':''}${inSheet?'':esc(m.name)+' — '}${esc(p.label)}</div><div class="s">${p.added!=null&&T-p.added<S.settings.recent&&!m.lib?'محفوظ حديثًا، يُكرَّر يوميًا':dueTxt(p)}${p.rv?' · رُوجع '+ar(p.rv)+' مرة':''}${p.tests&&p.tests.length?' · آخر اختبار '+pc(p.tests[p.tests.length-1].s):''}</div></div><div class="b">${p.pg?`<button data-read="${m.id}|${p.id}|test">اختبرني</button>`:''}<button class="ok" data-rate="1" data-m="${m.id}" data-p="${p.id}">ثابت</button><button class="again" data-rate="0" data-m="${m.id}" data-p="${p.id}">يحتاج إعادة</button></div></div>`}
 
@@ -907,14 +934,32 @@ function useText(mid,lines,src){const m=S.mutun.find(x=>x.id==mid);if(!m)return;
   m.tlib={lines,src:src||''};regUser(m);const L=LIB[m.lib];m.portions=textPortions(L);
   m.ptr=m.status=='done'?L.W.length-1:-1;m.hist=m.status=='done'?[{d:T,p:m.ptr,init:1}]:[];
   save();render();closeSheet();matnSheet(m.id);toast('جُهّز نص «'+m.name+'»: '+ar(real.length)+(real[0].v?' بيتًا':' سطرًا'),true)}
+
+const TEXTCAT=[
+  {name:'الرحبية',full:'متن الرحبية (بغية الباحث عن جمل الموارث)',al:['الرحبيه','رحبيه','بغيه الباحث','الفرائض','المواريث'],cat:'الفرائض',file:'texts/rahbiyya.txt',src:'متون طالب العلم – المستوى الرابع'},
+  {name:'حائية ابن أبي داود',full:'المنظومة الحائية لابن أبي داود',al:['الحائيه','حائيه','حائيه ابن ابي داود','منظومه ابن ابي داود'],cat:'العقيدة',file:'texts/hayiyya.txt',src:'توضيح المقصود للبراك'},
+  {name:'سلم الوصول',full:'سلم الوصول إلى علم الأصول لحافظ الحكمي',al:['سلم الوصول','معارج القبول'],cat:'العقيدة',wiki:'سلم الوصول إلى علم الأصول'},
+  {name:'المنظومة البيقونية',full:'المنظومة البيقونية في مصطلح الحديث',al:['البيقونيه','بيقونيه'],cat:'مصطلح الحديث',wiki:'منظومة البيقوني'}
+];
+const STOPW=new Set(['متن','منظومه','نظم','في','على','ابن','ابي','لل','الامام','الشيخ','شرح']);
+function qTokens(q){return String(q).split(/\s+/).map(NORM).map(t=>t.replace(/^(ال|لل)/,'')).filter(t=>t.length>=3&&!STOPW.has(t))}
+function tcatMatch(q){const ts=qTokens(q);if(!ts.length)return [];return TEXTCAT.filter(c=>{const hay=[c.name,c.full,...c.al].map(NORM).join(' ');return ts.some(t=>hay.includes(t))})}
+async function tcatUse(mid,i){const c=TEXTCAT[i],box2=document.getElementById('netRes');if(box2)box2.innerHTML='<p class="note">جارٍ تجهيز النص…</p>';
+  try{if(c.wiki){const r=await fetch(WS+'action=parse&prop=wikitext&redirects=1&page='+encodeURIComponent(c.wiki)).then(r=>r.json());return useText(mid,wikiToLines(r.parse.wikitext['*']),'ar.wikisource.org/wiki/'+c.wiki)}
+    const t=await fetch(c.file,{cache:'no-cache'}).then(r=>{if(!r.ok)throw 0;return r.text()});useText(mid,textFileLines(t),c.src||'')}
+  catch(e){if(box2)box2.innerHTML='<p class="note">تعذّر تحميل النص الآن، أعد المحاولة.</p>'}}
+function textFileLines(t){const out=[];for(const raw of t.split(/\r?\n/)){const l=raw.trim();if(!l)continue;if(l[0]=='#'){out.push({h:l.slice(1).trim()});continue}const hs=l.split(/\s*…\s*/);out.push(hs.length>=2?{v:[hs[0],hs.slice(1).join(' ')]}:{p:l})}return out}
 const WS='https://ar.wikisource.org/w/api.php?format=json&origin=*&';
 async function wikiSearch(mid,q){
   const box=document.getElementById('netRes');if(!box)return;box.innerHTML='<p class="note">جارٍ البحث في ويكي مصدر…</p>';
-  try{const r=await fetch(WS+'action=query&list=search&srlimit=20&srsearch='+encodeURIComponent(q)).then(r=>r.json());
-    let hs=(r.query&&r.query.search||[]).filter(x=>!/شرح|حاشية|تفسير|مجلة|تعليق|فتاوى|سير أعلام|تاريخ|المزهر|مقامات|ديوان/.test(x.title)&&!x.title.includes('/'));
-    box.innerHTML=hs.length?'<p class="note" style="font-size:13px">نتائج من ويكي مصدر (نص المتن نفسه). اختر المتن المطلوب، وستظهر لك أبياته لتتأكد قبل اعتمادها.</p>'+hs.slice(0,8).map(x=>`<div class="catr"><span><b>${esc(x.title)}</b><small>${ar(x.wordcount)} كلمة</small></span><div class="b"><button class="pri" data-wiki="${mid}|${esc(x.title)}">اعرضه</button></div></div>`).join('')
-      :'<p class="note">لم أجد هذا المتن في ويكي مصدر. انسخ نصه من المكتبة الشاملة أو أي موقع، والصقه في خانة «الصق نص المتن».</p>';
-  }catch(e){box.innerHTML='<p class="note">تعذّر البحث الآن. الصق نص المتن أو ارفع ملفه.</p>'}
+  const loc=tcatMatch(q);let lh=loc.length?'<p class="note" style="font-size:13px">من مكتبة نصوص الموقع (نص المتن مضبوطًا):</p>'+loc.map(c=>`<div class="catr"><span><b>${esc(c.full)}</b><small>${esc(c.cat)}</small></span><div class="b"><button class="pri" data-tcat="${mid}|${TEXTCAT.indexOf(c)}">استعمله</button></div></div>`).join(''):'';
+  try{const r=await fetch(WS+'action=query&list=search&srlimit=30&srsearch='+encodeURIComponent(q)).then(r=>r.json());
+    const ts=qTokens(q);
+    let hs=(r.query&&r.query.search||[]).filter(x=>!/شرح|حاشية|تفسير|مجلة|تعليق|فتاوى|سير أعلام|تاريخ|المزهر|مقامات|ديوان/.test(x.title)&&!x.title.includes('/')&&x.wordcount>=60&&ts.length&&ts.some(t=>NORM(x.title).includes(t)));
+    if(loc.length&&!hs.length){box.innerHTML=lh;return}
+    box.innerHTML=lh+(hs.length?'<p class="note" style="font-size:13px">نتائج من ويكي مصدر (نص المتن نفسه). اختر المتن المطلوب، وستظهر لك أبياته لتتأكد قبل اعتمادها.</p>'+hs.slice(0,8).map(x=>`<div class="catr"><span><b>${esc(x.title)}</b><small>${ar(x.wordcount)} كلمة</small></span><div class="b"><button class="pri" data-wiki="${mid}|${esc(x.title)}">اعرضه</button></div></div>`).join('')
+      :'<p class="note">لم أجد نص هذا المتن في ويكي مصدر ولا في مكتبة الموقع. انسخ نصه من المكتبة الشاملة أو أي موقع، والصقه في خانة «الصق نص المتن» أدناه.</p>');
+  }catch(e){box.innerHTML=lh||'<p class="note">تعذّر البحث الآن. الصق نص المتن أو ارفع ملفه.</p>'}
 }
 let WIKIP=null;
 async function wikiOpen(mid,title){
@@ -1031,7 +1076,7 @@ function openReader(mid,what,start){
   else if(what=='mark'){from=+Object.keys(L.words)[0];to=+Object.keys(L.words).slice(-1)[0];mode=m.status=='prog'?'mark':'read'}
   else if(what=='recent'){const r=recentRange(m);hl=r;from=L.W[r[0]].g;to=L.W[r[1]].g;title='ما حفظته مؤخرًا'}
   else{p=m.portions.find(x=>x.id==what);from=p.pg[0];to=p.pg[1];title=p.label}
-  if(start==='test')mode='test';
+  if(start==='test')mode='test';if(start==='read')mode='read';
   RD={m,L,from,to,mode,p,hl,sel:null,hint:false,what};resetTest();
   const canMark=m.status=='prog';
   openSheet(`<div class="rhead"><div class="top"><h3>${esc(title)}</h3><button data-close>إغلاق</button></div>
@@ -1134,6 +1179,7 @@ document.addEventListener('click',e=>{
   if(d.cin){CEX=(CEX||[]).filter(x=>x!=d.cin);CEDIT=(CEDIT||[]).concat(d.cin);return cycSheetKeep()}
   if(d.cdel!==undefined){if(b.dataset.sure){delete S.cycle;save();closeSheet();render();return toast('أُلغيت الخطة',true)}b.dataset.sure=1;b.textContent='اضغط للتأكيد';return}
   if(d.cat){const [i,st]=d.cat.split('|');const c=CATALOG[+i];S.mutun.push(fromCatalog(c,st));save();if(sheet.classList.contains('open'))closeSheet();render();return toast('أُضيف «'+c.name+'»',true)}
+  if(d.tcat){const i=d.tcat.indexOf('|');return tcatUse(d.tcat.slice(0,i),+d.tcat.slice(i+1))}
   if(d.wiki){const i=d.wiki.indexOf('|');return wikiOpen(d.wiki.slice(0,i),d.wiki.slice(i+1))}
   if(d.wikiuse!==undefined&&WIKIP){const w=WIKIP;WIKIP=null;return useText(w.mid,w.lines,w.src)}
   if(d.netuse){const i=d.netuse.indexOf('|');return netUse(d.netuse.slice(0,i),d.netuse.slice(i+1))}
