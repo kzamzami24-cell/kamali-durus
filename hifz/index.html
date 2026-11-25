@@ -881,7 +881,7 @@ async function buildQuiz(){
   const all=libLines(L,+Object.keys(L.words)[0],+Object.keys(L.words).slice(-1)[0]);
   const urls={};
   for(const g of new Set(lines.map(x=>x.g).concat(all.map(x=>x.g)))){const u=await pageURL(L,g);if(u){urls[g]=u;const a=await aspOf(u);if(a)ASP[g+'|'+L.dir+L.user]=a}}
-  const ok=x=>urls[x.g]&&ASP[x.g+'|'+L.dir+L.user];RD.urls=urls;
+  const ok=x=>urls[x.g]&&ASP[x.g+'|'+L.dir+L.user]&&x.ws.length>=3;RD.urls=urls;
   // كل كلمة صالحة للسؤال: عرض مناسب (ليست حرفًا مفردًا)
   const pool=[];for(const x of all.filter(ok))x.ws.forEach((w,wi)=>{if(w[1]-w[0]>=.035)pool.push({x,wi,w:w[1]-w[0]})});
   const cand=[];for(const x of lines.filter(ok))x.ws.forEach((w,wi)=>{if(w[1]-w[0]>=.035)cand.push({x,wi,w:w[1]-w[0]})});
