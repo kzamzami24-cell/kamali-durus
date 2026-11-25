@@ -348,6 +348,7 @@ button{border-radius:14px}
 .rbtns button{min-height:42px;font-size:14px;border-radius:12px;display:flex;align-items:center;justify-content:center;gap:5px;padding:0 6px}
 .rbtns svg{width:17px;height:17px;flex:none}.rbtns .rt{background:#fff;color:var(--ink)}
 .rch{cursor:pointer;list-style:none}.rch::-webkit-details-marker{display:none}.rch>div{flex:1}.rchev{width:28px;height:28px;border-radius:50%;background:var(--bg);flex:none;position:relative}.rchev::after{content:"";position:absolute;inset:0;margin:auto;width:8px;height:8px;border-left:2px solid var(--mute);border-bottom:2px solid var(--mute);transform:translateY(-2px) rotate(-45deg);transition:transform .2s}.rcard[open] .rchev::after{transform:translateY(1px) rotate(135deg)}.rcard:not([open]) .rch{margin-bottom:0}
+.linkb{display:inline;min-height:0;padding:0 4px;border:0;background:none;color:var(--em);font-weight:700;text-decoration:underline;font-size:inherit}
 </style>
 </head>
 <body>
@@ -593,7 +594,7 @@ function render(){
     h+=`<div class="stats3"><div><b>${ar(streak)}</b><span>${streak>=3&&streak<=10?'أيام':'يومًا'} متتابعة في المراجعة</span></div><div><b>${ar(week)}</b><span>مراجعة هذا الأسبوع</span></div><div><b>${ar(kh)}</b><span>ختمات المتون كلها</span></div></div>`;
     h+=`<div class="sect">محفوظاتي</div><div class="icons">`+act.map(m=>icon(m,'review',dueBy[m.id]||0)).join('')+`<button class="ic addic" data-addm="rev"><span class="ring" style="--p:0;--c:#999"><span class="face plus">+</span></span><span class="ttl">إضافة متن للمراجعة</span><span class="st">تختار متى يبدأ</span></button></div>`;
     h+=cycCard();
-    h+=revSec;
+    h+=`<p class="note" style="text-align:center;margin-top:18px">مقاطع المراجعة المطلوبة اليوم تجدها في تبويب <button class="linkb" data-tab="today">ورد اليوم</button></p>`;
   }
   h+=`<details class="step"><summary>الإعدادات والنسخة الاحتياطية</summary><form class="form" id="setF" style="margin-top:14px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));align-items:end">
   <label>عدد مقاطع المراجعة في اليوم<input name="cap" type="number" min="1" max="40" value="${S.settings.cap}"></label>
