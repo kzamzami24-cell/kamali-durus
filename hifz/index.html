@@ -1279,6 +1279,11 @@ document.addEventListener('submit',e=>{
 });
 boot();
 }
+
+/* تحديث تلقائي: إن نُشرت نسخة أحدث من الموقع تُحمَّل وحدها */
+const BUILD='20261125203704';
+(async()=>{try{const t=await fetch(location.pathname+'?nc='+Date.now(),{cache:'no-store'}).then(r=>r.text());const m=t.match(/const BUILD='([^']+)'/);
+  if(m&&m[1]!==BUILD&&m[1].indexOf('BUILD')<0){const k='hifz-reload-'+m[1];if(!sessionStorage.getItem(k)){sessionStorage.setItem(k,'1');location.reload()}}}catch(e){}})();
 </script>
 </body>
 </html>
