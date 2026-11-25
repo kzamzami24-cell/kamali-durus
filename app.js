@@ -228,7 +228,6 @@ function home() {
   const lastS = last && BY_ID[last.s];
   inProg.sort((a, b) => (lastActivity(b) - lastActivity(a)));
 
-  const newOnes = Object.keys(CAT.videos).filter(isNew);
 
   let html = `
   <section class="hero">
@@ -260,9 +259,11 @@ function home() {
     html += `<div class="section-head"><h2>سلاسلك الجارية</h2><span class="muted">${fmtHours(wsec)} من الاستماع حتى الآن</span></div>
       <div class="grid">${inProg.slice(0, 6).map(card).join('')}</div>`;
   }
-  if (newOnes.length) {
-    html += `<div class="section-head"><h2>أُضيف حديثًا</h2><span class="muted">دروس جديدة منذ زيارتك السابقة</span></div>
-      <div class="results">${newOnes.slice(0, 12).map(v => lessonRow(v, SERIES_OF[v], null)).join('')}</div>`;
+  const recent = recentList();
+  if (recent.length) {
+    const nNew = recent.filter(isNew).length;
+    html += `<div class="section-head" id="recent"><h2>أُضيف حديثًا</h2><a class="muted see-all" href="#/new">${nNew ? `${n(nNew)} جديد منذ زيارتك · ` : ''}عرض الكل (${n(recent.length)}) ←</a></div>
+      <ol class="lessons">${recent.slice(0, 6).map(v => lessonRow(v, SERIES_OF[v], null)).join('')}</ol>`;
   }
   const counts = {}; all.forEach(s => counts[s.cat] = (counts[s.cat] || 0) + 1);
   html += `<div class="section-head" id="browse"><h2>كل السلاسل</h2><span class="muted">آخر تحديث للفهرس: ${updatedTxt()}</span></div>
@@ -379,7 +380,7 @@ function lessonRow(v, s, idx) {
   const x = CAT.videos[v] || { t: v, d: 0 }, f = frac(v), p = S.p[v];
   const d = dur(v);
   let sub = [];
-  if (idx == null && s) sub.push(esc(s.title));
+  if (idx == null && s) sub.push(`<a class="in-series" href="#/s/${encodeURIComponent(s.id)}" title="افتح السلسلة">${esc(s.title)}</a>`);
   if (d) sub.push(fmtDur(d));
   if (p && !p.done && p.t > 5) sub.push(`توقّفت عند ${fmtDur(p.t)}`);
   if (f >= 1) sub.push('مكتمل');
@@ -390,6 +391,27 @@ function lessonRow(v, s, idx) {
     <span class="t"><b>${esc(cleanTitle(x.t))}</b><small>${sub.join(' · ')}</small></span>
     <button class="tick" data-tick="${v}" title="${f >= 1 ? 'إلغاء الإتمام' : 'تعليم كمكتمل'}" aria-label="${f >= 1 ? 'إلغاء الإتمام' : 'تعليم كمكتمل'}"><svg viewBox="0 0 24 24"><path d="M9 16.2l-3.5-3.5L4 14.2l5 5 11-11-1.5-1.4z"/></svg></button>
   </li>`;
+}
+
+/* ---------------- أُضيف حديثًا ---------------- */
+// أحدث ما رُفع على القناة (الأحدث أولًا) ثم ما ظهر جديدًا منذ زيارتك. عرضٌ فقط: كل درس يبقى في سلسلته الأصلية.
+function recentList() {
+  const out = [], seen = new Set();
+  for (const v of CAT.latest || []) if (CAT.videos[v] && SERIES_OF[v] && !seen.has(v)) { seen.add(v); out.push(v); }
+  const extra = Object.keys(CAT.videos).filter(v => isNew(v) && !seen.has(v) && SERIES_OF[v]).sort((a, b) => S.seen[b] - S.seen[a]);
+  return out.concat(extra);
+}
+function newPage() {
+  const list = recentList();
+  app.innerHTML = `<div class="section-head" style="margin-top:6px"><h2>أُضيف حديثًا</h2><span class="muted">${n(list.length)} درسًا · آخر تحديث: ${updatedTxt()}</span></div>
+    <p class="muted new-note">أحدث ما رُفع من دروس الشيخ، الأحدث أولًا. كل درس هنا باقٍ في سلسلته الأصلية، واسمها مكتوب تحته، وتقدّمك فيه واحد في الموضعين.</p>
+    ${list.length ? `<ol class="lessons">${list.map(v => lessonRow(v, SERIES_OF[v], null)).join('')}</ol>` : `<div class="empty">لا جديد الآن.</div>`}`;
+  markPlaying();
+}
+function updateNewBadge() {
+  const b = $('#newCount'); if (!b || !CAT) return;
+  const k = recentList().filter(isNew).length;
+  b.textContent = k ? n(k) : ''; b.hidden = !k;
 }
 
 /* ---------------- البحث ---------------- */
@@ -418,15 +440,19 @@ function route() {
   const h = decodeURIComponent(location.hash.slice(1));
   if (h.startsWith('/s/')) seriesPage(h.slice(3));
   else if (h.startsWith('/q/')) { const q = h.slice(3); if ($('#q').value !== q) $('#q').value = q; searchPage(q); }
+  else if (h === '/new') newPage();
   else if (h === 'browse') { home(); $('#browse')?.scrollIntoView(); return; }
   else { home(); }
   if (!h.startsWith('/q/')) $('#q').value = '';
+  document.querySelectorAll('.nav-new').forEach(a => a.classList.toggle('on', h === '/new'));
+  updateNewBadge();
   window.scrollTo(0, 0);
 }
 window.addEventListener('hashchange', route);
 
 /* ---------------- النقرات ---------------- */
 app.addEventListener('click', e => {
+  if (e.target.closest('a.in-series')) return;
   const comp = e.target.closest('[data-complete]');
   if (comp) {
     e.preventDefault(); e.stopPropagation();
@@ -587,7 +613,7 @@ $('#resetBtn').onclick = () => {
 dlg.querySelector('.close').onclick = () => dlg.close();
 
 /* ---------------- التشغيل ---------------- */
-const APP_V = '8';
+const APP_V = '9';
 async function checkVersion() {
   try {
     const v = (await (await fetch('version.txt', { cache: 'no-store' })).text()).trim();
