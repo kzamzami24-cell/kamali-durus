@@ -881,15 +881,11 @@ async function netSearch(mid,q){
   }catch(e){box.innerHTML='<p class="note">تعذّر البحث الآن. ارفع الملف من جهازك.</p>'}
 }
 const IAC={};
-async function iaOpen(id){if(IAC[id])return IAC[id];
-  const md=await fetch('https://archive.org/metadata/'+encodeURIComponent(id)).then(r=>r.json());
-  const zip=(md.files||[]).find(f=>/_jp2\.zip$/i.test(f.name));
-  if(zip&&md.server&&md.dir){const t=await fetch('https://'+md.server+'/view_archive.php?archive='+encodeURIComponent(md.dir+'/'+zip.name)).then(r=>r.text());
-    const pre=zip.name.replace(/\.zip$/i,'');const files=[...new Set((t.match(/[^"'<>\s?&=]+?\.jp2/g)||[]).map(x=>{x=decodeURIComponent(x);const i=x.indexOf(pre.split('/').pop()+'/');return i>=0?x.slice(i):x}))].sort();
-    if(files.length)return IAC[id]={D:iaDoc(md.server,md.dir,zip.name,files)}}
-  const pdf=(md.files||[]).filter(f=>/\.pdf$/i.test(f.name)).sort((a,b)=>(+a.size||0)-(+b.size||0))[0];if(!pdf)throw new Error('nopdf');
-  const blob=await fetch('https://archive.org/download/'+encodeURIComponent(id)+'/'+pdf.name.split('/').map(encodeURIComponent).join('/')).then(r=>{if(!r.ok)throw new Error(r.status);return r.blob()});
-  return IAC[id]={D:await pdfDoc(blob)}}
+async function iaManifest(id){const m=await fetch('https://iiif.archive.org/iiif/3/'+encodeURIComponent(id)+'/manifest.json').then(r=>{if(!r.ok)throw 0;return r.json()});
+  return (m.items||[]).map(c=>{try{const b=c.items[0].items[0].body;return (b.service&&b.service[0]&&(b.service[0].id||b.service[0]['@id']))||String(b.id).replace(/\/full\/.*$/,'')}catch(e){return null}}).filter(Boolean)}
+function iiifDoc(svcs){const cache={};const get=(g,W)=>{const k=g+'|'+W;return cache[k]||(cache[k]=fetch(svcs[g-1]+'/full/'+W+',/0/default.jpg').then(r=>{if(!r.ok)throw new Error(r.status);return r.blob()}).then(b=>createImageBitmap(b)))};
+  return {n:svcs.length,async canvas(g,W){const im=await get(g,W>400?1300:300),cv=document.createElement('canvas');cv.width=W;cv.height=Math.round(im.height*W/im.width);const ctx=cv.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,cv.width,cv.height);ctx.drawImage(im,0,0,cv.width,cv.height);return cv}}}
+async function iaOpen(id){if(IAC[id])return IAC[id];const sv=await iaManifest(id);if(sv.length<2)throw new Error('nopages');return IAC[id]={D:iiifDoc(sv)}}
 async function netUse(mid,id){
   const box=document.getElementById('netRes');if(box&&!IAC[id])box.insertAdjacentHTML('afterbegin','<p class="note" id="iaw">جارٍ جلب صفحات الكتاب…</p>');
   try{const c=await iaOpen(id);startDoc(mid,c.D,'archive.org/details/'+id)}
@@ -968,8 +964,10 @@ const SHARH=/شرح|حاشي|حواشي|تعليق|فتح |منحة|عون |تق
 const cleanT=t=>String(t).replace(/\b(Book|Bok|Pdf|PDF)\b/g,'').replace(/[0-9٠-٩]{3,}/g,'').replace(/كتاب|اقرا اونلاين|صيغة بي دي اف|صيغة بوك|\[.*?\]|---.*$|۩|۞/g,'').replace(/\s+/g,' ').trim();
 async function iaSearch(q){const ts=qTokens(q);if(!ts.length)return [];
   const r=await fetch('https://archive.org/advancedsearch.php?q='+encodeURIComponent('title:('+q+') AND mediatype:texts')+'&fl[]=identifier&fl[]=title&fl[]=imagecount&rows=60&output=json').then(r=>r.json());
-  const seen=new Set();return ((r.response&&r.response.docs)||[]).map(d=>Object.assign(d,{t:cleanT(d.title)})).filter(d=>{const n=NORM(d.t);if(SHARH.test(String(d.title)))return false;if(!ts.every(t=>n.includes(t)))return false;if(d.imagecount&&+d.imagecount>90)return false;if(seen.has(n))return false;seen.add(n);return true})
-    .sort((a,b)=>(/متن|منظومة|نظم/.test(b.t)?1:0)-(/متن|منظومة|نظم/.test(a.t)?1:0)||a.t.length-b.t.length).slice(0,8)}
+  const seen=new Set();const docs=((r.response&&r.response.docs)||[]).map(d=>Object.assign(d,{t:cleanT(d.title)})).filter(d=>{const n=NORM(d.t);if(SHARH.test(String(d.title)))return false;if(!ts.every(t=>n.includes(t)))return false;if(d.imagecount&&+d.imagecount>90)return false;if(seen.has(n))return false;seen.add(n);return true})
+    .sort((a,b)=>(/متن|منظومة|نظم/.test(b.t)?1:0)-(/متن|منظومة|نظم/.test(a.t)?1:0)||a.t.length-b.t.length).slice(0,14);
+  const ok=await Promise.all(docs.map(d=>iaManifest(d.identifier).then(sv=>{if(sv.length>=2&&sv.length<=120){IAC[d.identifier]={D:iiifDoc(sv)};d.imagecount=sv.length;return true}return false}).catch(()=>false)));
+  return docs.filter((d,i)=>ok[i]).slice(0,8)}
 async function wikiSearch(mid,q){
   const box=document.getElementById('netRes');if(!box)return;box.innerHTML='<p class="note">جارٍ البحث…</p>';
   const ts=qTokens(q),loc=tcatMatch(q);let h=loc.length?'<p class="note" style="font-size:13px">من مكتبة نصوص الموقع (نص المتن مضبوطًا ومكتوبًا):</p>'+loc.map(c=>`<div class="catr"><span><b>${esc(c.full)}</b><small>${esc(c.cat)}</small></span><div class="b"><button data-tcprev="${TEXTCAT.indexOf(c)}">اعرضه</button><button class="pri" data-tcat="${mid}|${TEXTCAT.indexOf(c)}">استعمله</button></div></div>`).join(''):'';
