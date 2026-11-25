@@ -138,7 +138,7 @@ main:focus{outline:none}
 .segbar i{flex:1;border-radius:3px;background:var(--paper-2);position:relative;overflow:hidden}
 .segbar i>s{position:absolute;inset:0;inset-inline-end:auto;background:var(--gold);text-decoration:none}
 .lessons{list-style:none;margin:18px 0 0;padding:0;display:flex;flex-direction:column;gap:8px}
-.lesson{display:grid;grid-template-columns:auto 120px 1fr auto;gap:14px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:10px 12px;cursor:pointer;transition:border-color .2s}
+.lesson{display:grid;grid-template-columns:auto 120px 1fr auto auto;gap:14px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:10px 12px;cursor:pointer;transition:border-color .2s}
 .lesson:hover,.lesson.playing{border-color:var(--gold)}
 .lesson.playing{box-shadow:0 0 0 2px color-mix(in srgb,var(--gold) 40%,transparent)}
 .lesson .num{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:600;background:var(--paper-2);color:var(--ink-2)}
@@ -172,9 +172,11 @@ main:focus{outline:none}
 .player-meta small{display:block;color:var(--gold);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .player-meta b{display:block;font-weight:500;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .player-foot{display:flex;justify-content:flex-end;padding:6px 10px 8px}
-.yt-open{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted,#999);text-decoration:none;opacity:.85}
-.yt-open:hover{opacity:1;text-decoration:underline}
-.yt-open svg{width:16px;height:16px;fill:currentColor}
+.yt-open,.yt-row{display:inline-flex;align-items:center;gap:6px;text-decoration:none;color:var(--ink);font-weight:600;border:1.5px solid var(--line);border-radius:999px;background:var(--card);transition:border-color .2s,background .2s}
+.yt-open{font-size:13px;padding:5px 12px}
+.yt-row{font-size:12px;padding:5px 10px;white-space:nowrap}
+.yt-open:hover,.yt-row:hover{border-color:#FF0000;background:rgba(255,0,0,.06)}
+.yt-open svg,.yt-row svg{width:24px;height:17px;flex:none}
 .player-dock.min .player-foot{display:none}
 .player-actions{display:flex;gap:6px;align-items:center}
 .player-actions .chip{padding:5px 10px;font-size:13px}
@@ -209,7 +211,9 @@ dialog .btn.ghost{color:var(--ink)}
   .topbar{flex-wrap:wrap}
   .search{order:3;flex-basis:100%;max-width:none}
   .brand b{font-size:20px}
-  .lesson{grid-template-columns:auto 1fr auto;gap:10px}
+  .lesson{grid-template-columns:auto 1fr auto auto;gap:10px}
+  .yt-row span{display:none}
+  .yt-row{padding:6px 8px}
   .lesson .thumb{display:none}
   .s-head{grid-template-columns:1fr;justify-items:start}
   .big-ring{width:110px;height:110px;order:-1}
