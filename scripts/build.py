@@ -93,6 +93,15 @@ def categorize(title):
 def main():
     raw = json.load(open(RAW, encoding='utf-8'))
     src = json.load(open(SRC, encoding='utf-8'))
+    # عناوين عربية يدوية لمقاطع لا يعطي يوتيوب عنوانها إلا بالإنجليزية (data/titles.json)
+    tpath = os.path.join(ROOT, 'data', 'titles.json')
+    fixed = json.load(open(tpath, encoding='utf-8')) if os.path.exists(tpath) else {}
+    fixed = {k: v for k, v in fixed.items() if not k.startswith('_')}
+    for p in raw['playlists'].values():
+        for it in p['items']:
+            if it['v'] in fixed: it['t'] = fixed[it['v']]
+    for v, x in raw.get('videos_extra', {}).items():
+        if v in fixed: x['t'] = fixed[v]
     official = {c['handle']: c['rank'] for c in src['channels']}
     catch_all = set(src.get('catch_all', []))
     exclude = set(src.get('exclude', []))
