@@ -337,6 +337,17 @@ button{border-radius:14px}
 
 .tabs{grid-template-columns:1fr 1fr 1fr!important}
 @media(max-width:560px){.tabs button{font-size:13.5px!important;gap:5px!important;min-height:48px!important;padding:0 4px}.tabs button svg{width:18px;height:18px}.tabs .cnt{font-size:11px;padding:0 5px;min-width:18px}}
+
+.rgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px;margin-top:12px}
+.rcard{background:var(--card);border-radius:20px;padding:14px;box-shadow:0 6px 18px -10px rgba(0,40,30,.25);border-top:5px solid var(--mc)}
+.rch{display:flex;gap:10px;align-items:center;margin-bottom:8px}.rch b{display:block;font-size:16px;line-height:1.4}.rch small{color:var(--mute);font-size:12.5px}
+.rface{flex:none;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:11px;font-weight:700;text-align:center;line-height:1.2;padding:3px}
+.ritem{background:var(--bg);border-radius:14px;padding:10px 12px;margin-top:8px}
+.rl b{display:block;font-size:15px;line-height:1.5}.rl small{display:block;color:var(--mute);font-size:12.5px;margin-top:2px}
+.rbtns{display:grid;gap:6px;margin-top:8px}.rbtns.n3{grid-template-columns:1fr 1fr 1fr}.rbtns.n2{grid-template-columns:1fr 1fr}
+.rbtns button{min-height:42px;font-size:14px;border-radius:12px;display:flex;align-items:center;justify-content:center;gap:5px;padding:0 6px}
+.rbtns svg{width:17px;height:17px;flex:none}.rbtns .rt{background:#fff;color:var(--ink)}
+.rch{cursor:pointer;list-style:none}.rch::-webkit-details-marker{display:none}.rch>div{flex:1}.rchev{width:28px;height:28px;border-radius:50%;background:var(--bg);flex:none;position:relative}.rchev::after{content:"";position:absolute;inset:0;margin:auto;width:8px;height:8px;border-left:2px solid var(--mute);border-bottom:2px solid var(--mute);transform:translateY(-2px) rotate(-45deg);transition:transform .2s}.rcard[open] .rchev::after{transform:translateY(1px) rotate(135deg)}.rcard:not([open]) .rch{margin-bottom:0}
 </style>
 </head>
 <body>
@@ -552,10 +563,10 @@ function render(){
   const dueBy={};for(const x of pl.list)dueBy[x.m.id]=(dueBy[x.m.id]||0)+1;for(const m of rec)if(m.recentDone!==T)dueBy[m.id]=(dueBy[m.id]||0)+1;
   const left=pl.list.length+rec.filter(m=>m.recentDone!==T).length;
   let rv='';
-    rv+=`<section class="step" id="rev"><div class="sh"><h2>ورد اليوم<small>اضغط «اختبرني» لاختبار حفظك سطرًا سطرًا، أو قيّم المقطع مباشرة</small></h2>${left?`<span class="count">بقي ${ar(left)}</span>`:''}</div>`;
+    rv+=`<section class="step" id="rev"><div class="sh"><h2>ورد اليوم<small>راجع المقطع أو اختبر نفسك، ثم اضغط «ثابت» إن أتقنته أو «أعِده» إن احتاج تكرارًا</small></h2>${left?`<span class="count">بقي ${ar(left)}</span>`:''}</div>`;
     for(const m of rec){const L=LIB[m.lib],r=recentRange(m),dn=m.recentDone===T;
       rv+=`<div class="row ${dn?'done':''}"><div><div class="t">${esc(m.name)}: ما حفظته في آخر ${ar(S.settings.recent)} أيام</div><div class="s">من ${where(L,r[0])} إلى ${where(L,r[1])} · يُكرَّر يوميًا حتى يرسخ</div></div><div class="b"><button data-read="${m.id}|recent|test">اختبرني</button>${dn?'<span class="note">تمّ اليوم</span>':`<button class="ok" data-recent="${m.id}">راجعته</button>`}</div></div>`}
-    rv+=pl.list.map(({m,p,cyc})=>rowHTML(m,p,false,cyc)).join('');
+    rv+=revGrid(pl.list);
     if(!pl.list.length&&!rec.length)rv+=`<div class="empty">${pl.done.length?'أتممت ورد اليوم، بارك الله فيك.':'لا شيء مستحق اليوم.'}</div>`;
     if(pl.all>pl.list.length)rv+=`<p class="note">وبقي ${nP(pl.all-pl.list.length)} مستحقة، تأتيك في الأيام القادمة تدريجيًا كي لا يثقل الورد.</p>`;
     if(pl.done.length)rv+=`<p class="note">رُوجع اليوم: ${pl.done.map(x=>esc(x.m.name)+' ('+esc(x.p.label)+')').join('، ')}</p>`;
@@ -613,6 +624,9 @@ function todayHTML(memT,revSec){let h=`<div class="qcard"><p>مَنْ حَفِظ
   h+=`</section>`;
   return h+revSec.replace('<h2>ورد اليوم<small>','<h2>مراجعة اليوم<small>');
 }
+const RGOPEN={};document.addEventListener('toggle',e=>{const d=e.target;if(d.dataset&&d.dataset.rg)RGOPEN[d.dataset.rg]=d.open},true);
+function revGrid(list){const g=new Map();for(const x of list){if(!g.has(x.m.id))g.set(x.m.id,{m:x.m,items:[]});g.get(x.m.id).items.push(x)}
+  const wide=window.innerWidth>700;return '<div class="rgrid">'+[...g.values()].map(({m,items},gi)=>`<details class="rcard" data-rg="${m.id}" style="--mc:${m.color}" ${(RGOPEN[m.id]!=null?RGOPEN[m.id]:(wide||gi==0))?'open':''}><summary class="rch"><span class="rface" style="background:${m.color}">${esc(shortOf(m))}</span><div><b>${esc(m.name)}</b><small>${ar(items.length)} ${items.length==1?'مقطع':items.length==2?'مقطعان':items.length<=10?'مقاطع':'مقطعًا'} اليوم${items.some(x=>x.cyc)?' · ضمن الخطة':''}</small></div><span class="rchev"></span></summary>`+items.map(({p,cyc})=>`<div class="ritem"><div class="rl"><b>${esc(p.label)}</b><small>${p.added!=null&&T-p.added<S.settings.recent&&!m.lib?'محفوظ حديثًا، يُكرَّر يوميًا':dueTxt(p)}${p.rv?' · رُوجع '+ar(p.rv)+' مرة':''}${p.tests&&p.tests.length?' · آخر اختبار '+pc(p.tests[p.tests.length-1].s):''}</small></div><div class="rbtns ${p.pg?'n3':'n2'}">${p.pg?`<button class="rt" data-read="${m.id}|${p.id}|test"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>اختبرني</button>`:''}<button class="ok" data-rate="1" data-m="${m.id}" data-p="${p.id}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>ثابت</button><button class="again" data-rate="0" data-m="${m.id}" data-p="${p.id}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>أعِده</button></div></div>`).join('')+'</details>').join('')+'</div>'}
 function rowHTML(m,p,inSheet,cyc){return `<div class="row"><div><div class="t">${cyc?'<span class="ctag">الخطة</span>':''}${inSheet?'':esc(m.name)+' — '}${esc(p.label)}</div><div class="s">${p.added!=null&&T-p.added<S.settings.recent&&!m.lib?'محفوظ حديثًا، يُكرَّر يوميًا':dueTxt(p)}${p.rv?' · رُوجع '+ar(p.rv)+' مرة':''}${p.tests&&p.tests.length?' · آخر اختبار '+pc(p.tests[p.tests.length-1].s):''}</div></div><div class="b">${p.pg?`<button data-read="${m.id}|${p.id}|test">اختبرني</button>`:''}<button class="ok" data-rate="1" data-m="${m.id}" data-p="${p.id}">ثابت</button><button class="again" data-rate="0" data-m="${m.id}" data-p="${p.id}">يحتاج إعادة</button></div></div>`}
 
 /* النوافذ */
