@@ -195,6 +195,7 @@ details.step summary{cursor:pointer;font-family:"Reem Kufi";font-size:20px}
 .mact{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px}.mact button{min-height:40px;font-size:14px}
 .srcnote{background:var(--goldS);border-radius:14px;padding:10px 14px;margin-bottom:12px;font-size:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:space-between}
 .srcnote button{min-height:38px;font-size:13px}
+.pvbox{background:var(--bg);border-radius:14px;padding:10px 12px;margin:-4px 0 10px}.pvbig canvas{width:100%;height:auto;border-radius:10px;margin-top:6px;box-shadow:0 1px 4px rgba(0,0,0,.15)}.pvth .pth{cursor:pointer}
 .pthumbs{display:flex;gap:6px;overflow-x:auto;padding:6px 0 10px}.pth{flex:none;position:relative;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.2);background:#fff}
 .pth canvas{display:block;width:110px;height:auto}.pth{min-width:110px;min-height:150px}.pth span{position:absolute;bottom:2px;inset-inline-start:4px;font-size:11px;background:rgba(0,0,0,.6);color:#fff;border-radius:6px;padding:0 5px}
 .noimg{padding:30px 16px;text-align:center;color:#666;font-size:14px;background:#fafafa}
@@ -876,23 +877,36 @@ async function netSearch(mid,q){
   const box=document.getElementById('netRes');if(!box)return;box.innerHTML='<p class="note">جارٍ البحث في أرشيف الإنترنت…</p>';
   try{const r=await fetch('https://archive.org/advancedsearch.php?q='+encodeURIComponent('('+q+') AND mediatype:texts')+'&fl[]=identifier&fl[]=title&fl[]=creator&fl[]=imagecount&rows=15&output=json').then(r=>r.json());
     const docs=(r.response&&r.response.docs)||[];
-    box.innerHTML=docs.length?'<p class="note" style="font-size:13px">اختر الكتاب الذي فيه نص المتن (متن مفرد أو شرح يورد المتن)، ثم تحدّد صفحاته.</p>'+docs.map(d=>`<div class="catr"><span><b>${esc(String(d.title||d.identifier).slice(0,120))}</b><small>${esc(String(d.creator||'').slice(0,80))}${d.imagecount?' · '+ar(d.imagecount)+' صفحة':''}</small></span><div class="b"><a class="ytb" style="background:var(--bg);color:var(--ink)" href="https://archive.org/details/${encodeURIComponent(d.identifier)}" target="_blank" rel="noopener">معاينة</a><button class="pri" data-netuse="${mid}|${esc(d.identifier)}">استعمله</button></div></div>`).join(''):'<p class="note">لم أجد نتائج. جرّب كلمات أخرى أو ارفع الملف من جهازك.</p>';
+    box.innerHTML=docs.length?'<p class="note" style="font-size:13px">اختر الكتاب الذي فيه نص المتن (متن مفرد أو شرح يورد المتن)، ثم تحدّد صفحاته.</p>'+docs.map(d=>`<div class="catr"><span><b>${esc(String(d.title||d.identifier).slice(0,120))}</b><small>${esc(String(d.creator||'').slice(0,80))}${d.imagecount?' · '+ar(d.imagecount)+' صفحة':''}</small></span><div class="b"><button data-iaprev="${esc(d.identifier)}">اعرضه</button><button class="pri" data-netuse="${mid}|${esc(d.identifier)}">استعمله</button></div></div>`).join(''):'<p class="note">لم أجد نتائج. جرّب كلمات أخرى أو ارفع الملف من جهازك.</p>';
   }catch(e){box.innerHTML='<p class="note">تعذّر البحث الآن. ارفع الملف من جهازك.</p>'}
 }
+const IAC={};
+async function iaOpen(id){if(IAC[id])return IAC[id];
+  const md=await fetch('https://archive.org/metadata/'+encodeURIComponent(id)).then(r=>r.json());
+  const zip=(md.files||[]).find(f=>/_jp2\.zip$/i.test(f.name));
+  if(zip&&md.server&&md.dir){const t=await fetch('https://'+md.server+'/view_archive.php?archive='+encodeURIComponent(md.dir+'/'+zip.name)).then(r=>r.text());
+    const pre=zip.name.replace(/\.zip$/i,'');const files=[...new Set((t.match(/[^"'<>\s?&=]+?\.jp2/g)||[]).map(x=>{x=decodeURIComponent(x);const i=x.indexOf(pre.split('/').pop()+'/');return i>=0?x.slice(i):x}))].sort();
+    if(files.length)return IAC[id]={D:iaDoc(md.server,md.dir,zip.name,files)}}
+  const pdf=(md.files||[]).filter(f=>/\.pdf$/i.test(f.name)).sort((a,b)=>(+a.size||0)-(+b.size||0))[0];if(!pdf)throw new Error('nopdf');
+  const blob=await fetch('https://archive.org/download/'+encodeURIComponent(id)+'/'+pdf.name.split('/').map(encodeURIComponent).join('/')).then(r=>{if(!r.ok)throw new Error(r.status);return r.blob()});
+  return IAC[id]={D:await pdfDoc(blob)}}
 async function netUse(mid,id){
-  const box=document.getElementById('netRes');if(box)box.innerHTML='<p class="note">جارٍ جلب صفحات الكتاب…</p>';
-  try{const md=await fetch('https://archive.org/metadata/'+encodeURIComponent(id)).then(r=>r.json());
-    const zip=(md.files||[]).find(f=>/_jp2\.zip$/i.test(f.name));
-    if(zip&&md.server&&md.dir){
-      const t=await fetch('https://'+md.server+'/view_archive.php?archive='+encodeURIComponent(md.dir+'/'+zip.name)).then(r=>r.text());
-      const pre=zip.name.replace(/\.zip$/i,'');const files=[...new Set((t.match(/[^"'<>\s?&=]+?\.jp2/g)||[]).map(x=>{x=decodeURIComponent(x);const i=x.indexOf(pre.split('/').pop()+'/');return i>=0?x.slice(i):x}))].sort();
-      if(files.length)return startDoc(mid,iaDoc(md.server,md.dir,zip.name,files),'archive.org/details/'+id);
-    }
-    const pdf=(md.files||[]).filter(f=>/\.pdf$/i.test(f.name)).sort((a,b)=>(+a.size||0)-(+b.size||0))[0];if(!pdf)throw new Error('nopdf');
-    const blob=await fetch('https://archive.org/download/'+encodeURIComponent(id)+'/'+pdf.name.split('/').map(encodeURIComponent).join('/')).then(r=>{if(!r.ok)throw new Error(r.status);return r.blob()});
-    startPdf(mid,blob,'archive.org/details/'+id);
-  }catch(e){console.warn(e);if(box)box.innerHTML=`<p class="note">تعذّر جلب هذا الكتاب مباشرة. افتحه من <a href="https://archive.org/details/${encodeURIComponent(id)}" target="_blank" rel="noopener">صفحته في الأرشيف</a> ونزّل ملف PDF ثم ارفعه هنا، أو جرّب نتيجة أخرى.</p>`}
+  const box=document.getElementById('netRes');if(box&&!IAC[id])box.insertAdjacentHTML('afterbegin','<p class="note" id="iaw">جارٍ جلب صفحات الكتاب…</p>');
+  try{const c=await iaOpen(id);startDoc(mid,c.D,'archive.org/details/'+id)}
+  catch(e){console.warn(e);const w=document.getElementById('iaw');if(w)w.innerHTML=`تعذّر جلب هذا الكتاب مباشرة. افتحه من <a href="https://archive.org/details/${encodeURIComponent(id)}" target="_blank" rel="noopener">صفحته في الأرشيف</a> ونزّل ملف PDF ثم ارفعه هنا، أو جرّب نتيجة أخرى.`}
 }
+async function iaPrev(btn,id){const row=btn.closest('.catr');let pv=row.nextElementSibling;
+  if(pv&&pv.classList.contains('pvbox')){pv.remove();return}
+  pv=document.createElement('div');pv.className='pvbox';pv.innerHTML='<p class="note">جارٍ عرض صفحات الكتاب…</p>';row.after(pv);
+  try{const {D}=await iaOpen(id);const n=Math.min(D.n,16);pv.innerHTML=`<p class="note" style="font-size:13px">في الكتاب ${ar(D.n)} صفحة. هذه أول ${ar(n)} صفحة، اضغط على صفحة لتكبيرها:</p><div class="pthumbs pvth"></div><div class="pvbig"></div>`;
+    const th=pv.querySelector('.pvth');for(let g=1;g<=n;g++){const d=document.createElement('div');d.className='pth';d.dataset.pg=g;d.innerHTML=`<span>${ar(g)}</span>`;th.appendChild(d)}
+    for(const d of th.children){if(!pv.isConnected)return;try{const cv=await D.canvas(+d.dataset.pg,240);d.prepend(cv);d.onclick=async()=>{const big=pv.querySelector('.pvbig');big.innerHTML='<p class="note">…</p>';const c2=await D.canvas(+d.dataset.pg,900);big.innerHTML='';big.appendChild(c2)}}catch(e){}}
+  }catch(e){pv.innerHTML=`<p class="note">لا تتوفر معاينة هذا الكتاب داخل الموقع. افتح <a href="https://archive.org/details/${encodeURIComponent(id)}" target="_blank" rel="noopener">صفحته في الأرشيف</a> لتراه.</p>`}}
+async function tcPrev(btn,i){const row=btn.closest('.catr');let pv=row.nextElementSibling;if(pv&&pv.classList.contains('pvbox')){pv.remove();return}
+  pv=document.createElement('div');pv.className='pvbox';pv.innerHTML='<p class="note">…</p>';row.after(pv);const c=TEXTCAT[i];
+  try{let lines;if(c.wiki){const r=await fetch(WS+'action=parse&prop=wikitext&redirects=1&page='+encodeURIComponent(c.wiki)).then(r=>r.json());lines=wikiToLines(r.parse.wikitext['*'])}else lines=textFileLines(await fetch(c.file).then(r=>r.text()));
+    const real=lines.filter(l=>!l.h);pv.innerHTML=`<p class="note" style="font-size:13px">${ar(real.length)} ${real[0]&&real[0].v?'بيتًا':'سطرًا'}، وهذا أوله:</p><div class="tpl">${lines.slice(0,12).map(l=>l.h?`<div class="th">${esc(l.h)}</div>`:l.v?`<div class="tv"><span>${esc(l.v[0])}</span><span>${esc(l.v[1])}</span></div>`:`<div>${esc(l.p)}</div>`).join('')}<div class="note">…</div></div>`}
+  catch(e){pv.innerHTML='<p class="note">تعذّر العرض الآن.</p>'}}
 
 /* المتون النصية: من ويكي مصدر أو نص ملصوق */
 const NORM=t=>String(t).replace(/[ً-ٰٟـ]/g,'').replace(/[أإآٱ]/g,'ا').replace(/ى/g,'ي').replace(/ة/g,'ه').replace(/[^ء-ي0-9a-z]/gi,'');
@@ -950,7 +964,7 @@ async function tcatUse(mid,i){const c=TEXTCAT[i],box2=document.getElementById('n
   catch(e){if(box2)box2.innerHTML='<p class="note">تعذّر تحميل النص الآن، أعد المحاولة.</p>'}}
 function textFileLines(t){const out=[];for(const raw of t.split(/\r?\n/)){const l=raw.trim();if(!l)continue;if(l[0]=='#'){out.push({h:l.slice(1).trim()});continue}const hs=l.split(/\s*…\s*/);out.push(hs.length>=2?{v:[hs[0],hs.slice(1).join(' ')]}:{p:l})}return out}
 const WS='https://ar.wikisource.org/w/api.php?format=json&origin=*&';
-const SHARH=/شرح|حاشي|حواشي|تعليق|فتح |منحة|عون |تقريب|خلاصة|الإطلال|هداية|الجمع |نثر |الدر |الدرة الزهية|توضيح|تيسير|تطبيقات|التحفة السنية|التحفة الخيرية|الزوائد|جداول|خرائط|الكافي|التوضيحات|التقريرات|بصوت|كردية|commentaire|ضبط|الفوائد|السبيكة|المجموعة|الحجج|مدعم|قانون|htm|word|وورد|ويب|مخطوط|تطبيق|دروس|المتممة|متممة|الجزء/i;
+const SHARH=/شرح|حاشي|حواشي|تعليق|فتح |منحة|عون |تقريب|خلاصة|الإطلال|هداية|الجمع |نثر |الدر |الدرة الزهية|توضيح|تيسير|تطبيقات|التحفة السنية|التحفة الخيرية|الزوائد|جداول|خرائط|الكافي|التوضيحات|التقريرات|بصوت|كردية|commentaire|ضبط|الفوائد|السبيكة|المجموعة|الحجج|مدعم|قانون|htm|word|وورد|ويب|مخطوط|تطبيق|دروس|المتممة|متممة|الجزء|الدرس|إعراب|اعراب|على متن|على المنظومة|البهية|البهيّة|الروضة|مرشد|وبآخره/i;
 const cleanT=t=>String(t).replace(/\b(Book|Bok|Pdf|PDF)\b/g,'').replace(/[0-9٠-٩]{3,}/g,'').replace(/كتاب|اقرا اونلاين|صيغة بي دي اف|صيغة بوك|\[.*?\]|---.*$|۩|۞/g,'').replace(/\s+/g,' ').trim();
 async function iaSearch(q){const ts=qTokens(q);if(!ts.length)return [];
   const r=await fetch('https://archive.org/advancedsearch.php?q='+encodeURIComponent('title:('+q+') AND mediatype:texts')+'&fl[]=identifier&fl[]=title&fl[]=imagecount&rows=60&output=json').then(r=>r.json());
@@ -958,10 +972,10 @@ async function iaSearch(q){const ts=qTokens(q);if(!ts.length)return [];
     .sort((a,b)=>(/متن|منظومة|نظم/.test(b.t)?1:0)-(/متن|منظومة|نظم/.test(a.t)?1:0)||a.t.length-b.t.length).slice(0,8)}
 async function wikiSearch(mid,q){
   const box=document.getElementById('netRes');if(!box)return;box.innerHTML='<p class="note">جارٍ البحث…</p>';
-  const ts=qTokens(q),loc=tcatMatch(q);let h=loc.length?'<p class="note" style="font-size:13px">من مكتبة نصوص الموقع (نص المتن مضبوطًا ومكتوبًا):</p>'+loc.map(c=>`<div class="catr"><span><b>${esc(c.full)}</b><small>${esc(c.cat)}</small></span><div class="b"><button class="pri" data-tcat="${mid}|${TEXTCAT.indexOf(c)}">استعمله</button></div></div>`).join(''):'';
+  const ts=qTokens(q),loc=tcatMatch(q);let h=loc.length?'<p class="note" style="font-size:13px">من مكتبة نصوص الموقع (نص المتن مضبوطًا ومكتوبًا):</p>'+loc.map(c=>`<div class="catr"><span><b>${esc(c.full)}</b><small>${esc(c.cat)}</small></span><div class="b"><button data-tcprev="${TEXTCAT.indexOf(c)}">اعرضه</button><button class="pri" data-tcat="${mid}|${TEXTCAT.indexOf(c)}">استعمله</button></div></div>`).join(''):'';
   const [ia,wk]=await Promise.all([iaSearch(q).catch(()=>[]),fetch(WS+'action=query&list=search&srlimit=30&srsearch='+encodeURIComponent(q)).then(r=>r.json()).then(r=>(r.query&&r.query.search||[]).filter(x=>!SHARH.test(x.title)&&!/تفسير|مجلة|فتاوى|سير أعلام|تاريخ|المزهر|مقامات|ديوان|بروتوكول|اتفاقية/.test(x.title)&&!x.title.includes('/')&&x.wordcount>=60&&ts.length&&ts.every(t=>NORM(x.title).includes(t)))).catch(()=>[])]);
   if(wk.length)h+='<p class="note" style="font-size:13px">نص مكتوب من ويكي مصدر:</p>'+wk.slice(0,5).map(x=>`<div class="catr"><span><b>${esc(x.title)}</b><small>${ar(x.wordcount)} كلمة</small></span><div class="b"><button class="pri" data-wiki="${mid}|${esc(x.title)}">اعرضه</button></div></div>`).join('');
-  if(ia.length)h+='<p class="note" style="font-size:13px">نسخ مصوّرة للمتن من أرشيف الإنترنت (بلا الشروح). بعد الاختيار تحدّد صفحات المتن:</p>'+ia.map(d=>`<div class="catr"><span><b>${esc(d.t)}</b><small>${d.imagecount?ar(d.imagecount)+' صفحة':'أرشيف الإنترنت'}</small></span><div class="b"><a class="ytb" style="background:var(--bg);color:var(--ink)" href="https://archive.org/details/${encodeURIComponent(d.identifier)}" target="_blank" rel="noopener">معاينة</a><button class="pri" data-netuse="${mid}|${esc(d.identifier)}">استعمله</button></div></div>`).join('');
+  if(ia.length)h+='<p class="note" style="font-size:13px">نسخ مصوّرة للمتن من أرشيف الإنترنت (بلا الشروح). اضغط «اعرضه» لترى صفحاته قبل اعتماده:</p>'+ia.map(d=>`<div class="catr"><span><b>${esc(d.t)}</b><small>${d.imagecount?ar(d.imagecount)+' صفحة':'أرشيف الإنترنت'}</small></span><div class="b"><a class="ytb" style="background:var(--bg);color:var(--ink)" href="https://archive.org/details/${encodeURIComponent(d.identifier)}" target="_blank" rel="noopener">معاينة</a><button class="pri" data-netuse="${mid}|${esc(d.identifier)}">استعمله</button></div></div>`).join('');
   box.innerHTML=h||'<p class="note">لم أجد نص هذا المتن. انسخ نصه من المكتبة الشاملة أو أي موقع، والصقه في خانة «الصق نص المتن» أدناه.</p>';
 }
 let WIKIP=null;
@@ -1182,6 +1196,8 @@ document.addEventListener('click',e=>{
   if(d.cin){CEX=(CEX||[]).filter(x=>x!=d.cin);CEDIT=(CEDIT||[]).concat(d.cin);return cycSheetKeep()}
   if(d.cdel!==undefined){if(b.dataset.sure){delete S.cycle;save();closeSheet();render();return toast('أُلغيت الخطة',true)}b.dataset.sure=1;b.textContent='اضغط للتأكيد';return}
   if(d.cat){const [i,st]=d.cat.split('|');const c=CATALOG[+i];S.mutun.push(fromCatalog(c,st));save();if(sheet.classList.contains('open'))closeSheet();render();return toast('أُضيف «'+c.name+'»',true)}
+  if(d.iaprev){return iaPrev(b,d.iaprev)}
+  if(d.tcprev!==undefined){return tcPrev(b,+d.tcprev)}
   if(d.tcat){const i=d.tcat.indexOf('|');return tcatUse(d.tcat.slice(0,i),+d.tcat.slice(i+1))}
   if(d.wiki){const i=d.wiki.indexOf('|');return wikiOpen(d.wiki.slice(0,i),d.wiki.slice(i+1))}
   if(d.wikiuse!==undefined&&WIKIP){const w=WIKIP;WIKIP=null;return useText(w.mid,w.lines,w.src)}
