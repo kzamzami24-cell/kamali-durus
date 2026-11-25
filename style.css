@@ -171,6 +171,11 @@ main:focus{outline:none}
 .player-meta{flex:1;min-width:0}
 .player-meta small{display:block;color:var(--gold);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .player-meta b{display:block;font-weight:500;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.player-foot{display:flex;justify-content:flex-end;padding:6px 10px 8px}
+.yt-open{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted,#999);text-decoration:none;opacity:.85}
+.yt-open:hover{opacity:1;text-decoration:underline}
+.yt-open svg{width:16px;height:16px;fill:currentColor}
+.player-dock.min .player-foot{display:none}
 .player-actions{display:flex;gap:6px;align-items:center}
 .player-actions .chip{padding:5px 10px;font-size:13px}
 .player-actions .icon-btn{width:32px;height:32px}

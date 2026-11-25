@@ -600,6 +600,15 @@ $('#pNext').onclick = () => { const v = neighbor(1); if (v) play(v, cur.s); };
 $('#pPrev').onclick = () => { const v = neighbor(-1); if (v) play(v, cur.s); };
 $('#pMin').onclick = () => $('#playerDock').classList.toggle('min');
 $('#pClose').onclick = () => { track(true); save(true); try { YTP && YTP.pauseVideo(); } catch (e) {} $('#playerDock').hidden = true; clearInterval(tick); };
+// خيار ثانوي: متابعة الدرس في يوتيوب (أو تطبيقه) من نفس الدقيقة
+$('#pYT').onclick = () => {
+  if (!cur) return;
+  let t = 0; try { t = Math.floor(YTP.getCurrentTime()) || 0; } catch (e) {}
+  if (!t) { const p = S.p[cur.v]; t = p && !p.done ? Math.floor(p.t || 0) : 0; }
+  track(true); save(true); cloudPush(true);
+  try { YTP && YTP.pauseVideo(); } catch (e) {}
+  $('#pYT').href = `https://www.youtube.com/watch?v=${encodeURIComponent(cur.v)}${t > 5 ? '&t=' + t + 's' : ''}`;
+};
 $('#pTitle').onclick = () => { if (cur && cur.s) location.hash = '#/s/' + encodeURIComponent(cur.s); };
 // عند إغلاق الموقع أو الانتقال عنه: احفظ الموضع فورًا محليًا وفي السحابة
 const flush = () => { track(true); save(true); cloudPush(true); };
@@ -639,7 +648,7 @@ $('#resetBtn').onclick = () => {
 dlg.querySelector('.close').onclick = () => dlg.close();
 
 /* ---------------- التشغيل ---------------- */
-const APP_V = '11';
+const APP_V = '12';
 async function checkVersion() {
   try {
     const v = (await (await fetch('version.txt', { cache: 'no-store' })).text()).trim();
