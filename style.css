@@ -234,3 +234,15 @@ dialog .btn.ghost{color:var(--ink)}
 .cloud-box:empty{display:none}
 .gbtn{background:#fff;color:#1f1f1f;border:1px solid #dadce0}
 .cloud-on{background:color-mix(in srgb,var(--ok) 12%,transparent);border:1px solid var(--ok);border-radius:12px;padding:8px 12px;font-size:14px}
+
+/* أُضيف حديثًا */
+.nav-new{display:inline-flex;align-items:center;gap:6px;flex:none;padding:8px 14px;border-radius:999px;text-decoration:none;font-weight:600;font-size:14px;
+  color:var(--ink);background:var(--card);border:1px solid var(--gold);white-space:nowrap}
+.nav-new:hover,.nav-new.on{background:var(--gold);color:#1b1206}
+.nav-new b{background:var(--clay);color:#fff;border-radius:999px;min-width:20px;padding:0 6px;font-size:12px;line-height:20px;text-align:center}
+.see-all{text-decoration:none;font-weight:600;color:var(--gold)!important}
+.see-all:hover{text-decoration:underline}
+.lesson .t small a.in-series{color:inherit;text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}
+.lesson .t small a.in-series:hover{color:var(--gold)}
+.new-note{margin:-6px 0 0;font-size:14px}
+@media (max-width:600px){.nav-new{order:3;padding:9px 12px;font-size:13px}.topbar .search{order:4;flex:1 1 0;min-width:0}}
