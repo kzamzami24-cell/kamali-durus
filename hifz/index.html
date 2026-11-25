@@ -832,6 +832,7 @@ function iaDoc(server,dir,zip,files){const cache={};
 async function processDoc(m,D,from,to,onProg){
   const words={},keep=m.status;
   for(let g=from;g<=to;g++){
+    if(D.pre)for(let k=1;k<=3;k++)if(g+k<=to)D.pre(g+k,1300);
     const cv=await D.canvas(g,1300);const r=analyze(cv);
     if(r&&r.lines.length){words[g]=r.lines;const bl=await new Promise(res=>r.canvas.toBlob(res,'image/jpeg',.82));await IDB.put('img:'+m.id+':'+g,bl)}
     onProg&&onProg((g-from+1)/(to-from+1));
@@ -885,7 +886,7 @@ const fetchT=(u,ms)=>fetch(u,{signal:AbortSignal.timeout?AbortSignal.timeout(ms|
 async function iaManifest(id,tries){let m;try{m=await fetchT('https://iiif.archive.org/iiif/3/'+encodeURIComponent(id)+'/manifest.json',12000).then(r=>{if(!r.ok)throw 0;return r.json()})}catch(e){if((tries||0)<1){await new Promise(r=>setTimeout(r,800));return iaManifest(id,1)}throw e}
   return (m.items||[]).map(c=>{try{const b=c.items[0].items[0].body;return (b.service&&b.service[0]&&(b.service[0].id||b.service[0]['@id']))||String(b.id).replace(/\/full\/.*$/,'')}catch(e){return null}}).filter(Boolean)}
 function iiifDoc(svcs){const cache={};const get=(g,W)=>{const k=g+'|'+W;return cache[k]||(cache[k]=fetch(svcs[g-1]+'/full/'+W+',/0/default.jpg').then(r=>{if(!r.ok)throw new Error(r.status);return r.blob()}).then(b=>createImageBitmap(b)))};
-  return {n:svcs.length,async canvas(g,W){const im=await get(g,W>400?1300:300),cv=document.createElement('canvas');cv.width=W;cv.height=Math.round(im.height*W/im.width);const ctx=cv.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,cv.width,cv.height);ctx.drawImage(im,0,0,cv.width,cv.height);return cv}}}
+  return {n:svcs.length,pre(g,W){get(g,W>400?1300:300).catch(()=>{})},async canvas(g,W){const im=await get(g,W>400?1300:300),cv=document.createElement('canvas');cv.width=W;cv.height=Math.round(im.height*W/im.width);const ctx=cv.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,cv.width,cv.height);ctx.drawImage(im,0,0,cv.width,cv.height);return cv}}}
 async function iaOpen(id){if(IAC[id])return IAC[id];const sv=await iaManifest(id);if(sv.length<2)throw new Error('nopages');return IAC[id]={D:iiifDoc(sv)}}
 async function netUse(mid,id){
   const box=document.getElementById('netRes');if(box&&!IAC[id])box.insertAdjacentHTML('afterbegin','<p class="note" id="iaw">جارٍ جلب صفحات الكتاب…</p>');
@@ -895,9 +896,9 @@ async function netUse(mid,id){
 async function iaPrev(btn,id){const row=btn.closest('.catr');let pv=row.nextElementSibling;
   if(pv&&pv.classList.contains('pvbox')){pv.remove();return}
   pv=document.createElement('div');pv.className='pvbox';pv.innerHTML='<p class="note">جارٍ عرض صفحات الكتاب…</p>';row.after(pv);
-  try{const {D}=await iaOpen(id);const n=Math.min(D.n,16);pv.innerHTML=`<p class="note" style="font-size:13px">في الكتاب ${ar(D.n)} صفحة. هذه أول ${ar(n)} صفحة، اضغط على صفحة لتكبيرها:</p><div class="pthumbs pvth"></div><div class="pvbig"></div>`;
+  try{const {D}=await iaOpen(id);const n=Math.min(D.n,12);pv.innerHTML=`<p class="note" style="font-size:13px">في الكتاب ${ar(D.n)} صفحة. هذه أول ${ar(n)} صفحة (تظهر تباعًا)، اضغط على صفحة لتكبيرها:</p><div class="pthumbs pvth"></div><div class="pvbig"></div>`;
     const th=pv.querySelector('.pvth');for(let g=1;g<=n;g++){const d=document.createElement('div');d.className='pth';d.dataset.pg=g;d.innerHTML=`<span>${ar(g)}</span>`;th.appendChild(d)}
-    for(const d of th.children){if(!pv.isConnected)return;try{const cv=await D.canvas(+d.dataset.pg,240);d.prepend(cv);d.onclick=async()=>{const big=pv.querySelector('.pvbig');big.innerHTML='<p class="note">…</p>';const c2=await D.canvas(+d.dataset.pg,900);big.innerHTML='';big.appendChild(c2)}}catch(e){}}
+    const kids=[...th.children];let ix=0;const work=async()=>{while(ix<kids.length&&pv.isConnected){const d=kids[ix++];d.onclick=async()=>{const big=pv.querySelector('.pvbig');big.innerHTML='<p class="note">جارٍ التكبير…</p>';try{const c2=await D.canvas(+d.dataset.pg,900);big.innerHTML='';big.appendChild(c2)}catch(e){big.innerHTML=''}};try{const cv=await D.canvas(+d.dataset.pg,240);d.prepend(cv)}catch(e){}}};await Promise.all([work(),work(),work(),work()]);
   }catch(e){pv.innerHTML=`<p class="note">لا تتوفر معاينة هذا الكتاب داخل الموقع. افتح <a href="https://archive.org/details/${encodeURIComponent(id)}" target="_blank" rel="noopener">صفحته في الأرشيف</a> لتراه.</p>`}}
 async function tcPrev(btn,i){const row=btn.closest('.catr');let pv=row.nextElementSibling;if(pv&&pv.classList.contains('pvbox')){pv.remove();return}
   pv=document.createElement('div');pv.className='pvbox';pv.innerHTML='<p class="note">…</p>';row.after(pv);const c=TEXTCAT[i];
@@ -961,21 +962,28 @@ async function tcatUse(mid,i){const c=TEXTCAT[i],box2=document.getElementById('n
   catch(e){if(box2)box2.innerHTML='<p class="note">تعذّر تحميل النص الآن، أعد المحاولة.</p>'}}
 function textFileLines(t){const out=[];for(const raw of t.split(/\r?\n/)){const l=raw.trim();if(!l)continue;if(l[0]=='#'){out.push({h:l.slice(1).trim()});continue}const hs=l.split(/\s*…\s*/);out.push(hs.length>=2?{v:[hs[0],hs.slice(1).join(' ')]}:{p:l})}return out}
 const WS='https://ar.wikisource.org/w/api.php?format=json&origin=*&';
-const SHARH=/شرح|حاشي|حواشي|تعليق|فتح |منحة|عون |تقريب|خلاصة|الإطلال|هداية|الجمع |نثر |الدر |الدرة الزهية|توضيح|تيسير|تطبيقات|التحفة السنية|التحفة الخيرية|الزوائد|جداول|خرائط|الكافي|التوضيحات|التقريرات|بصوت|كردية|commentaire|ضبط|الفوائد|السبيكة|المجموعة|الحجج|مدعم|قانون|htm|word|وورد|ويب|مخطوط|تطبيق|دروس|المتممة|متممة|الجزء|الدرس|إعراب|اعراب|على متن|على المنظومة|البهية|البهيّة|الروضة|مرشد|وبآخره/i;
+const SHARH=/شرح|حاشي|حواشي|تعليق|فتح |منحة|عون |تقريب|خلاصة|الإطلال|هداية|الجمع |نثر |الدر |الدرة الزهية|توضيح|تيسير|تطبيقات|التحفة السنية|التحفة الخيرية|الزوائد|جداول|خرائط|الكافي|التوضيحات|التقريرات|بصوت|كردية|commentaire|ضبط|الفوائد|السبيكة|المجموعة|الحجج|مدعم|قانون|htm|word|وورد|ويب|مخطوط|تطبيق|دروس|المتممة|متممة|الجزء|الدرس|إعراب|اعراب|على متن|على المنظومة|البهية|البهيّة|الروضة|مرشد|وبآخره|حل |ألفاظ|الفاظ/i;
 const cleanT=t=>String(t).replace(/\b(Book|Bok|Pdf|PDF)\b/g,'').replace(/[0-9٠-٩]{3,}/g,'').replace(/كتاب|اقرا اونلاين|صيغة بي دي اف|صيغة بوك|\[.*?\]|---.*$|۩|۞/g,'').replace(/\s+/g,' ').trim();
-async function iaSearch(q){const ts=qTokens(q);if(!ts.length)return [];
+async function iaSearch(q,cb){const ts=qTokens(q);if(!ts.length)return [];
   const r=await fetch('https://archive.org/advancedsearch.php?q='+encodeURIComponent('title:('+q+') AND mediatype:texts')+'&fl[]=identifier&fl[]=title&fl[]=imagecount&rows=60&output=json').then(r=>r.json());
   const seen=new Set();const docs=((r.response&&r.response.docs)||[]).map(d=>Object.assign(d,{t:cleanT(d.title)})).filter(d=>{const n=NORM(d.t);if(SHARH.test(String(d.title)))return false;if(!ts.every(t=>n.includes(t)))return false;if(d.imagecount&&+d.imagecount>90)return false;if(seen.has(n))return false;seen.add(n);return true})
     .sort((a,b)=>(/متن|منظومة|نظم/.test(b.t)?1:0)-(/متن|منظومة|نظم/.test(a.t)?1:0)||a.t.length-b.t.length).slice(0,14);
-  const ok=[];for(let i=0;i<docs.length;i+=4){ok.push(...await Promise.all(docs.slice(i,i+4).map(d=>iaManifest(d.identifier).then(sv=>{if(sv.length>=2&&sv.length<=120){IAC[d.identifier]={D:iiifDoc(sv)};d.imagecount=sv.length;return true}return false}).catch(()=>false))));if(ok.filter(Boolean).length>=8)break}
+  const ok=[];for(let i=0;i<docs.length;i+=4){ok.push(...await Promise.all(docs.slice(i,i+4).map(d=>iaManifest(d.identifier).then(sv=>{if(sv.length>=2&&sv.length<=120){IAC[d.identifier]={D:iiifDoc(sv)};d.imagecount=sv.length;return true}return false}).catch(()=>false))));cb&&cb(docs.filter((d,j)=>ok[j]).slice(0,8),i+4<docs.length);if(ok.filter(Boolean).length>=8)break}
   return docs.filter((d,i)=>ok[i]).slice(0,8)}
 async function wikiSearch(mid,q){
   const box=document.getElementById('netRes');if(!box)return;box.innerHTML='<p class="note">جارٍ البحث…</p>';
-  const ts=qTokens(q),loc=tcatMatch(q);let h=loc.length?'<p class="note" style="font-size:13px">من مكتبة نصوص الموقع (نص المتن مضبوطًا ومكتوبًا):</p>'+loc.map(c=>`<div class="catr"><span><b>${esc(c.full)}</b><small>${esc(c.cat)}</small></span><div class="b"><button data-tcprev="${TEXTCAT.indexOf(c)}">اعرضه</button><button class="pri" data-tcat="${mid}|${TEXTCAT.indexOf(c)}">استعمله</button></div></div>`).join(''):'';
-  const [ia,wk]=await Promise.all([iaSearch(q).catch(()=>[]),fetchT(WS+'action=query&list=search&srlimit=30&srsearch='+encodeURIComponent(q),10000).then(r=>r.json()).then(r=>(r.query&&r.query.search||[]).filter(x=>!SHARH.test(x.title)&&!/تفسير|مجلة|فتاوى|سير أعلام|تاريخ|المزهر|مقامات|ديوان|بروتوكول|اتفاقية/.test(x.title)&&!x.title.includes('/')&&x.wordcount>=60&&ts.length&&ts.every(t=>NORM(x.title).includes(t)))).catch(()=>[])]);
-  if(wk.length)h+='<p class="note" style="font-size:13px">نص مكتوب من ويكي مصدر:</p>'+wk.slice(0,5).map(x=>`<div class="catr"><span><b>${esc(x.title)}</b><small>${ar(x.wordcount)} كلمة</small></span><div class="b"><button class="pri" data-wiki="${mid}|${esc(x.title)}">اعرضه</button></div></div>`).join('');
-  if(ia.length)h+='<p class="note" style="font-size:13px">نسخ مصوّرة للمتن من أرشيف الإنترنت (بلا الشروح). اضغط «اعرضه» لترى صفحاته قبل اعتماده:</p>'+ia.map(d=>`<div class="catr"><span><b>${esc(d.t)}</b><small>${d.imagecount?ar(d.imagecount)+' صفحة':'أرشيف الإنترنت'}</small></span><div class="b"><button data-iaprev="${esc(d.identifier)}">اعرضه</button><button class="pri" data-netuse="${mid}|${esc(d.identifier)}">استعمله</button></div></div>`).join('');
-  box.innerHTML=h||'<p class="note">لم أجد نص هذا المتن. انسخ نصه من المكتبة الشاملة أو أي موقع، والصقه في خانة «الصق نص المتن» أدناه.</p>';
+  const ts=qTokens(q),loc=tcatMatch(q);const lh=loc.length?'<p class="note" style="font-size:13px">من مكتبة نصوص الموقع (نص المتن مضبوطًا ومكتوبًا):</p>'+loc.map(c=>`<div class="catr"><span><b>${esc(c.full)}</b><small>${esc(c.cat)}</small></span><div class="b"><button data-tcprev="${TEXTCAT.indexOf(c)}">اعرضه</button><button class="pri" data-tcat="${mid}|${TEXTCAT.indexOf(c)}">استعمله</button></div></div>`).join(''):'';
+  let wh='',ia=[],more=true,wdone=false;
+  const iaRow=d=>`<div class="catr"><span><b>${esc(d.t)}</b><small>${d.imagecount?ar(d.imagecount)+' صفحة':'أرشيف الإنترنت'}</small></span><div class="b"><button data-iaprev="${esc(d.identifier)}">اعرضه</button><button class="pri" data-netuse="${mid}|${esc(d.identifier)}">استعمله</button></div></div>`;
+  const paint=()=>{if(!box.isConnected)return;const open=[...box.querySelectorAll('.pvbox')].length;if(open)return;
+    let h=lh+wh;if(ia.length)h+='<p class="note" style="font-size:13px">نسخ مصوّرة للمتن من أرشيف الإنترنت (بلا الشروح). اضغط «اعرضه» لترى صفحاته قبل اعتماده:</p>'+ia.map(iaRow).join('');
+    if(more)h+='<p class="note">…جارٍ البحث عن نسخ مصوّرة أخرى</p>';
+    else if(!h)h='<p class="note">لم أجد نص هذا المتن. انسخ نصه من المكتبة الشاملة أو أي موقع، والصقه في خانة «الصق نص المتن» أدناه.</p>';
+    box.innerHTML=h};
+  if(lh)paint();
+  const wk=fetchT(WS+'action=query&list=search&srlimit=30&srsearch='+encodeURIComponent(q),10000).then(r=>r.json()).then(r=>(r.query&&r.query.search||[]).filter(x=>!SHARH.test(x.title)&&!/تفسير|مجلة|فتاوى|سير أعلام|تاريخ|المزهر|مقامات|ديوان|بروتوكول|اتفاقية/.test(x.title)&&!x.title.includes('/')&&x.wordcount>=60&&ts.length&&ts.every(t=>NORM(x.title).includes(t)))).catch(()=>[]).then(w=>{if(w.length)wh='<p class="note" style="font-size:13px">نص مكتوب من ويكي مصدر:</p>'+w.slice(0,5).map(x=>`<div class="catr"><span><b>${esc(x.title)}</b><small>${ar(x.wordcount)} كلمة</small></span><div class="b"><button class="pri" data-wiki="${mid}|${esc(x.title)}">اعرضه</button></div></div>`).join('');paint()});
+  await iaSearch(q,(r,m)=>{ia=r;more=m;paint()}).catch(()=>{});more=false;await wk;paint();
+  if(box.querySelector('.pvbox')){/* المستخدم يعاين: أضف النتائج الجديدة دون مسح المعاينة */const have=new Set([...box.querySelectorAll('[data-iaprev]')].map(b=>b.dataset.iaprev));for(const d of ia)if(!have.has(d.identifier))box.insertAdjacentHTML('beforeend',iaRow(d))}
 }
 let WIKIP=null;
 async function wikiOpen(mid,title){
